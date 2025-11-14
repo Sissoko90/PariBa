@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Rapports et Analyses</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-responsive.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #79638f 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .header-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(196, 23, 23, 0.4), rgba(118, 75, 162, 0.4));
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            margin: 0;
+            color: #fbfbfb;
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .stat-card p {
+            margin: 10px 0 0 0;
+            color: #fdfdfd;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid" style="max-width: 1400px;">
+        <!-- Header -->
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2><i class="fas fa-chart-bar me-2"></i><span th:text="${pageTitle}">Rapports et Analyses</span></h2>
+                    <p class="text-muted mb-0">Visualisez les statistiques détaillées</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/admin/dashboard" class="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        Retour au Dashboard
+                    </a>
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 th:text="${stats.totalUsers}">0</h3>
+                <p><i class="fas fa-users me-1"></i>Total Utilisateurs</p>
+            </div>
+            <div class="stat-card">
+                <h3 th:text="${stats.totalGroups}">0</h3>
+                <p><i class="fas fa-layer-group me-1"></i>Total Groupes</p>
+            </div>
+            <div class="stat-card">
+                <h3 th:text="${stats.totalPayments}">0</h3>
+                <p><i class="fas fa-credit-card me-1"></i>Total Paiements</p>
+            </div>
+            <div class="stat-card">
+                <h3 th:text="${stats.totalContributions}">0</h3>
+                <p><i class="fas fa-hand-holding-usd me-1"></i>Contributions</p>
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="content-card">
+                <div class="chart-title">
+                    <i class="fas fa-chart-pie me-2"></i>Répartition des Utilisateurs
+                </div>
+                <canvas id="usersChart"></canvas>
+            </div>
+            
+            <div class="content-card">
+                <div class="chart-title">
+                    <i class="fas fa-chart-line me-2"></i>Évolution des Groupes
+                </div>
+                <canvas id="groupsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Export Section -->
+        <div class="content-card mt-4">
+            <h3 class="mb-4"><i class="fas fa-download me-2"></i>Exporter les Rapports</h3>
+            
+            <h5 class="mt-3 mb-3">Utilisateurs</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <a href="/api/admin/export/users/excel" class="btn btn-success w-100" download>
+                        <i class="fas fa-file-excel me-2"></i>Utilisateurs - Excel
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="/api/admin/export/users/pdf" class="btn btn-danger w-100" download>
+                        <i class="fas fa-file-pdf me-2"></i>Utilisateurs - PDF
+                    </a>
+                </div>
+            </div>
+            
+            <h5 class="mt-3 mb-3">Groupes</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <a href="/api/admin/export/groups/excel" class="btn btn-success w-100" download>
+                        <i class="fas fa-file-excel me-2"></i>Groupes - Excel
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="/api/admin/export/groups/pdf" class="btn btn-danger w-100" download>
+                        <i class="fas fa-file-pdf me-2"></i>Groupes - PDF
+                    </a>
+                </div>
+            </div>
+            
+            <h5 class="mt-3 mb-3">Paiements</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <a href="/api/admin/export/payments/excel" class="btn btn-success w-100" download>
+                        <i class="fas fa-file-excel me-2"></i>Paiements - Excel
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="/api/admin/export/payments/pdf" class="btn btn-danger w-100" download>
+                        <i class="fas fa-file-pdf me-2"></i>Paiements - PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        const stats = /*[[${stats}]]*/ {};
+        
+        // Graphique Utilisateurs
+        const usersCtx = document.getElementById('usersChart').getContext('2d');
+        new Chart(usersCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Super Admins', 'Admins', 'Membres'],
+                datasets: [{
+                    data: [
+                        stats.totalSuperAdmins || 0,
+                        stats.totalAdmins || 0,
+                        stats.totalMembers || 0
+                    ],
+                    backgroundColor: [
+                        'rgba(220, 38, 38, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(16, 185, 129, 0.8)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // Graphique Groupes
+        const groupsCtx = document.getElementById('groupsChart').getContext('2d');
+        new Chart(groupsCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                datasets: [{
+                    label: 'Nouveaux Groupes',
+                    data: [5, 10, 15, 12, 20, 25],
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

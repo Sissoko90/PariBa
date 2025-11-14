@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Formulaire Publicité</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-card">
+            <h2 class="mb-4">
+                <i class="fas fa-ad me-2"></i>
+                <span th:text="${isEdit} ? 'Modifier Publicité' : 'Nouvelle Publicité'"></span>
+            </h2>
+
+            <form th:action="${isEdit} ? @{/admin/advertisements/update/{id}(id=${advertisement.id})} : @{/admin/advertisements}" 
+                  method="post" th:object="${advertisement}">
+                
+                <div class="mb-3">
+                    <label class="form-label">Titre *</label>
+                    <input type="text" class="form-control" th:field="*{title}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" rows="3" th:field="*{description}"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">URL de l'image *</label>
+                    <input type="url" class="form-control" th:field="*{imageUrl}" required
+                           placeholder="https://example.com/image.jpg">
+                    <small class="text-muted">URL complète de l'image de la publicité</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Lien de destination</label>
+                    <input type="url" class="form-control" th:field="*{linkUrl}"
+                           placeholder="https://example.com">
+                    <small class="text-muted">Lien vers lequel rediriger lors du clic</small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Date de début</label>
+                        <input type="datetime-local" class="form-control" th:field="*{startDate}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Date de fin</label>
+                        <input type="datetime-local" class="form-control" th:field="*{endDate}">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" th:field="*{active}" id="activeSwitch">
+                        <label class="form-check-label" for="activeSwitch">
+                            Publicité active
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Enregistrer
+                    </button>
+                    <a href="/admin/advertisements" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

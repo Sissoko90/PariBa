@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Gestion des Publicités</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .header-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .table-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .badge-active {
+            background: #10b981;
+            color: white;
+        }
+        .badge-inactive {
+            background: #ef4444;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-ad me-2"></i>Gestion des Publicités</h2>
+                    <p class="text-muted mb-0">Total: <span th:text="${totalItems}">0</span> publicités</p>
+                </div>
+                <div>
+                    <a href="/admin/advertisements/new" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nouvelle Publicité
+                    </a>
+                    <a href="/admin/dashboard" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Description</th>
+                            <th>Image</th>
+                            <th>Période</th>
+                            <th>Stats</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ad : ${advertisements}">
+                            <td th:text="${ad.title}">Titre</td>
+                            <td th:text="${ad.description}">Description</td>
+                            <td>
+                                <img th:if="${ad.imageUrl}" th:src="${ad.imageUrl}" 
+                                     style="max-width: 100px; border-radius: 8px;" alt="Pub">
+                            </td>
+                            <td>
+                                <small th:if="${ad.startDate}">
+                                    Du <span th:text="${#temporals.format(ad.startDate, 'dd/MM/yyyy')}"></span>
+                                </small><br>
+                                <small th:if="${ad.endDate}">
+                                    Au <span th:text="${#temporals.format(ad.endDate, 'dd/MM/yyyy')}"></span>
+                                </small>
+                            </td>
+                            <td>
+                                <small>
+                                    <i class="fas fa-eye"></i> <span th:text="${ad.impressions}">0</span><br>
+                                    <i class="fas fa-mouse-pointer"></i> <span th:text="${ad.clicks}">0</span>
+                                </small>
+                            </td>
+                            <td>
+                                <span th:class="${ad.active} ? 'badge badge-active' : 'badge badge-inactive'"
+                                      th:text="${ad.active} ? 'Active' : 'Inactive'">
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a th:href="@{/admin/advertisements/edit/{id}(id=${ad.id})}" 
+                                       class="btn btn-info" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form th:action="@{/admin/advertisements/toggle/{id}(id=${ad.id})}" 
+                                          method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-warning" 
+                                                th:title="${ad.active} ? 'Désactiver' : 'Activer'">
+                                            <i th:class="${ad.active} ? 'fas fa-pause' : 'fas fa-play'"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/admin/advertisements/delete/{id}(id=${ad.id})}" 
+                                          method="post" style="display: inline;"
+                                          onsubmit="return confirm('Supprimer cette publicité ?');">
+                                        <button type="submit" class="btn btn-danger" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(advertisements)}">
+                            <td colspan="7" class="text-center text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>Aucune publicité pour le moment</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav th:if="${totalPages > 1}">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/admin/advertisements(page=${currentPage - 1})}">Précédent</a>
+                    </li>
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage} ? 'active' : ''">
+                        <a class="page-link" th:href="@{/admin/advertisements(page=${i})}" th:text="${i + 1}">1</a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/admin/advertisements(page=${currentPage + 1})}">Suivant</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

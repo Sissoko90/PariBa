@@ -1,0 +1,210 @@
+/**
+ * CSS Responsive pour toutes les pages admin
+ */
+
+/* Mobile First - Styles de base */
+body {
+    font-size: 14px;
+}
+
+/* Tablettes et petits écrans (max 768px) */
+@media (max-width: 768px) {
+    /* Container */
+    .container-fluid {
+        padding: 10px !important;
+    }
+    
+    /* Header cards */
+    .header-card {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .header-card h2 {
+        font-size: 20px !important;
+    }
+    
+    .header-card p {
+        font-size: 12px !important;
+    }
+    
+    /* Boutons */
+    .back-btn, .btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+    
+    /* Stats boxes */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    
+    .stat-box, .stat-card {
+        padding: 15px !important;
+    }
+    
+    .stat-box h3, .stat-card h3 {
+        font-size: 24px !important;
+    }
+    
+    .stat-box p, .stat-card p {
+        font-size: 12px !important;
+    }
+    
+    /* Tables */
+    .table-responsive {
+        font-size: 12px !important;
+    }
+    
+    .table thead th {
+        font-size: 11px !important;
+        padding: 8px 4px !important;
+    }
+    
+    .table tbody td {
+        font-size: 12px !important;
+        padding: 8px 4px !important;
+    }
+    
+    /* Cacher certaines colonnes sur mobile */
+    .table th:nth-child(4),
+    .table td:nth-child(4),
+    .table th:nth-child(5),
+    .table td:nth-child(5) {
+        display: none;
+    }
+    
+    /* Badges */
+    .badge {
+        font-size: 10px !important;
+        padding: 4px 8px !important;
+    }
+    
+    /* Search box */
+    .search-box input, .form-control {
+        font-size: 13px !important;
+        padding: 10px 15px !important;
+    }
+    
+    /* Pagination */
+    .pagination {
+        font-size: 12px !important;
+    }
+    
+    .page-link {
+        padding: 6px 10px !important;
+    }
+    
+    /* Content cards */
+    .content-card, .users-table-card, .payments-table-card {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    /* Flex direction */
+    .d-flex {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    /* Charts */
+    .chart-card {
+        padding: 15px !important;
+    }
+    
+    canvas {
+        max-height: 250px !important;
+    }
+    
+    /* Settings items */
+    .setting-item {
+        padding: 15px !important;
+    }
+    
+    .setting-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 18px !important;
+    }
+}
+
+/* Très petits écrans (max 480px) */
+@media (max-width: 480px) {
+    body {
+        font-size: 12px;
+        padding: 5px !important;
+    }
+    
+    .header-card h2 {
+        font-size: 18px !important;
+    }
+    
+    /* Cacher encore plus de colonnes */
+    .table th:nth-child(3),
+    .table td:nth-child(3) {
+        display: none;
+    }
+    
+    /* Stats en colonne unique */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Boutons plus petits */
+    .btn {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+    }
+    
+    /* Pagination simplifiée */
+    .pagination .page-item:not(.active):not(:first-child):not(:last-child) {
+        display: none;
+    }
+}
+
+/* Tablettes en mode paysage (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container-fluid {
+        max-width: 100% !important;
+        padding: 15px !important;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .table {
+        font-size: 13px !important;
+    }
+}
+
+/* Desktop (> 1024px) */
+@media (min-width: 1025px) {
+    .container-fluid {
+        max-width: 1400px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Utilitaires responsive */
+.mobile-only {
+    display: none;
+}
+
+.desktop-only {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: block;
+    }
+    
+    .desktop-only {
+        display: none;
+    }
+}

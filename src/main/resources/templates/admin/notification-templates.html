@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Templates de Notifications</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-responsive.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #79638f 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .header-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .back-btn:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .templates-table-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .table thead {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .table thead th {
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+        }
+        
+        .badge-email { background: #3b82f6; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; }
+        .badge-push { background: #8b5cf6; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; }
+        .badge-sms { background: #10b981; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; }
+        .badge-whatsapp { background: #25d366; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; }
+        .badge-active { background: #10b981; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; }
+        .badge-inactive { background: #ef4444; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; }
+        
+        .btn-create {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .btn-create:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Back Button -->
+        <a href="/admin/dashboard" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Retour au Dashboard
+        </a>
+        
+        <!-- Header -->
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-envelope-open-text me-2"></i><span th:text="${pageTitle}">Templates de Notifications</span></h2>
+                    <p class="text-muted mb-0">Gérez les templates d'emails et de notifications push</p>
+                </div>
+                <a href="/admin/notification-templates/new" class="btn btn-create">
+                    <i class="fas fa-plus me-2"></i>Nouveau Template
+                </a>
+            </div>
+        </div>
+        
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <!-- Templates Table -->
+        <div class="templates-table-card">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Canal</th>
+                            <th>Sujet</th>
+                            <th>Langue</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="template : ${templates}">
+                            <td>
+                                <strong th:text="${template.type}">WELCOME</strong>
+                            </td>
+                            <td>
+                                <span th:if="${template.channel.name() == 'EMAIL'}" class="badge-email">
+                                    <i class="fas fa-envelope me-1"></i>EMAIL
+                                </span>
+                                <span th:if="${template.channel.name() == 'PUSH'}" class="badge-push">
+                                    <i class="fas fa-bell me-1"></i>PUSH
+                                </span>
+                                <span th:if="${template.channel.name() == 'SMS'}" class="badge-sms">
+                                    <i class="fas fa-sms me-1"></i>SMS
+                                </span>
+                                <span th:if="${template.channel.name() == 'WHATSAPP'}" class="badge-whatsapp">
+                                    <i class="fab fa-whatsapp me-1"></i>WHATSAPP
+                                </span>
+                            </td>
+                            <td th:text="${template.subject}">Bienvenue sur Pariba</td>
+                            <td>
+                                <span class="badge bg-secondary" th:text="${template.language}">fr</span>
+                            </td>
+                            <td>
+                                <span th:if="${template.active}" class="badge-active">
+                                    <i class="fas fa-check-circle me-1"></i>ACTIF
+                                </span>
+                                <span th:unless="${template.active}" class="badge-inactive">
+                                    <i class="fas fa-times-circle me-1"></i>INACTIF
+                                </span>
+                            </td>
+                            <td>
+                                <a th:href="@{/admin/notification-templates/edit/{id}(id=${template.id})}" 
+                                   class="btn btn-sm btn-primary" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                
+                                <form th:action="@{/admin/notification-templates/toggle/{id}(id=${template.id})}" 
+                                      method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-warning" 
+                                            th:title="${template.active ? 'Désactiver' : 'Activer'}">
+                                        <i th:class="${template.active ? 'fas fa-toggle-on' : 'fas fa-toggle-off'}"></i>
+                                    </button>
+                                </form>
+                                
+                                <form th:action="@{/admin/notification-templates/delete/{id}(id=${template.id})}" 
+                                      method="post" style="display: inline;"
+                                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce template ?');">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        
+                        <tr th:if="${#lists.isEmpty(templates)}">
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>Aucun template trouvé</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <nav th:if="${totalPages > 1}">
+                <ul class="pagination justify-content-center mt-3">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/admin/notification-templates(page=${currentPage - 1})}">Précédent</a>
+                    </li>
+                    
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage} ? 'active' : ''">
+                        <a class="page-link" th:href="@{/admin/notification-templates(page=${i})}" th:text="${i + 1}">1</a>
+                    </li>
+                    
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/admin/notification-templates(page=${currentPage + 1})}">Suivant</a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="text-center text-muted mt-3">
+                <small>Total: <strong th:text="${totalItems}">0</strong> template(s)</small>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

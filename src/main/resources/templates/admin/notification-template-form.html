@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Template de Notification</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-responsive.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #79638f 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .header-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            padding: 10px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .btn-cancel {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+        }
+        
+        .help-text {
+            background: #f3f4f6;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .variable-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            margin: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Back Button -->
+        <a href="/admin/notification-templates" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+        </a>
+        
+        <!-- Header -->
+        <div class="header-card">
+            <h2><i class="fas fa-file-alt me-2"></i><span th:text="${pageTitle}">Template de Notification</span></h2>
+            <p class="text-muted mb-0">Créez ou modifiez un template de notification</p>
+        </div>
+        
+        <!-- Form -->
+        <div class="form-card">
+            <form th:action="${isEdit} ? @{/admin/notification-templates/update/{id}(id=${template.id})} : @{/admin/notification-templates}" 
+                  method="post" th:object="${template}">
+                
+                <div class="row">
+                    <!-- Type de notification -->
+                    <div class="col-md-6 mb-3">
+                        <label for="type" class="form-label">
+                            <i class="fas fa-tag me-1"></i>Type de Notification *
+                        </label>
+                        <select class="form-select" id="type" th:field="*{type}" required>
+                            <option value="">-- Sélectionnez un type --</option>
+                            <option th:each="type : ${notificationTypes}" 
+                                    th:value="${type}" 
+                                    th:text="${type}">WELCOME</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Canal -->
+                    <div class="col-md-6 mb-3">
+                        <label for="channel" class="form-label">
+                            <i class="fas fa-broadcast-tower me-1"></i>Canal *
+                        </label>
+                        <select class="form-select" id="channel" th:field="*{channel}" required>
+                            <option value="">-- Sélectionnez un canal --</option>
+                            <option th:each="channel : ${notificationChannels}" 
+                                    th:value="${channel}" 
+                                    th:text="${channel}">EMAIL</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Langue -->
+                    <div class="col-md-6 mb-3">
+                        <label for="language" class="form-label">
+                            <i class="fas fa-language me-1"></i>Langue *
+                        </label>
+                        <select class="form-select" id="language" th:field="*{language}" required>
+                            <option value="fr">Français</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Statut -->
+                    <div class="col-md-6 mb-3">
+                        <label for="active" class="form-label">
+                            <i class="fas fa-toggle-on me-1"></i>Statut
+                        </label>
+                        <select class="form-select" id="active" th:field="*{active}">
+                            <option th:value="true">Actif</option>
+                            <option th:value="false">Inactif</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Sujet -->
+                <div class="mb-3">
+                    <label for="subject" class="form-label">
+                        <i class="fas fa-heading me-1"></i>Sujet / Titre *
+                    </label>
+                    <input type="text" class="form-control" id="subject" 
+                           th:field="*{subject}" 
+                           placeholder="Ex: Bienvenue sur Pariba" 
+                           required>
+                    <small class="text-muted">Pour les emails, c'est le sujet. Pour les push, c'est le titre.</small>
+                </div>
+                
+                <!-- Corps du template -->
+                <div class="mb-3">
+                    <label for="bodyTemplate" class="form-label">
+                        <i class="fas fa-file-code me-1"></i>Corps du Template *
+                    </label>
+                    <textarea class="form-control" id="bodyTemplate" 
+                              th:field="*{bodyTemplate}" 
+                              rows="10" 
+                              placeholder="Contenu du template avec variables {{nom}}, {{prenom}}, etc." 
+                              required></textarea>
+                    <small class="text-muted">Pour les emails, vous pouvez utiliser du HTML.</small>
+                </div>
+                
+                <!-- Variables disponibles -->
+                <div class="help-text">
+                    <h6><i class="fas fa-info-circle me-2"></i>Variables Disponibles</h6>
+                    <p class="mb-2">Utilisez ces variables dans votre template (elles seront remplacées automatiquement) :</p>
+                    
+                    <!-- Variables par type -->
+                    <div th:each="entry : ${templateVariables}">
+                        <div th:attr="data-type=${entry.key}" class="variable-section mb-3" style="display: none;">
+                            <strong th:text="${entry.key}" class="text-primary">TYPE</strong>
+                            <div class="mt-2">
+                                <div th:each="var : ${entry.value}" class="mb-1">
+                                    <span class="variable-tag" th:text="${var.placeholder}">{{variable}}</span>
+                                    <small class="text-muted ms-2" th:text="${var.description}">Description</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Message par défaut -->
+                    <div id="default-variables" class="text-muted">
+                        <i class="fas fa-arrow-up me-1"></i>
+                        Sélectionnez un type de notification ci-dessus pour voir les variables disponibles.
+                    </div>
+                </div>
+                
+                <!-- Boutons -->
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-save me-2"></i>
+                        <span th:text="${isEdit} ? 'Mettre à jour' : 'Créer'">Créer</span>
+                    </button>
+                    <a href="/admin/notification-templates" class="btn btn-cancel">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Afficher les variables selon le type sélectionné
+        document.getElementById('type').addEventListener('change', function() {
+            const selectedType = this.value;
+            
+            // Cacher toutes les sections de variables
+            document.querySelectorAll('.variable-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Afficher la section correspondante
+            if (selectedType) {
+                const targetSection = document.querySelector(`[data-type="${selectedType}"]`);
+                if (targetSection) {
+                    targetSection.style.display = 'block';
+                    document.getElementById('default-variables').style.display = 'none';
+                } else {
+                    document.getElementById('default-variables').style.display = 'block';
+                }
+            } else {
+                document.getElementById('default-variables').style.display = 'block';
+            }
+        });
+        
+        // Déclencher l'événement au chargement si un type est déjà sélectionné
+        if (document.getElementById('type').value) {
+            document.getElementById('type').dispatchEvent(new Event('change'));
+        }
+        
+        // Fonction pour copier une variable dans le presse-papier
+        document.querySelectorAll('.variable-tag').forEach(tag => {
+            tag.style.cursor = 'pointer';
+            tag.title = 'Cliquer pour copier';
+            
+            tag.addEventListener('click', function() {
+                const text = this.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    // Animation de feedback
+                    const original = this.style.background;
+                    this.style.background = '#10b981';
+                    setTimeout(() => {
+                        this.style.background = original;
+                    }, 300);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

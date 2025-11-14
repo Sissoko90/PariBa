@@ -1,0 +1,10 @@
+{
+  "/api/*": "/$1",
+  "/auth/login": "/users?username=:username",
+  "/auth/register": "/users",
+  "/persons/me": "/persons/:id",
+  "/devices/me": "/deviceTokens?personId=:personId",
+  "/groups/me": "/tontineGroups?creatorPersonId=:personId",
+  "/notifications/me": "/notifications?personId=:personId",
+  "/dashboard/summary": "/persons/:id"
+}

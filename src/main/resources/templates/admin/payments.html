@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Gestion des Paiements</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-responsive.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #79638f 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .header-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        .table thead {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .table thead th {
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+        }
+        
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .badge-success {
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-pending {
+            background: #f59e0b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-failed {
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            flex: 1;
+            flex: 1;
+            background: linear-gradient(135deg, rgba(196, 23, 23, 0.4), rgba(118, 75, 162, 0.4));
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-box h3 {
+            margin: 0;
+            color: #fafafa;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .stat-box p {
+            margin: 5px 0 0 0;
+            color: #fcfcfc;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid" style="max-width: 1400px;">
+        <!-- Header -->
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2><i class="fas fa-credit-card me-2"></i><span th:text="${pageTitle}">Gestion des Paiements</span></h2>
+                    <p class="text-muted mb-0">Consultez toutes les transactions</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/admin/dashboard" class="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        Retour au Dashboard
+                    </a>
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <h3 th:text="${totalPayments}">0</h3>
+                <p>Total Paiements</p>
+            </div>
+            <div class="stat-box">
+                <h3 th:text="${currentPage + 1}">1</h3>
+                <p>Page Actuelle</p>
+            </div>
+            <div class="stat-box">
+                <h3 th:text="${totalPages}">1</h3>
+                <p>Total Pages</p>
+            </div>
+        </div>
+        
+        <!-- Table -->
+        <div class="content-card">
+            <div class="mb-3">
+                <form method="get" action="/admin/payments" id="searchForm">
+                    <input type="text" class="form-control" id="searchInput" name="search" 
+                           th:value="${search}" placeholder=" Rechercher un paiement...">
+                </form>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID Transaction</th>
+                            <th>Utilisateur</th>
+                            <th>Montant</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Méthode</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                        <tr th:each="payment : ${payments}">
+                            <td><code th:text="${#strings.substring(payment.id, 0, 8)}">abc12345</code></td>
+                            <td th:text="${payment.person?.prenom + ' ' + payment.person?.nom}">John Doe</td>
+                            <td><strong th:text="${payment.amount + ' FCFA'}">5000 FCFA</strong></td>
+                            <td th:text="${payment.type}">CONTRIBUTION</td>
+                            <td>
+                                <span th:if="${payment.status.name() == 'SUCCESS'}" class="badge-success">
+                                    <i class="fas fa-check-circle me-1"></i>RÉUSSI
+                                </span>
+                                <span th:if="${payment.status.name() == 'PENDING'}" class="badge-pending">
+                                    <i class="fas fa-clock me-1"></i>EN ATTENTE
+                                </span>
+                                <span th:if="${payment.status.name() == 'FAILED'}" class="badge-failed">
+                                    <i class="fas fa-times-circle me-1"></i>ÉCHOUÉ
+                                </span>
+                            </td>
+                            <td th:text="${payment.paymentMethod}">MOBILE_MONEY</td>
+                            <td th:text="${#temporals.format(payment.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <nav th:if="${totalPages > 1}">
+                <ul class="pagination justify-content-center mt-3">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/admin/payments(page=${currentPage - 1})}">Précédent</a>
+                    </li>
+                    
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                        th:classappend="${i == currentPage} ? 'active' : ''">
+                        <a class="page-link" th:href="@{/admin/payments(page=${i})}" th:text="${i + 1}">1</a>
+                    </li>
+                    
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/admin/payments(page=${currentPage + 1})}">Suivant</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    
+    <script>
+        // Recherche automatique avec debounce
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('searchForm').submit();
+            }, 500);
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
