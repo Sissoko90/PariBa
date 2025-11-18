@@ -1,101 +1,580 @@
 {
   "persons": [
-    { "id": "p-1", "createdAt": "2025-09-27T08:00:00Z", "updatedAt": "2025-09-27T08:00:00Z", "prenom": "Cheick", "nom": "Kounta", "email": "abdaty11@gmail.com", "phone": "+22376714142", "photo": null, "role": "SUPERADMIN" },
-    { "id": "p-2", "createdAt": "2025-09-27T08:05:00Z", "updatedAt": "2025-09-27T08:05:00Z", "prenom": "Amina",  "nom": "Diallo", "email": "amina@example.com",  "phone": "+22370000000", "photo": null, "role": "USER" },
-    { "id": "p-3", "createdAt": "2025-09-27T08:06:00Z", "updatedAt": "2025-09-27T08:06:00Z", "prenom": "Moussa", "nom": "Diakité","email": "moussa@example.com", "phone": "+22371000000", "photo": null, "role": "USER" },
-    { "id": "p-4", "createdAt": "2025-11-14T15:00:00Z", "updatedAt": "2025-11-14T15:00:00Z", "prenom": "Fatoumata", "nom": "Traoré", "email": "fatoumata@example.com", "phone": "+22372000000", "photo": null, "role": "ADMIN" }
+    {
+      "id": "p-1",
+      "createdAt": "2025-09-27T08:00:00Z",
+      "updatedAt": "2025-09-27T08:00:00Z",
+      "prenom": "Cheick",
+      "nom": "Kounta",
+      "email": "abdaty11@gmail.com",
+      "phone": "+22376714142",
+      "photo": null,
+      "role": "SUPERADMIN"
+    },
+    {
+      "id": "p-2",
+      "createdAt": "2025-09-27T08:05:00Z",
+      "updatedAt": "2025-09-27T08:05:00Z",
+      "prenom": "Amina",
+      "nom": "Diallo",
+      "email": "amina@example.com",
+      "phone": "+22370000000",
+      "photo": null,
+      "role": "USER"
+    },
+    {
+      "id": "p-3",
+      "createdAt": "2025-09-27T08:06:00Z",
+      "updatedAt": "2025-09-27T08:06:00Z",
+      "prenom": "Moussa",
+      "nom": "Diakité",
+      "email": "moussa@example.com",
+      "phone": "+22371000000",
+      "photo": null,
+      "role": "USER"
+    },
+    {
+      "id": "p-4",
+      "createdAt": "2025-11-14T15:00:00Z",
+      "updatedAt": "2025-11-14T15:00:00Z",
+      "prenom": "Fatoumata",
+      "nom": "Traoré",
+      "email": "fatoumata@example.com",
+      "phone": "+22372000000",
+      "photo": null,
+      "role": "ADMIN"
+    }
   ],
   "users": [
-    { "id": "u-1", "createdAt": "2025-09-27T08:00:00Z", "updatedAt": "2025-09-27T08:00:00Z", "username": "abdaty11@gmail.com", "password": "$2a$10$hash", "personId": "p-1" },
-    { "id": "u-2", "createdAt": "2025-09-27T08:05:00Z", "updatedAt": "2025-09-27T08:05:00Z", "username": "amina@example.com", "password": "$2a$10$hash", "personId": "p-2" },
-    { "id": "u-3", "createdAt": "2025-09-27T08:06:00Z", "updatedAt": "2025-09-27T08:06:00Z", "username": "moussa@example.com", "password": "$2a$10$hash", "personId": "p-3" },
-    { "id": "u-4", "createdAt": "2025-11-14T15:00:00Z", "updatedAt": "2025-11-14T15:00:00Z", "username": "fatoumata@example.com", "password": "$2a$10$hash", "personId": "p-4" }
+    {
+      "id": "u-1",
+      "createdAt": "2025-09-27T08:00:00Z",
+      "updatedAt": "2025-09-27T08:00:00Z",
+      "username": "abdaty11@gmail.com",
+      "password": "$2a$10$hash",
+      "personId": "p-1"
+    },
+    {
+      "id": "u-2",
+      "createdAt": "2025-09-27T08:05:00Z",
+      "updatedAt": "2025-09-27T08:05:00Z",
+      "username": "amina@example.com",
+      "password": "$2a$10$hash",
+      "personId": "p-2"
+    },
+    {
+      "id": "u-3",
+      "createdAt": "2025-09-27T08:06:00Z",
+      "updatedAt": "2025-09-27T08:06:00Z",
+      "username": "moussa@example.com",
+      "password": "$2a$10$hash",
+      "personId": "p-3"
+    },
+    {
+      "id": "u-4",
+      "createdAt": "2025-11-14T15:00:00Z",
+      "updatedAt": "2025-11-14T15:00:00Z",
+      "username": "fatoumata@example.com",
+      "password": "$2a$10$hash",
+      "personId": "p-4"
+    }
   ],
   "refreshTokens": [
-    { "id": "rt-1", "createdAt": "2025-11-14T15:00:00Z", "updatedAt": "2025-11-14T15:00:00Z", "token": "refresh-token-uuid-1234", "userId": "u-1", "expiryDate": "2025-12-14T15:00:00Z", "revoked": false, "ipAddress": "192.168.1.100", "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)" },
-    { "id": "rt-2", "createdAt": "2025-11-14T15:05:00Z", "updatedAt": "2025-11-14T15:05:00Z", "token": "refresh-token-uuid-5678", "userId": "u-2", "expiryDate": "2025-12-14T15:05:00Z", "revoked": false, "ipAddress": "192.168.1.101", "userAgent": "Mozilla/5.0 (Linux; Android 14; SM-G998B)" }
+    {
+      "id": "rt-1",
+      "createdAt": "2025-11-14T15:00:00Z",
+      "updatedAt": "2025-11-14T15:00:00Z",
+      "token": "refresh-token-uuid-1234",
+      "userId": "u-1",
+      "expiryDate": "2025-12-14T15:00:00Z",
+      "revoked": false,
+      "ipAddress": "192.168.1.100",
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)"
+    },
+    {
+      "id": "rt-2",
+      "createdAt": "2025-11-14T15:05:00Z",
+      "updatedAt": "2025-11-14T15:05:00Z",
+      "token": "refresh-token-uuid-5678",
+      "userId": "u-2",
+      "expiryDate": "2025-12-14T15:05:00Z",
+      "revoked": false,
+      "ipAddress": "192.168.1.101",
+      "userAgent": "Mozilla/5.0 (Linux; Android 14; SM-G998B)"
+    }
   ],
   "deviceTokens": [
-    { "id": "dt-1", "createdAt": "2025-11-14T15:00:00Z", "updatedAt": "2025-11-14T15:00:00Z", "personId": "p-1", "token": "fcm-token-cheick-iphone", "platform": "ios", "deviceName": "iPhone 15 Pro", "appVersion": "1.0.0", "osVersion": "iOS 17.1", "active": true, "lastUsedAt": "2025-11-14T15:00:00" },
-    { "id": "dt-2", "createdAt": "2025-11-14T15:05:00Z", "updatedAt": "2025-11-14T15:05:00Z", "personId": "p-2", "token": "fcm-token-amina-samsung", "platform": "android", "deviceName": "Samsung Galaxy S24", "appVersion": "1.0.0", "osVersion": "Android 14", "active": true, "lastUsedAt": "2025-11-14T15:05:00" },
-    { "id": "dt-3", "createdAt": "2025-11-14T15:10:00Z", "updatedAt": "2025-11-14T15:10:00Z", "personId": "p-1", "token": "fcm-token-cheick-ipad", "platform": "ios", "deviceName": "iPad Pro 12.9", "appVersion": "1.0.0", "osVersion": "iPadOS 17.1", "active": false, "lastUsedAt": "2025-11-10T10:00:00" }
+    {
+      "id": "dt-1",
+      "createdAt": "2025-11-14T15:00:00Z",
+      "updatedAt": "2025-11-14T15:00:00Z",
+      "personId": "p-1",
+      "token": "fcm-token-cheick-iphone",
+      "platform": "ios",
+      "deviceName": "iPhone 15 Pro",
+      "appVersion": "1.0.0",
+      "osVersion": "iOS 17.1",
+      "active": true,
+      "lastUsedAt": "2025-11-14T15:00:00"
+    },
+    {
+      "id": "dt-2",
+      "createdAt": "2025-11-14T15:05:00Z",
+      "updatedAt": "2025-11-14T15:05:00Z",
+      "personId": "p-2",
+      "token": "fcm-token-amina-samsung",
+      "platform": "android",
+      "deviceName": "Samsung Galaxy S24",
+      "appVersion": "1.0.0",
+      "osVersion": "Android 14",
+      "active": true,
+      "lastUsedAt": "2025-11-14T15:05:00"
+    },
+    {
+      "id": "dt-3",
+      "createdAt": "2025-11-14T15:10:00Z",
+      "updatedAt": "2025-11-14T15:10:00Z",
+      "personId": "p-1",
+      "token": "fcm-token-cheick-ipad",
+      "platform": "ios",
+      "deviceName": "iPad Pro 12.9",
+      "appVersion": "1.0.0",
+      "osVersion": "iPadOS 17.1",
+      "active": false,
+      "lastUsedAt": "2025-11-10T10:00:00"
+    }
   ],
   "otpTokens": [
-    { "id": "otp-1", "createdAt": "2025-09-27T08:01:00Z", "updatedAt": "2025-09-27T08:01:00Z", "target": "amina@example.com", "code": "482913", "expiresAt": "2025-09-27T08:06:00Z", "used": false }
+    {
+      "id": "otp-1",
+      "createdAt": "2025-09-27T08:01:00Z",
+      "updatedAt": "2025-09-27T08:01:00Z",
+      "target": "amina@example.com",
+      "code": "482913",
+      "expiresAt": "2025-09-27T08:06:00Z",
+      "used": false
+    }
   ],
   "tontineGroups": [
-    { "id": "g-1", "createdAt": "2025-09-27T08:10:00Z", "updatedAt": "2025-09-27T08:10:00Z", "nom": "PariBa ACI 2000", "description": "Mensuelle, ordre fixe, 3 membres", "montant": 25000, "frequency": "MONTHLY", "rotationMode": "FIXED_ORDER", "totalTours": 3, "startDate": "2025-10-01", "latePenaltyAmount": 500, "graceDays": 3, "creatorPersonId": "p-1" },
-    { "id": "g-2", "createdAt": "2025-11-14T15:20:00Z", "updatedAt": "2025-11-14T15:20:00Z", "nom": "Tontine Hebdo Bamako", "description": "Tontine hebdomadaire pour entrepreneurs", "montant": 50000, "frequency": "WEEKLY", "rotationMode": "RANDOM", "totalTours": 5, "startDate": "2025-11-18", "latePenaltyAmount": 1000, "graceDays": 2, "creatorPersonId": "p-4" }
+    {
+      "id": "g-1",
+      "createdAt": "2025-09-27T08:10:00Z",
+      "updatedAt": "2025-09-27T08:10:00Z",
+      "nom": "PariBa ACI 2000",
+      "description": "Mensuelle, ordre fixe, 3 membres",
+      "montant": 25000,
+      "frequency": "MONTHLY",
+      "rotationMode": "FIXED_ORDER",
+      "totalTours": 3,
+      "startDate": "2025-10-01",
+      "latePenaltyAmount": 500,
+      "graceDays": 3,
+      "creatorPersonId": "p-1"
+    },
+    {
+      "id": "g-2",
+      "createdAt": "2025-11-14T15:20:00Z",
+      "updatedAt": "2025-11-14T15:20:00Z",
+      "nom": "Tontine Hebdo Bamako",
+      "description": "Tontine hebdomadaire pour entrepreneurs",
+      "montant": 50000,
+      "frequency": "WEEKLY",
+      "rotationMode": "RANDOM",
+      "totalTours": 5,
+      "startDate": "2025-11-18",
+      "latePenaltyAmount": 1000,
+      "graceDays": 2,
+      "creatorPersonId": "p-4"
+    },
+    {
+      "id": "9db7",
+      "nom": "test",
+      "description": "teest",
+      "montant": 10000,
+      "frequency": "MONTHLY",
+      "rotationMode": "RANDOM",
+      "totalTours": 12,
+      "startDate": "2025-11-18",
+      "latePenaltyAmount": 500,
+      "graceDays": 3,
+      "creatorPersonId": "p-1",
+      "createdAt": "2025-11-18T09:53:05.580394",
+      "updatedAt": "2025-11-18T09:53:05.581087"
+    }
   ],
   "groupMemberships": [
-    { "groupId": "g-1", "personId": "p-1", "role": "ADMIN",     "joinedAt": "2025-09-27" },
-    { "groupId": "g-1", "personId": "p-2", "role": "MEMBER",    "joinedAt": "2025-09-27" },
-    { "groupId": "g-1", "personId": "p-3", "role": "TREASURER", "joinedAt": "2025-09-27" },
-    { "groupId": "g-2", "personId": "p-4", "role": "ADMIN",     "joinedAt": "2025-11-14" },
-    { "groupId": "g-2", "personId": "p-1", "role": "MEMBER",    "joinedAt": "2025-11-14" }
+    {
+      "groupId": "g-1",
+      "personId": "p-1",
+      "role": "ADMIN",
+      "joinedAt": "2025-09-27",
+      "id": "4cce"
+    },
+    {
+      "groupId": "g-1",
+      "personId": "p-2",
+      "role": "MEMBER",
+      "joinedAt": "2025-09-27",
+      "id": "0057"
+    },
+    {
+      "groupId": "g-1",
+      "personId": "p-3",
+      "role": "TREASURER",
+      "joinedAt": "2025-09-27",
+      "id": "d248"
+    },
+    {
+      "groupId": "g-2",
+      "personId": "p-4",
+      "role": "ADMIN",
+      "joinedAt": "2025-11-14",
+      "id": "525f"
+    },
+    {
+      "groupId": "g-2",
+      "personId": "p-1",
+      "role": "MEMBER",
+      "joinedAt": "2025-11-14",
+      "id": "0f8b"
+    }
   ],
   "invitations": [
-    { "id": "inv-1", "createdAt": "2025-09-27T08:11:00Z", "updatedAt": "2025-09-27T08:11:00Z", "groupId": "g-1", "targetPhone": "+22370000000", "targetEmail": null, "linkCode": "JOIN-G1-AB12", "status": "PENDING", "expiresAt": "2025-10-05T00:00:00Z" }
+    {
+      "id": "inv-1",
+      "createdAt": "2025-09-27T08:11:00Z",
+      "updatedAt": "2025-09-27T08:11:00Z",
+      "groupId": "g-1",
+      "targetPhone": "+22370000000",
+      "targetEmail": null,
+      "linkCode": "JOIN-G1-AB12",
+      "status": "PENDING",
+      "expiresAt": "2025-10-05T00:00:00Z"
+    }
   ],
   "tours": [
-    { "id": "t-1", "createdAt": "2025-09-27T08:12:00Z", "updatedAt": "2025-09-27T08:12:00Z", "groupId": "g-1", "indexInGroup": 1, "beneficiaryPersonId": "p-1", "scheduledDate": "2025-10-01", "status": "SCHEDULED", "totalDue": 75000, "totalCollected": 0, "payoutPaymentId": null },
-    { "id": "t-2", "createdAt": "2025-09-27T08:12:30Z", "updatedAt": "2025-09-27T08:12:30Z", "groupId": "g-1", "indexInGroup": 2, "beneficiaryPersonId": "p-2", "scheduledDate": "2025-11-01", "status": "SCHEDULED", "totalDue": 75000, "totalCollected": 0, "payoutPaymentId": null },
-    { "id": "t-3", "createdAt": "2025-09-27T08:13:00Z", "updatedAt": "2025-09-27T08:13:00Z", "groupId": "g-1", "indexInGroup": 3, "beneficiaryPersonId": "p-3", "scheduledDate": "2025-12-01", "status": "SCHEDULED", "totalDue": 75000, "totalCollected": 0, "payoutPaymentId": null }
+    {
+      "id": "t-1",
+      "createdAt": "2025-09-27T08:12:00Z",
+      "updatedAt": "2025-09-27T08:12:00Z",
+      "groupId": "g-1",
+      "indexInGroup": 1,
+      "beneficiaryPersonId": "p-1",
+      "scheduledDate": "2025-10-01",
+      "status": "SCHEDULED",
+      "totalDue": 75000,
+      "totalCollected": 0,
+      "payoutPaymentId": null
+    },
+    {
+      "id": "t-2",
+      "createdAt": "2025-09-27T08:12:30Z",
+      "updatedAt": "2025-09-27T08:12:30Z",
+      "groupId": "g-1",
+      "indexInGroup": 2,
+      "beneficiaryPersonId": "p-2",
+      "scheduledDate": "2025-11-01",
+      "status": "SCHEDULED",
+      "totalDue": 75000,
+      "totalCollected": 0,
+      "payoutPaymentId": null
+    },
+    {
+      "id": "t-3",
+      "createdAt": "2025-09-27T08:13:00Z",
+      "updatedAt": "2025-09-27T08:13:00Z",
+      "groupId": "g-1",
+      "indexInGroup": 3,
+      "beneficiaryPersonId": "p-3",
+      "scheduledDate": "2025-12-01",
+      "status": "SCHEDULED",
+      "totalDue": 75000,
+      "totalCollected": 0,
+      "payoutPaymentId": null
+    }
   ],
   "contributions": [
-    { "id": "c-1", "createdAt": "2025-09-27T08:14:00Z", "updatedAt": "2025-09-27T08:14:00Z", "groupId": "g-1", "memberPersonId": "p-2", "tourId": "t-1", "amountDue": 25000, "status": "DUE", "dueDate": "2025-10-01", "paymentId": null, "penaltyApplied": null },
-    { "id": "c-2", "createdAt": "2025-09-27T08:14:30Z", "updatedAt": "2025-09-27T08:14:30Z", "groupId": "g-1", "memberPersonId": "p-3", "tourId": "t-1", "amountDue": 25000, "status": "DUE", "dueDate": "2025-10-01", "paymentId": null, "penaltyApplied": null }
+    {
+      "id": "c-1",
+      "createdAt": "2025-09-27T08:14:00Z",
+      "updatedAt": "2025-09-27T08:14:00Z",
+      "groupId": "g-1",
+      "memberPersonId": "p-2",
+      "tourId": "t-1",
+      "amountDue": 25000,
+      "status": "DUE",
+      "dueDate": "2025-10-01",
+      "paymentId": null,
+      "penaltyApplied": null
+    },
+    {
+      "id": "c-2",
+      "createdAt": "2025-09-27T08:14:30Z",
+      "updatedAt": "2025-09-27T08:14:30Z",
+      "groupId": "g-1",
+      "memberPersonId": "p-3",
+      "tourId": "t-1",
+      "amountDue": 25000,
+      "status": "DUE",
+      "dueDate": "2025-10-01",
+      "paymentId": null,
+      "penaltyApplied": null
+    }
   ],
   "payments": [
-    { "id": "pay-1", "createdAt": "2025-10-01T09:00:00Z", "updatedAt": "2025-10-01T09:00:00Z", "groupId": "g-1", "payerPersonId": "p-2", "amount": 25000, "paymentType": "ORANGE_MONEY", "status": "SUCCESS", "externalRef": "OM-20251001-XYZ", "invoice": "https://example.com/invoices/pay-1.pdf", "payout": false }
+    {
+      "id": "pay-1",
+      "createdAt": "2025-10-01T09:00:00Z",
+      "updatedAt": "2025-10-01T09:00:00Z",
+      "groupId": "g-1",
+      "payerPersonId": "p-2",
+      "amount": 25000,
+      "paymentType": "ORANGE_MONEY",
+      "status": "SUCCESS",
+      "externalRef": "OM-20251001-XYZ",
+      "invoice": "https://example.com/invoices/pay-1.pdf",
+      "payout": false
+    }
   ],
   "notifications": [
-    { "id": "n-1", "createdAt": "2025-09-28T08:00:00Z", "updatedAt": "2025-09-28T08:00:00Z", "personId": "p-2", "type": "REMINDER_DUE", "channel": "PUSH", "title": "Rappel cotisation", "body": "Votre cotisation est due le 01/10", "scheduledAt": "2025-09-30T08:00:00Z", "sentAt": null, "readFlag": false },
-    { "id": "n-2", "createdAt": "2025-11-14T15:30:00Z", "updatedAt": "2025-11-14T15:30:00Z", "personId": "p-1", "type": "GROUP_INVITATION", "channel": "EMAIL", "title": "Nouvelle invitation", "body": "Vous avez été invité à rejoindre un groupe", "scheduledAt": "2025-11-14T15:30:00Z", "sentAt": "2025-11-14T15:30:05Z", "readFlag": true },
-    { "id": "n-3", "createdAt": "2025-11-14T16:00:00Z", "updatedAt": "2025-11-14T16:00:00Z", "personId": "p-4", "type": "PAYMENT_SUCCESS", "channel": "SMS", "title": "Paiement confirmé", "body": "Votre paiement de 50,000 FCFA a été confirmé", "scheduledAt": "2025-11-14T16:00:00Z", "sentAt": null, "readFlag": false }
+    {
+      "id": "n-1",
+      "createdAt": "2025-09-28T08:00:00Z",
+      "updatedAt": "2025-09-28T08:00:00Z",
+      "personId": "p-2",
+      "type": "REMINDER_DUE",
+      "channel": "PUSH",
+      "title": "Rappel cotisation",
+      "body": "Votre cotisation est due le 01/10",
+      "scheduledAt": "2025-09-30T08:00:00Z",
+      "sentAt": null,
+      "readFlag": false
+    },
+    {
+      "id": "n-2",
+      "createdAt": "2025-11-14T15:30:00Z",
+      "updatedAt": "2025-11-14T15:30:00Z",
+      "personId": "p-1",
+      "type": "GROUP_INVITATION",
+      "channel": "EMAIL",
+      "title": "Nouvelle invitation",
+      "body": "Vous avez été invité à rejoindre un groupe",
+      "scheduledAt": "2025-11-14T15:30:00Z",
+      "sentAt": "2025-11-14T15:30:05Z",
+      "readFlag": true
+    },
+    {
+      "id": "n-3",
+      "createdAt": "2025-11-14T16:00:00Z",
+      "updatedAt": "2025-11-14T16:00:00Z",
+      "personId": "p-4",
+      "type": "PAYMENT_SUCCESS",
+      "channel": "SMS",
+      "title": "Paiement confirmé",
+      "body": "Votre paiement de 50,000 FCFA a été confirmé",
+      "scheduledAt": "2025-11-14T16:00:00Z",
+      "sentAt": null,
+      "readFlag": false
+    }
   ],
   "notificationPreferences": [
-    { "id": "np-1", "createdAt": "2025-11-14T15:00:00Z", "updatedAt": "2025-11-14T15:00:00Z", "personId": "p-1", "pushEnabled": true, "emailEnabled": true, "smsEnabled": false, "whatsappEnabled": true },
-    { "id": "np-2", "createdAt": "2025-11-14T15:05:00Z", "updatedAt": "2025-11-14T15:05:00Z", "personId": "p-2", "pushEnabled": true, "emailEnabled": false, "smsEnabled": true, "whatsappEnabled": false },
-    { "id": "np-3", "createdAt": "2025-11-14T15:10:00Z", "updatedAt": "2025-11-14T15:10:00Z", "personId": "p-3", "pushEnabled": true, "emailEnabled": true, "smsEnabled": true, "whatsappEnabled": true }
+    {
+      "id": "np-1",
+      "createdAt": "2025-11-14T15:00:00Z",
+      "updatedAt": "2025-11-14T15:00:00Z",
+      "personId": "p-1",
+      "pushEnabled": true,
+      "emailEnabled": true,
+      "smsEnabled": false,
+      "whatsappEnabled": true
+    },
+    {
+      "id": "np-2",
+      "createdAt": "2025-11-14T15:05:00Z",
+      "updatedAt": "2025-11-14T15:05:00Z",
+      "personId": "p-2",
+      "pushEnabled": true,
+      "emailEnabled": false,
+      "smsEnabled": true,
+      "whatsappEnabled": false
+    },
+    {
+      "id": "np-3",
+      "createdAt": "2025-11-14T15:10:00Z",
+      "updatedAt": "2025-11-14T15:10:00Z",
+      "personId": "p-3",
+      "pushEnabled": true,
+      "emailEnabled": true,
+      "smsEnabled": true,
+      "whatsappEnabled": true
+    }
   ],
   "notificationTemplates": [
-    { "id": "nt-1", "createdAt": "2025-11-14T14:00:00Z", "updatedAt": "2025-11-14T14:00:00Z", "type": "GROUP_INVITATION", "channel": "EMAIL", "subject": "Invitation à rejoindre {{groupe}}", "content": "<h1>Bonjour {{prenom}}</h1><p>Vous êtes invité à rejoindre le groupe {{groupe}}. Montant: {{montant}} FCFA</p><a href='{{lien}}'>Accepter l'invitation</a>" },
-    { "id": "nt-2", "createdAt": "2025-11-14T14:05:00Z", "updatedAt": "2025-11-14T14:05:00Z", "type": "REMINDER_DUE", "channel": "PUSH", "subject": "Rappel cotisation", "content": "Bonjour {{prenom}}, votre cotisation de {{montant}} FCFA est due pour le groupe {{groupe}}" }
+    {
+      "id": "nt-1",
+      "createdAt": "2025-11-14T14:00:00Z",
+      "updatedAt": "2025-11-14T14:00:00Z",
+      "type": "GROUP_INVITATION",
+      "channel": "EMAIL",
+      "subject": "Invitation à rejoindre {{groupe}}",
+      "content": "<h1>Bonjour {{prenom}}</h1><p>Vous êtes invité à rejoindre le groupe {{groupe}}. Montant: {{montant}} FCFA</p><a href='{{lien}}'>Accepter l'invitation</a>"
+    },
+    {
+      "id": "nt-2",
+      "createdAt": "2025-11-14T14:05:00Z",
+      "updatedAt": "2025-11-14T14:05:00Z",
+      "type": "REMINDER_DUE",
+      "channel": "PUSH",
+      "subject": "Rappel cotisation",
+      "content": "Bonjour {{prenom}}, votre cotisation de {{montant}} FCFA est due pour le groupe {{groupe}}"
+    }
   ],
   "exportJobs": [
-    { "id": "ex-1", "createdAt": "2025-10-01T12:00:00Z", "updatedAt": "2025-10-01T12:00:00Z", "groupId": "g-1", "status": "DONE", "format": "PDF", "downloadUrl": "https://example.com/exports/g1-octobre.pdf", "parametersJson": "{\"period\":\"2025-10\"}" }
+    {
+      "id": "ex-1",
+      "createdAt": "2025-10-01T12:00:00Z",
+      "updatedAt": "2025-10-01T12:00:00Z",
+      "groupId": "g-1",
+      "status": "DONE",
+      "format": "PDF",
+      "downloadUrl": "https://example.com/exports/g1-octobre.pdf",
+      "parametersJson": "{\"period\":\"2025-10\"}"
+    }
   ],
   "documents": [
-    { "id": "doc-1", "createdAt": "2025-10-01T12:05:00Z", "updatedAt": "2025-10-01T12:05:00Z", "groupId": "g-1", "type": "EXPORT_REPORT", "url": "https://example.com/docs/g1-report-oct.pdf", "metaJson": "{\"generatedBy\":\"exportJob:ex-1\"}" }
+    {
+      "id": "doc-1",
+      "createdAt": "2025-10-01T12:05:00Z",
+      "updatedAt": "2025-10-01T12:05:00Z",
+      "groupId": "g-1",
+      "type": "EXPORT_REPORT",
+      "url": "https://example.com/docs/g1-report-oct.pdf",
+      "metaJson": "{\"generatedBy\":\"exportJob:ex-1\"}"
+    }
   ],
   "subscriptionPlans": [
-    { "id": "plan-free", "createdAt": "2025-09-27T07:00:00Z", "updatedAt": "2025-09-27T07:00:00Z", "type": "FREE", "name": "Gratuit", "monthlyPrice": 0, "featuresJson": "{\"ads\":true,\"exports\":\"pdf-basic\"}" },
-    { "id": "plan-pro",  "createdAt": "2025-09-27T07:00:00Z", "updatedAt": "2025-09-27T07:00:00Z", "type": "PRO",  "name": "Pro",     "monthlyPrice": 1500, "featuresJson": "{\"ads\":false,\"exports\":\"pdf+excel\",\"prioritySupport\":true}" }
+    {
+      "id": "plan-free",
+      "createdAt": "2025-09-27T07:00:00Z",
+      "updatedAt": "2025-09-27T07:00:00Z",
+      "type": "FREE",
+      "name": "Gratuit",
+      "monthlyPrice": 0,
+      "featuresJson": "{\"ads\":true,\"exports\":\"pdf-basic\"}"
+    },
+    {
+      "id": "plan-pro",
+      "createdAt": "2025-09-27T07:00:00Z",
+      "updatedAt": "2025-09-27T07:00:00Z",
+      "type": "PRO",
+      "name": "Pro",
+      "monthlyPrice": 1500,
+      "featuresJson": "{\"ads\":false,\"exports\":\"pdf+excel\",\"prioritySupport\":true}"
+    }
   ],
   "subscriptions": [
-    { "id": "sub-1", "createdAt": "2025-09-27T07:10:00Z", "updatedAt": "2025-09-27T07:10:00Z", "personId": "p-1", "planId": "plan-pro", "status": "ACTIVE", "startDate": "2025-09-27", "endDate": "2025-10-27" }
+    {
+      "id": "sub-1",
+      "createdAt": "2025-09-27T07:10:00Z",
+      "updatedAt": "2025-09-27T07:10:00Z",
+      "personId": "p-1",
+      "planId": "plan-pro",
+      "status": "ACTIVE",
+      "startDate": "2025-09-27",
+      "endDate": "2025-10-27"
+    }
   ],
   "advertisements": [
-    { "id": "ad-1", "createdAt": "2025-09-27T07:20:00Z", "updatedAt": "2025-09-27T07:20:00Z", "placement": "HOME_TOP", "imageUrl": "https://example.com/ads/top.jpg", "linkUrl": "https://sponsor.example", "targetingJson": "{\"country\":\"ML\",\"plan\":\"FREE\"}" }
+    {
+      "id": "ad-1",
+      "createdAt": "2025-09-27T07:20:00Z",
+      "updatedAt": "2025-09-27T07:20:00Z",
+      "placement": "HOME_TOP",
+      "imageUrl": "https://example.com/ads/top.jpg",
+      "linkUrl": "https://sponsor.example",
+      "targetingJson": "{\"country\":\"ML\",\"plan\":\"FREE\"}"
+    }
   ],
   "adEvents": [
-    { "id": "ade-1", "createdAt": "2025-09-27T07:21:00Z", "updatedAt": "2025-09-27T07:21:00Z", "adId": "ad-1", "personId": "p-2", "type": "impression", "metaJson": "{}" }
+    {
+      "id": "ade-1",
+      "createdAt": "2025-09-27T07:21:00Z",
+      "updatedAt": "2025-09-27T07:21:00Z",
+      "adId": "ad-1",
+      "personId": "p-2",
+      "type": "impression",
+      "metaJson": "{}"
+    }
   ],
   "auditLogs": [
-    { "id": "log-1", "createdAt": "2025-09-27T08:10:05Z", "updatedAt": "2025-09-27T08:10:05Z", "actorPersonId": "p-1", "action": "CREATE_GROUP", "entityType": "TontineGroup", "entityId": "g-1", "detailsJson": "{\"montant\":25000,\"frequency\":\"MONTHLY\"}" }
+    {
+      "id": "log-1",
+      "createdAt": "2025-09-27T08:10:05Z",
+      "updatedAt": "2025-09-27T08:10:05Z",
+      "actorPersonId": "p-1",
+      "action": "CREATE_GROUP",
+      "entityType": "TontineGroup",
+      "entityId": "g-1",
+      "detailsJson": "{\"montant\":25000,\"frequency\":\"MONTHLY\"}"
+    }
   ],
   "delegations": [
-    { "id": "del-1", "createdAt": "2025-11-01T09:00:00Z", "updatedAt": "2025-11-01T09:00:00Z", "groupId": "g-1", "grantorPersonId": "p-2", "proxyPersonId": "p-3", "status": "PENDING", "validFrom": "2025-11-01", "validTo": "2025-11-30" }
+    {
+      "id": "del-1",
+      "createdAt": "2025-11-01T09:00:00Z",
+      "updatedAt": "2025-11-01T09:00:00Z",
+      "groupId": "g-1",
+      "grantorPersonId": "p-2",
+      "proxyPersonId": "p-3",
+      "status": "PENDING",
+      "validFrom": "2025-11-01",
+      "validTo": "2025-11-30"
+    }
   ],
   "systemLogs": [
-    { "id": "sl-1", "createdAt": "2025-11-14T15:00:00Z", "updatedAt": "2025-11-14T15:00:00Z", "level": "INFO", "message": "Application started successfully", "category": "STARTUP", "metaJson": "{\"version\":\"1.0.0\",\"environment\":\"development\"}" },
-    { "id": "sl-2", "createdAt": "2025-11-14T15:30:00Z", "updatedAt": "2025-11-14T15:30:00Z", "level": "WARN", "message": "Rate limit exceeded for IP 192.168.1.100", "category": "SECURITY", "metaJson": "{\"ip\":\"192.168.1.100\",\"endpoint\":\"/auth/login\"}" }
+    {
+      "id": "sl-1",
+      "createdAt": "2025-11-14T15:00:00Z",
+      "updatedAt": "2025-11-14T15:00:00Z",
+      "level": "INFO",
+      "message": "Application started successfully",
+      "category": "STARTUP",
+      "metaJson": "{\"version\":\"1.0.0\",\"environment\":\"development\"}"
+    },
+    {
+      "id": "sl-2",
+      "createdAt": "2025-11-14T15:30:00Z",
+      "updatedAt": "2025-11-14T15:30:00Z",
+      "level": "WARN",
+      "message": "Rate limit exceeded for IP 192.168.1.100",
+      "category": "SECURITY",
+      "metaJson": "{\"ip\":\"192.168.1.100\",\"endpoint\":\"/auth/login\"}"
+    }
   ],
   "documentArchives": [
-    { "id": "da-1", "createdAt": "2025-11-14T16:00:00Z", "updatedAt": "2025-11-14T16:00:00Z", "groupId": "g-1", "type": "MONTHLY_REPORT", "fileName": "rapport-octobre-2025.pdf", "filePath": "/archives/g-1/2025/10/rapport-octobre-2025.pdf", "fileSize": 2048576, "archivedAt": "2025-11-01T00:00:00Z" }
+    {
+      "id": "da-1",
+      "createdAt": "2025-11-14T16:00:00Z",
+      "updatedAt": "2025-11-14T16:00:00Z",
+      "groupId": "g-1",
+      "type": "MONTHLY_REPORT",
+      "fileName": "rapport-octobre-2025.pdf",
+      "filePath": "/archives/g-1/2025/10/rapport-octobre-2025.pdf",
+      "fileSize": 2048576,
+      "archivedAt": "2025-11-01T00:00:00Z"
+    }
   ],
   "payouts": [
-    { "id": "po-1", "createdAt": "2025-11-14T17:00:00Z", "updatedAt": "2025-11-14T17:00:00Z", "tourId": "t-1", "beneficiaryPersonId": "p-1", "amount": 75000, "status": "PENDING", "scheduledDate": "2025-12-01", "paymentId": null }
+    {
+      "id": "po-1",
+      "createdAt": "2025-11-14T17:00:00Z",
+      "updatedAt": "2025-11-14T17:00:00Z",
+      "tourId": "t-1",
+      "beneficiaryPersonId": "p-1",
+      "amount": 75000,
+      "status": "PENDING",
+      "scheduledDate": "2025-12-01",
+      "paymentId": null
+    }
   ]
 }
