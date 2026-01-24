@@ -1,6 +1,8 @@
 package com.example.pariba.services.impl;
 
 import com.example.pariba.dtos.responses.SubscriptionResponse;
+import com.example.pariba.enums.NotificationChannel;
+import com.example.pariba.enums.NotificationType;
 import com.example.pariba.enums.SubscriptionStatus;
 import com.example.pariba.exceptions.ResourceNotFoundException;
 import com.example.pariba.models.Person;
@@ -9,6 +11,7 @@ import com.example.pariba.models.SubscriptionPlan;
 import com.example.pariba.repositories.PersonRepository;
 import com.example.pariba.repositories.SubscriptionPlanRepository;
 import com.example.pariba.repositories.SubscriptionRepository;
+import com.example.pariba.services.INotificationService;
 import com.example.pariba.services.ISubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -30,6 +35,7 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final PersonRepository personRepository;
+    private final INotificationService notificationService;
     
     @Override
     public SubscriptionResponse getActiveSubscription(String personId) {
@@ -76,6 +82,45 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
         }
         
         subscription = subscriptionRepository.save(subscription);
+        
+        // Envoyer notification d'abonnement
+        try {
+            Map<String, String> variables = new HashMap<>();
+            variables.put("plan", plan.getName());
+            variables.put("montant", String.format("%,.0f", plan.getMonthlyPrice()));
+            variables.put("date_fin", subscription.getEndDate().toString());
+            
+            if (existingSubscription.isPresent()) {
+                // Mise à niveau
+                notificationService.sendNotificationWithTemplate(
+                    personId,
+                    NotificationType.SYSTEM_UPDATE,
+                    NotificationChannel.PUSH,
+                    variables
+                );
+                log.info("✅ Notification mise à niveau abonnement envoyée à {}", personId);
+            } else {
+                // Nouvel abonnement
+                notificationService.sendNotificationWithTemplate(
+                    personId,
+                    NotificationType.SYSTEM_UPDATE,
+                    NotificationChannel.PUSH,
+                    variables
+                );
+                
+                // Envoyer aussi par Email
+                notificationService.sendNotificationWithTemplate(
+                    personId,
+                    NotificationType.SYSTEM_UPDATE,
+                    NotificationChannel.EMAIL,
+                    variables
+                );
+                log.info("✅ Notification nouvel abonnement envoyée à {}", personId);
+            }
+        } catch (Exception e) {
+            log.error("❌ Erreur notification abonnement: {}", e.getMessage());
+        }
+        
         return mapToResponse(subscription);
     }
     
@@ -93,6 +138,31 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
             sub.setStatus(SubscriptionStatus.CANCELLED);
             sub.setAutoRenew(false);
             subscriptionRepository.save(sub);
+            
+            // Envoyer notification d'annulation
+            try {
+                Map<String, String> variables = new HashMap<>();
+                variables.put("plan", sub.getPlan().getName());
+                variables.put("date_fin", sub.getEndDate().toString());
+                
+                notificationService.sendNotificationWithTemplate(
+                    personId,
+                    NotificationType.SYSTEM_UPDATE,
+                    NotificationChannel.PUSH,
+                    variables
+                );
+                
+                notificationService.sendNotificationWithTemplate(
+                    personId,
+                    NotificationType.SYSTEM_UPDATE,
+                    NotificationChannel.EMAIL,
+                    variables
+                );
+                
+                log.info("✅ Notification annulation abonnement envoyée à {}", personId);
+            } catch (Exception e) {
+                log.error("❌ Erreur notification annulation: {}", e.getMessage());
+            }
         } else {
             throw new ResourceNotFoundException("Aucun abonnement actif trouvé");
         }
@@ -131,12 +201,61 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
                 subscription.setStartDate(now);
                 subscription.setEndDate(calculateEndDate(subscription.getPlan()));
                 subscriptionRepository.save(subscription);
-                // Abonnement renouvelé
+                
+                // Notification de renouvellement
+                try {
+                    Map<String, String> variables = new HashMap<>();
+                    variables.put("plan", subscription.getPlan().getName());
+                    variables.put("montant", String.format("%,.0f", subscription.getPlan().getMonthlyPrice()));
+                    variables.put("date_fin", subscription.getEndDate().toString());
+                    
+                    notificationService.sendNotificationWithTemplate(
+                        subscription.getPerson().getId(),
+                        NotificationType.SYSTEM_UPDATE,
+                        NotificationChannel.PUSH,
+                        variables
+                    );
+                    
+                    notificationService.sendNotificationWithTemplate(
+                        subscription.getPerson().getId(),
+                        NotificationType.SYSTEM_UPDATE,
+                        NotificationChannel.EMAIL,
+                        variables
+                    );
+                    
+                    log.info("✅ Notification renouvellement envoyée");
+                } catch (Exception e) {
+                    log.error("❌ Erreur notification renouvellement: {}", e.getMessage());
+                }
             } else {
                 // Marquer comme expiré
                 subscription.setStatus(SubscriptionStatus.EXPIRED);
                 subscriptionRepository.save(subscription);
-                // Abonnement expiré
+                
+                // Notification d'expiration
+                try {
+                    Map<String, String> variables = new HashMap<>();
+                    variables.put("plan", subscription.getPlan().getName());
+                    variables.put("date", now.toString());
+                    
+                    notificationService.sendNotificationWithTemplate(
+                        subscription.getPerson().getId(),
+                        NotificationType.SYSTEM_UPDATE,
+                        NotificationChannel.PUSH,
+                        variables
+                    );
+                    
+                    notificationService.sendNotificationWithTemplate(
+                        subscription.getPerson().getId(),
+                        NotificationType.SYSTEM_UPDATE,
+                        NotificationChannel.EMAIL,
+                        variables
+                    );
+                    
+                    log.info("✅ Notification expiration envoyée");
+                } catch (Exception e) {
+                    log.error("❌ Erreur notification expiration: {}", e.getMessage());
+                }
             }
         }
     }

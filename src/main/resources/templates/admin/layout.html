@@ -138,6 +138,48 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/cash-payments}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/cash-payments')} ? 'active' : ''">
+                                <i class="fas fa-money-bill-wave"></i>
+                                Paiements Cash
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/subscription-plans-view}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/subscription-plans')} ? 'active' : ''">
+                                <i class="fas fa-crown"></i>
+                                Plans Abonnement
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/subscriptions}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/subscriptions')} ? 'active' : ''">
+                                <i class="fas fa-users-cog"></i>
+                                Abonnements Utilisateurs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/subscription-stats}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/subscription-stats')} ? 'active' : ''">
+                                <i class="fas fa-chart-pie"></i>
+                                Stats Abonnements
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/notification-templates}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/notification-templates')} ? 'active' : ''">
+                                <i class="fas fa-bell"></i>
+                                Notifications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/advertisements}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/advertisements')} ? 'active' : ''">
+                                <i class="fas fa-ad"></i>
+                                Publicités
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/stats}"
                                th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/stats')} ? 'active' : ''">
                                 <i class="fas fa-chart-line"></i>

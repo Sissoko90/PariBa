@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -19,10 +19,16 @@ import java.io.IOException;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class AdminLoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
+public class AdminLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     
     private final SecurityAuditService securityAuditService;
+    
+    public AdminLoginSuccessHandler(SecurityAuditService securityAuditService) {
+        super();
+        this.securityAuditService = securityAuditService;
+        setDefaultTargetUrl("/admin/dashboard");
+        setAlwaysUseDefaultTargetUrl(true);
+    }
     
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, 
@@ -36,10 +42,7 @@ public class AdminLoginSuccessHandler extends SavedRequestAwareAuthenticationSuc
         securityAuditService.logSuccessfulLogin(username, ipAddress);
         log.info("✅ Connexion réussie pour: {} depuis {}", username, ipAddress);
         
-        // Définir l'URL de redirection par défaut
-        setDefaultTargetUrl("/admin/dashboard");
-        
-        // Rediriger vers la page demandée ou le dashboard
+        // Rediriger toujours vers le dashboard
         super.onAuthenticationSuccess(request, response, authentication);
     }
 }

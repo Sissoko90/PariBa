@@ -35,3 +35,6 @@ build/
 ### Firebase ###
 firebase-adminsdk*.json
 src/main/resources/firebase-adminsdk*.json
+
+### Flutter Project (separate repo) ###
+pariba/

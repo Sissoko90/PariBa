@@ -24,13 +24,13 @@ import org.springframework.context.annotation.Configuration;
             API REST pour la plateforme Pariba - Gestion de tontines (groupes d'épargne rotatifs)
             
             ## Fonctionnalités principales:
-            - 🔐 Authentification JWT avec OTP
-            - 👥 Gestion des groupes de tontine
-            - 💰 Suivi des contributions et paiements
-            - 🔄 Gestion des tours de rotation
-            - 📊 Exports et statistiques
-            - 🔔 Notifications multi-canal
-            - 💎 Système d'abonnements
+            -  Authentification JWT avec OTP
+            -  Gestion des groupes de tontine
+            -  Suivi des contributions et paiements
+            -  Gestion des tours de rotation
+            -  Exports et statistiques
+            -  Notifications multi-canal
+            -  Système d'abonnements
             
             ## Authentification:
             1. Créer un compte: POST /api/auth/register
@@ -47,9 +47,9 @@ import org.springframework.context.annotation.Configuration;
             - 500: Erreur serveur
             """,
         contact = @Contact(
-            name = "Équipe Pariba",
-            email = "support@pariba.com",
-            url = "https://pariba.com"
+            name = "Makan SISSOKO",
+            email = "makenzyks6@gmail.com",
+            url = "https://makan.abdatytch.com"
         ),
         license = @License(
             name = "MIT License",
@@ -59,7 +59,7 @@ import org.springframework.context.annotation.Configuration;
     servers = {
         @Server(
             description = "Serveur de développement",
-            url = "http://localhost:8080"
+            url = "http://localhost:8085"
         ),
         @Server(
             description = "Serveur de production",

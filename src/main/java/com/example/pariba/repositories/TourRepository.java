@@ -26,4 +26,7 @@ public interface TourRepository extends JpaRepository<Tour, String> {
     
     @Query("SELECT t FROM Tour t WHERE t.group.id = :groupId AND t.status = 'IN_PROGRESS'")
     Optional<Tour> findCurrentTourByGroupId(@Param("groupId") String groupId);
+    
+    // Méthodes pour le scheduler de notifications
+    List<Tour> findByScheduledDateAndStatus(java.time.LocalDate scheduledDate, TourStatus status);
 }

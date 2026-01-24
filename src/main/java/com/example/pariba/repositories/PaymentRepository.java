@@ -32,4 +32,9 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     Double getTotalCollectedByGroup(@Param("groupId") String groupId);
     
     List<Payment> findByContributionId(String contributionId);
+    
+    List<Payment> findByStatus(PaymentStatus status);
+    
+    @Query("SELECT p FROM Payment p WHERE p.contribution.group.id = :groupId")
+    List<Payment> findByContribution_Group_Id(@Param("groupId") String groupId);
 }

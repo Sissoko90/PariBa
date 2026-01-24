@@ -34,4 +34,7 @@ public interface TontineGroupRepository extends JpaRepository<TontineGroup, Stri
     long countByCreatedAtAfter(LocalDateTime date);
     
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    
+    // Méthodes pour le scheduler de notifications
+    List<TontineGroup> findByStartDate(java.time.LocalDate startDate);
 }

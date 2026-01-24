@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout}">
+<head>
+    <title>Erreur - Administration</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-8">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Une erreur s'est produite</h4>
+                    </div>
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-exclamation-circle fa-5x text-danger mb-4"></i>
+                        <h3 class="mb-3">Oups! Quelque chose s'est mal passé</h3>
+                        <p class="text-muted mb-4" th:if="${error}" th:text="${error}">
+                            Une erreur inattendue s'est produite lors du traitement de votre demande.
+                        </p>
+                        <p class="text-muted mb-4" th:unless="${error}">
+                            Une erreur inattendue s'est produite lors du traitement de votre demande.
+                        </p>
+                        
+                        <div class="d-flex gap-3 justify-content-center">
+                            <a th:href="@{/admin/dashboard}" class="btn btn-primary">
+                                <i class="fas fa-home"></i> Retour au Dashboard
+                            </a>
+                            <button onclick="history.back()" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Page Précédente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Détails de l'erreur (seulement en mode développement) -->
+                <div class="card mt-3" th:if="${trace}">
+                    <div class="card-header">
+                        <h5 class="mb-0">Détails Techniques</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre class="text-danger" style="max-height: 400px; overflow-y: auto;" th:text="${trace}"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -28,8 +28,8 @@ public class NotificationTemplate extends BaseEntity {
     @Column(nullable = false, length = 20)
     private NotificationChannel channel;
     
-    @Column(nullable = false)
-    private String subject; // Pour email
+    @Column(nullable = true)
+    private String subject; // Pour email (optionnel pour PUSH/SMS)
     
     @Column(nullable = false, columnDefinition = "TEXT")
     private String bodyTemplate; // Template avec variables {{nom}}, {{montant}}, etc.

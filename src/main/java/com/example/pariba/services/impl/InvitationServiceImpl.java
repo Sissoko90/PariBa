@@ -120,7 +120,7 @@ public class InvitationServiceImpl implements IInvitationService {
             if (request.getTargetPhone() != null) {
                 notificationService.sendNotificationWithTemplate(
                     targetPerson.getId(),
-                    NotificationType.GROUP_INVITATION,
+                    NotificationType.GROUP_INVITATION_RECEIVED,
                     NotificationChannel.SMS,
                     variables
                 );
@@ -130,7 +130,7 @@ public class InvitationServiceImpl implements IInvitationService {
             if (request.getTargetEmail() != null) {
                 notificationService.sendNotificationWithTemplate(
                     targetPerson.getId(),
-                    NotificationType.GROUP_INVITATION,
+                    NotificationType.GROUP_INVITATION_RECEIVED,
                     NotificationChannel.EMAIL,
                     variables
                 );
@@ -139,7 +139,7 @@ public class InvitationServiceImpl implements IInvitationService {
             // Envoyer notification Push
             notificationService.sendNotificationWithTemplate(
                 targetPerson.getId(),
-                NotificationType.GROUP_INVITATION,
+                NotificationType.GROUP_INVITATION_RECEIVED,
                 NotificationChannel.PUSH,
                 variables
             );

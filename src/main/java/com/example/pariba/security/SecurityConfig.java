@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
@@ -45,10 +46,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // CSRF: Désactivé pour API REST, activé pour dashboard admin
+            // CSRF: Désactivé pour API REST et endpoints admin JSON
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/v1/**")  // API REST sans CSRF
-                // Dashboard admin avec CSRF activé
+                .ignoringRequestMatchers("/admin/subscription-plans/**")  // API REST admin pour plans d'abonnement
+                .ignoringRequestMatchers("/admin/api/**")  // API REST admin pour notifications et autres
+                .ignoringRequestMatchers("/admin/subscriptions", "/admin/subscription-stats", "/admin/subscription-plans-view")  // Pages admin en lecture seule
+                // Dashboard admin avec CSRF activé pour les formulaires HTML
             )
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             // Sessions: Stateless pour API, avec session pour admin dashboard
@@ -91,14 +95,14 @@ public class SecurityConfig {
                 // IMPORTANT: Ressources statiques AVANT toute autre règle
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/favicon.ico").permitAll()
                 
-                // Swagger/OpenAPI - Réservé aux SUPERADMIN uniquement
-                .requestMatchers("/swagger-ui/**").hasRole("SUPERADMIN")
-                .requestMatchers("/v3/api-docs/**").hasRole("SUPERADMIN")
-                .requestMatchers("/swagger-resources/**").hasRole("SUPERADMIN")
-                .requestMatchers("/webjars/**").hasRole("SUPERADMIN")
+                // Swagger/OpenAPI - Public pour faciliter le développement
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-resources/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
                 
                 // Page de login admin - Public (AVANT /admin/**)
-                .requestMatchers("/admin/login", "/admin/logout").permitAll()
+                .requestMatchers("/admin/login", "/admin/perform-login", "/admin/logout").permitAll()
                 
                 // Interface Admin Thymeleaf - Réservé aux SUPERADMIN uniquement
                 .requestMatchers("/admin/**").hasRole("SUPERADMIN")
@@ -112,10 +116,23 @@ public class SecurityConfig {
             // Configuration login form pour dashboard admin
             .formLogin(form -> form
                 .loginPage("/admin/login")
-                .loginProcessingUrl("/admin/login")
+                .loginProcessingUrl("/admin/perform-login")  // URL différente pour le traitement
+                .usernameParameter("username")
+                .passwordParameter("password")
                 .successHandler(adminLoginSuccessHandler)
                 .failureHandler(adminLoginFailureHandler)
                 .permitAll()
+            )
+            // Gestion des accès non autorisés
+            .exceptionHandling(exception -> exception
+                .accessDeniedPage("/admin/login?error=access_denied")
+                .authenticationEntryPoint((request, response, authException) -> {
+                    if (request.getRequestURI().startsWith("/admin/")) {
+                        response.sendRedirect("/admin/login?error=unauthorized");
+                    } else {
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                    }
+                })
             )
             // Configuration logout
             .logout(logout -> logout

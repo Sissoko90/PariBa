@@ -6,24 +6,31 @@ import com.example.pariba.dtos.requests.GenerateToursRequest;
 import com.example.pariba.dtos.responses.TourResponse;
 import com.example.pariba.enums.ContributionStatus;
 import com.example.pariba.enums.Frequency;
+import com.example.pariba.enums.NotificationChannel;
+import com.example.pariba.enums.NotificationType;
 import com.example.pariba.enums.TourStatus;
 import com.example.pariba.exceptions.BadRequestException;
 import com.example.pariba.exceptions.ResourceNotFoundException;
 import com.example.pariba.models.*;
 import com.example.pariba.repositories.*;
 import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.INotificationService;
 import com.example.pariba.services.ITontineGroupService;
 import com.example.pariba.services.ITourService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class TourServiceImpl implements ITourService {
 
     private final TourRepository tourRepository;
@@ -32,19 +39,22 @@ public class TourServiceImpl implements ITourService {
     private final ContributionRepository contributionRepository;
     private final ITontineGroupService groupService;
     private final IAuditService auditService;
+    private final INotificationService notificationService;
 
     public TourServiceImpl(TourRepository tourRepository,
                           TontineGroupRepository groupRepository,
                           GroupMembershipRepository membershipRepository,
                           ContributionRepository contributionRepository,
                           ITontineGroupService groupService,
-                          IAuditService auditService) {
+                          IAuditService auditService,
+                          INotificationService notificationService) {
         this.tourRepository = tourRepository;
         this.groupRepository = groupRepository;
         this.membershipRepository = membershipRepository;
         this.contributionRepository = contributionRepository;
         this.groupService = groupService;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -166,6 +176,41 @@ public class TourServiceImpl implements ITourService {
         createContributionsForTour(tour, members, tour.getGroup());
 
         auditService.log(personId, "START_TOUR", "Tour", tourId, null);
+        
+        // Envoyer notifications de démarrage du tour
+        try {
+            Map<String, String> variables = new HashMap<>();
+            variables.put("groupe", tour.getGroup().getNom());
+            variables.put("tour", "Tour " + tour.getIndexInGroup());
+            variables.put("beneficiaire", tour.getBeneficiary().getPrenom() + " " + tour.getBeneficiary().getNom());
+            variables.put("montant", String.format("%,.0f", tour.getExpectedAmount()));
+            
+            // Notifier tous les membres
+            members.forEach(membership -> {
+                try {
+                    notificationService.sendNotificationWithTemplate(
+                        membership.getPerson().getId(),
+                        NotificationType.TOUR_STARTED,
+                        NotificationChannel.PUSH,
+                        variables
+                    );
+                } catch (Exception e) {
+                    log.error("❌ Erreur notification tour démarré pour {}", membership.getPerson().getId());
+                }
+            });
+            
+            // Notification spéciale pour le bénéficiaire
+            notificationService.sendNotificationWithTemplate(
+                tour.getBeneficiary().getId(),
+                NotificationType.YOUR_TURN_NOW,
+                NotificationChannel.PUSH,
+                variables
+            );
+            
+            log.info("✅ Notifications tour démarré envoyées");
+        } catch (Exception e) {
+            log.error("❌ Erreur notifications tour: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -184,6 +229,52 @@ public class TourServiceImpl implements ITourService {
         tourRepository.save(tour);
 
         auditService.log(personId, "COMPLETE_TOUR", "Tour", tourId, null);
+        
+        // Envoyer notifications de complétion du tour
+        try {
+            Map<String, String> variables = new HashMap<>();
+            variables.put("groupe", tour.getGroup().getNom());
+            variables.put("tour", "Tour " + tour.getIndexInGroup());
+            variables.put("montant", String.format("%,.0f", tour.getExpectedAmount()));
+            
+            // Notifier tous les membres
+            List<GroupMembership> members = membershipRepository.findByGroupId(tour.getGroup().getId());
+            members.forEach(membership -> {
+                try {
+                    notificationService.sendNotificationWithTemplate(
+                        membership.getPerson().getId(),
+                        NotificationType.TOUR_COMPLETED,
+                        NotificationChannel.PUSH,
+                        variables
+                    );
+                } catch (Exception e) {
+                    log.error("❌ Erreur notification tour complété pour {}", membership.getPerson().getId());
+                }
+            });
+            
+            // Notification spéciale pour le bénéficiaire (déboursement)
+            variables.put("date", LocalDate.now().toString());
+            variables.put("methode", "Virement bancaire");
+            
+            notificationService.sendNotificationWithTemplate(
+                tour.getBeneficiary().getId(),
+                NotificationType.PAYOUT_PROCESSED,
+                NotificationChannel.PUSH,
+                variables
+            );
+            
+            // Envoyer aussi par Email au bénéficiaire
+            notificationService.sendNotificationWithTemplate(
+                tour.getBeneficiary().getId(),
+                NotificationType.PAYOUT_PROCESSED,
+                NotificationChannel.EMAIL,
+                variables
+            );
+            
+            log.info("✅ Notifications tour complété et déboursement envoyées");
+        } catch (Exception e) {
+            log.error("❌ Erreur notifications complétion tour: {}", e.getMessage());
+        }
     }
 
     private List<Person> determineBeneficiaryOrder(TontineGroup group, List<GroupMembership> members, GenerateToursRequest request) {

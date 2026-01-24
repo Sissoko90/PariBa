@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Envoyer une Notification</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-responsive.css">
+    
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-bg: #1f2937;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #79638f 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .recipient-type-card {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .recipient-type-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .recipient-type-card.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+        
+        .recipient-type-card i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .btn-send {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-send:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid px-4">
+        <a th:href="@{/admin/dashboard}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Retour au Dashboard
+        </a>
+        
+        <div class="page-header">
+            <h2><i class="fas fa-paper-plane text-primary"></i> Envoyer une Notification</h2>
+            <p class="text-muted mb-0">Envoyez des notifications à vos utilisateurs</p>
+        </div>
+        
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div class="form-card">
+            <form id="notificationForm">
+                <!-- Type de destinataire -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Destinataire *</label>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="recipient-type-card" onclick="selectRecipientType('user')">
+                                <i class="fas fa-user"></i>
+                                <h5>Utilisateur Unique</h5>
+                                <p class="text-muted mb-0">Envoyer à un utilisateur spécifique</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="recipient-type-card" onclick="selectRecipientType('group')">
+                                <i class="fas fa-users"></i>
+                                <h5>Groupe</h5>
+                                <p class="text-muted mb-0">Envoyer à tous les membres d'un groupe</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="recipient-type-card" onclick="selectRecipientType('all')">
+                                <i class="fas fa-globe"></i>
+                                <h5>Tous les Utilisateurs</h5>
+                                <p class="text-muted mb-0">Envoyer à tous les utilisateurs du système</p>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="recipientType" name="recipientType" required>
+                </div>
+                
+                <!-- Sélection utilisateur -->
+                <div id="userSelection" class="mb-3 hidden">
+                    <label class="form-label">Sélectionner un utilisateur *</label>
+                    <select class="form-select" id="userId" name="userId">
+                        <option value="">-- Choisir un utilisateur --</option>
+                        <option th:each="user : ${users}" 
+                                th:value="${user.id}" 
+                                th:text="${user.prenom + ' ' + user.nom + ' (' + user.phone + ')'}">
+                            Utilisateur
+                        </option>
+                    </select>
+                </div>
+                
+                <!-- Sélection groupe -->
+                <div id="groupSelection" class="mb-3 hidden">
+                    <label class="form-label">Sélectionner un groupe *</label>
+                    <select class="form-select" id="groupId" name="groupId">
+                        <option value="">-- Choisir un groupe --</option>
+                        <option th:each="group : ${groups}" 
+                                th:value="${group.id}" 
+                                th:text="${group.nom}">
+                            Groupe
+                        </option>
+                    </select>
+                </div>
+                
+                <!-- Titre -->
+                <div class="mb-3">
+                    <label class="form-label">Titre de la notification *</label>
+                    <input type="text" class="form-control" id="title" name="title" 
+                           placeholder="Ex: Nouvelle fonctionnalité disponible" required>
+                </div>
+                
+                <!-- Message -->
+                <div class="mb-3">
+                    <label class="form-label">Message *</label>
+                    <textarea class="form-control" id="message" name="message" rows="5" 
+                              placeholder="Écrivez votre message ici..." required></textarea>
+                    <small class="text-muted">Le message sera envoyé tel quel aux destinataires</small>
+                </div>
+                
+                <!-- Canal de notification -->
+                <div class="mb-3">
+                    <label class="form-label">Canal de notification *</label>
+                    <select class="form-select" id="channel" name="channel" required>
+                        <option value="IN_APP">Application (Notification in-app)</option>
+                        <option value="PUSH">Notification Push</option>
+                        <option value="EMAIL">Email</option>
+                        <option value="SMS">SMS</option>
+                    </select>
+                </div>
+                
+                <!-- Boutons -->
+                <div class="d-flex justify-content-end gap-2">
+                    <a th:href="@{/admin/dashboard}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-send">
+                        <i class="fas fa-paper-plane me-1"></i>Envoyer la Notification
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedRecipientType = null;
+        
+        function selectRecipientType(type) {
+            // Retirer la classe active de toutes les cartes
+            document.querySelectorAll('.recipient-type-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Ajouter la classe active à la carte sélectionnée
+            event.currentTarget.classList.add('active');
+            
+            // Mettre à jour le type sélectionné
+            selectedRecipientType = type;
+            document.getElementById('recipientType').value = type;
+            
+            // Afficher/masquer les sélections appropriées
+            document.getElementById('userSelection').classList.add('hidden');
+            document.getElementById('groupSelection').classList.add('hidden');
+            
+            if (type === 'user') {
+                document.getElementById('userSelection').classList.remove('hidden');
+                document.getElementById('userId').required = true;
+                document.getElementById('groupId').required = false;
+            } else if (type === 'group') {
+                document.getElementById('groupSelection').classList.remove('hidden');
+                document.getElementById('groupId').required = true;
+                document.getElementById('userId').required = false;
+            } else {
+                document.getElementById('userId').required = false;
+                document.getElementById('groupId').required = false;
+            }
+        }
+        
+        // Gérer la soumission du formulaire
+        document.getElementById('notificationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedRecipientType) {
+                alert('Veuillez sélectionner un type de destinataire');
+                return;
+            }
+            
+            const formData = {
+                recipientType: selectedRecipientType,
+                userId: document.getElementById('userId').value,
+                groupId: document.getElementById('groupId').value,
+                title: document.getElementById('title').value,
+                message: document.getElementById('message').value,
+                channel: document.getElementById('channel').value
+            };
+            
+            // Envoyer la requête
+            fetch('/admin/api/send-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Erreur lors de l\'envoi de la notification');
+                }
+            })
+            .then(data => {
+                alert('✅ Notification envoyée avec succès !');
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('❌ Erreur lors de l\'envoi de la notification');
+            });
+        });
+    </script>
+</body>
+</html>

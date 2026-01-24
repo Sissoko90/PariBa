@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plans d'Abonnement - Pariba Admin</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-responsive.css">
+    
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-bg: #1f2937;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #79638f 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .header-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .back-btn:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .plan-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .plan-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .plan-type {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .plan-price {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .plan-price span {
+            font-size: 18px;
+            color: #6b7280;
+        }
+        
+        .plan-description {
+            color: #6b7280;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+        
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        
+        .plan-features li {
+            padding: 8px 0;
+            color: #4b5563;
+        }
+        
+        .plan-features li i {
+            color: var(--success-color);
+            margin-right: 10px;
+        }
+        
+        .plan-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .badge-active {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--success-color);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge-inactive {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--danger-color);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .btn-create {
+            background: linear-gradient(135deg, var(--success-color), #059669);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-create:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-edit {
+            background: var(--info-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .btn-edit:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-toggle {
+            background: var(--warning-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .btn-toggle:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+        
+        .btn-delete {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .btn-delete:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a th:href="@{/admin/dashboard}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Retour au Dashboard
+        </a>
+        
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-crown"></i> Plans d'Abonnement</h2>
+                    <p class="text-muted mb-0">Gérez les plans d'abonnement de votre plateforme</p>
+                </div>
+                <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createPlanModal">
+                    <i class="fas fa-plus"></i> Nouveau Plan
+                </button>
+            </div>
+        </div>
+        
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div class="plans-grid">
+            <div class="plan-card" th:each="plan : ${plans}">
+                <span class="badge-active" th:if="${plan.active}">Actif</span>
+                <span class="badge-inactive" th:if="${!plan.active}">Inactif</span>
+                
+                <div class="plan-header">
+                    <div class="plan-type" th:text="${plan.name}">Plan Name</div>
+                    <div class="plan-price">
+                        <span th:text="${plan.monthlyPrice}">0</span>
+                        <span>FCFA/mois</span>
+                    </div>
+                </div>
+                
+                <p class="plan-description" th:text="${plan.description}">Description du plan</p>
+                
+                <ul class="plan-features" th:if="${plan.featuresJson}">
+                    <li th:each="feature : ${#strings.arraySplit(plan.featuresJson, ',')}">
+                        <i class="fas fa-check-circle"></i>
+                        <span th:text="${feature}">Feature</span>
+                    </li>
+                </ul>
+                
+                <div class="plan-actions">
+                    <button class="btn btn-edit" 
+                            th:data-plan-id="${plan.id}"
+                            onclick="editPlan(this.dataset.planId)">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
+                    <button class="btn btn-toggle" 
+                            th:data-plan-id="${plan.id}"
+                            onclick="togglePlan(this.dataset.planId)">
+                        <i class="fas fa-power-off"></i> 
+                        <span th:text="${plan.active} ? 'Désactiver' : 'Activer'">Toggle</span>
+                    </button>
+                    <button class="btn btn-delete" 
+                            th:data-plan-id="${plan.id}"
+                            onclick="deletePlan(this.dataset.planId)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Édition Plan -->
+    <div class="modal fade" id="editPlanModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Modifier le Plan d'Abonnement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editPlanForm" method="post">
+                    <input type="hidden" id="edit-plan-id" name="id">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Type de Plan *</label>
+                                <select class="form-select" id="edit-type" name="type" required>
+                                    <option value="FREE">FREE</option>
+                                    <option value="BASIC">BASIC</option>
+                                    <option value="PRO">PRO</option>
+                                    <option value="PREMIUM">PREMIUM</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nom du Plan *</label>
+                                <input type="text" class="form-control" id="edit-name" name="name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="edit-description" name="description" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Prix Mensuel (FCFA) *</label>
+                            <input type="number" class="form-control" id="edit-monthlyPrice" name="monthlyPrice" min="0" step="0.01" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Fonctionnalités (séparées par des virgules)</label>
+                            <textarea class="form-control" id="edit-features" name="features" rows="4" 
+                                      placeholder="Ex: Pas de publicités, Support prioritaire, Groupes illimités"></textarea>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="edit-active" name="active">
+                            <label class="form-check-label">Plan actif</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-create">Enregistrer les Modifications</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Création Plan -->
+    <div class="modal fade" id="createPlanModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus"></i> Nouveau Plan d'Abonnement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/admin/subscription-plans" method="post">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Type de Plan *</label>
+                                <select class="form-select" name="type" required>
+                                    <option value="FREE">FREE</option>
+                                    <option value="BASIC">BASIC</option>
+                                    <option value="PRO">PRO</option>
+                                    <option value="PREMIUM">PREMIUM</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nom du Plan *</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Prix Mensuel (FCFA) *</label>
+                            <input type="number" class="form-control" name="monthlyPrice" min="0" step="0.01" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Fonctionnalités (séparées par des virgules)</label>
+                            <textarea class="form-control" name="features" rows="4" 
+                                      placeholder="Ex: Pas de publicités, Support prioritaire, Groupes illimités"></textarea>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="active" checked>
+                            <label class="form-check-label">Plan actif</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-create">Créer le Plan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function editPlan(planId) {
+            // Récupérer les données du plan via API
+            fetch('/admin/subscription-plans/' + planId)
+                .then(response => response.json())
+                .then(plan => {
+                    // Remplir le formulaire d'édition
+                    document.getElementById('edit-plan-id').value = plan.id;
+                    document.getElementById('edit-type').value = plan.type;
+                    document.getElementById('edit-name').value = plan.name;
+                    document.getElementById('edit-description').value = plan.description || '';
+                    document.getElementById('edit-monthlyPrice').value = plan.monthlyPrice;
+                    document.getElementById('edit-features').value = plan.featuresJson || '';
+                    document.getElementById('edit-active').checked = plan.active;
+                    
+                    // Définir l'action du formulaire
+                    document.getElementById('editPlanForm').action = '/admin/subscription-plans/' + planId;
+                    
+                    // Ouvrir le modal
+                    const modal = new bootstrap.Modal(document.getElementById('editPlanModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors du chargement des données du plan');
+                });
+        }
+        
+        // Gérer la soumission du formulaire d'édition
+        document.getElementById('editPlanForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const planId = document.getElementById('edit-plan-id').value;
+            const formData = {
+                type: document.getElementById('edit-type').value,
+                name: document.getElementById('edit-name').value,
+                description: document.getElementById('edit-description').value,
+                monthlyPrice: parseFloat(document.getElementById('edit-monthlyPrice').value),
+                featuresJson: document.getElementById('edit-features').value,
+                active: document.getElementById('edit-active').checked
+            };
+            
+            fetch('/admin/subscription-plans/' + planId, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Erreur lors de la modification du plan');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la modification du plan');
+            });
+        });
+        
+        function togglePlan(planId) {
+            if (confirm('Voulez-vous vraiment changer le statut de ce plan ?')) {
+                fetch('/admin/subscription-plans/' + planId + '/toggle', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Erreur lors du changement de statut');
+                    }
+                });
+            }
+        }
+        
+        function deletePlan(planId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce plan ? Cette action est irréversible.')) {
+                fetch('/admin/subscription-plans/' + planId, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Erreur lors de la suppression');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

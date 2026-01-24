@@ -6,6 +6,8 @@ import com.example.pariba.dtos.requests.RegisterRequest;
 import com.example.pariba.dtos.responses.AuthResponse;
 import com.example.pariba.dtos.responses.PersonResponse;
 import com.example.pariba.enums.AppRole;
+import com.example.pariba.enums.NotificationChannel;
+import com.example.pariba.enums.NotificationType;
 import com.example.pariba.exceptions.AlreadyExistsException;
 import com.example.pariba.exceptions.UnauthorizedException;
 import com.example.pariba.models.Person;
@@ -14,26 +16,35 @@ import com.example.pariba.repositories.PersonRepository;
 import com.example.pariba.repositories.UserRepository;
 import com.example.pariba.services.IAuthService;
 import com.example.pariba.services.IJwtService;
+import com.example.pariba.services.INotificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
+@Slf4j
 public class AuthServiceImpl implements IAuthService {
 
     private final PersonRepository personRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final IJwtService jwtService;
+    private final INotificationService notificationService;
 
     public AuthServiceImpl(PersonRepository personRepository, 
                           UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
-                          IJwtService jwtService) {
+                          IJwtService jwtService,
+                          INotificationService notificationService) {
         this.personRepository = personRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -68,6 +79,31 @@ public class AuthServiceImpl implements IAuthService {
         // Générer le token JWT
         String token = jwtService.generateToken(person.getId(), person.getEmail(), person.getRole());
 
+        // Envoyer notification de bienvenue
+        try {
+            Map<String, String> variables = new HashMap<>();
+            // Les variables prenom et nom seront automatiquement ajoutées par le service
+            
+            notificationService.sendNotificationWithTemplate(
+                person.getId(),
+                NotificationType.WELCOME_REGISTRATION,
+                NotificationChannel.PUSH,
+                variables
+            );
+            
+            // Envoyer aussi par Email
+            notificationService.sendNotificationWithTemplate(
+                person.getId(),
+                NotificationType.WELCOME_REGISTRATION,
+                NotificationChannel.EMAIL,
+                variables
+            );
+            
+            log.info("✅ Notifications de bienvenue envoyées à {}", person.getEmail());
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de l'envoi des notifications de bienvenue: {}", e.getMessage());
+        }
+
         return new AuthResponse(token, new PersonResponse(person));
     }
 
@@ -98,6 +134,27 @@ public class AuthServiceImpl implements IAuthService {
         
         // Générer le token JWT
         String token = jwtService.generateToken(person.getId(), person.getEmail(), person.getRole());
+
+        // Vérifier si c'est la première connexion (basé sur createdAt vs updatedAt)
+        boolean isFirstLogin = person.getUpdatedAt() == null || 
+                              person.getCreatedAt().equals(person.getUpdatedAt());
+        
+        if (isFirstLogin) {
+            try {
+                Map<String, String> variables = new HashMap<>();
+                
+                notificationService.sendNotificationWithTemplate(
+                    person.getId(),
+                    NotificationType.FIRST_LOGIN,
+                    NotificationChannel.PUSH,
+                    variables
+                );
+                
+                log.info("✅ Notification première connexion envoyée à {}", person.getEmail());
+            } catch (Exception e) {
+                log.error("❌ Erreur notification première connexion: {}", e.getMessage());
+            }
+        }
 
         return new AuthResponse(token, new PersonResponse(person));
     }

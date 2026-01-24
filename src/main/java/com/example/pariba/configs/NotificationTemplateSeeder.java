@@ -56,131 +56,170 @@ public class NotificationTemplateSeeder implements CommandLineRunner {
     }
     
     private void createEmailTemplates() {
-        // Bienvenue
-        createTemplate(
-            NotificationType.WELCOME,
-            NotificationChannel.EMAIL,
-            "Bienvenue sur Pariba",
-            getWelcomeEmailTemplate()
-        );
+        // Authentification
+        createTemplate(NotificationType.WELCOME_REGISTRATION, NotificationChannel.EMAIL,
+            "Bienvenue sur Pariba", getWelcomeEmailTemplate());
+        createTemplate(NotificationType.FIRST_LOGIN, NotificationChannel.EMAIL,
+            "Première connexion réussie", getFirstLoginEmailTemplate());
         
-        // Contribution reçue
-        createTemplate(
-            NotificationType.CONTRIBUTION_RECEIVED,
-            NotificationChannel.EMAIL,
-            "Contribution reçue - {{montant}} FCFA",
-            getContributionReceivedEmailTemplate()
-        );
+        // Groupe
+        createTemplate(NotificationType.GROUP_CREATED, NotificationChannel.EMAIL,
+            "Groupe créé avec succès", getGroupCreatedEmailTemplate());
+        createTemplate(NotificationType.GROUP_INVITATION_RECEIVED, NotificationChannel.EMAIL,
+            "Invitation à rejoindre {{groupe}}", getGroupInvitationEmailTemplate());
+        createTemplate(NotificationType.GROUP_JOINED, NotificationChannel.EMAIL,
+            "Nouveau membre dans {{groupe}}", getGroupJoinedEmailTemplate());
         
-        // Paiement effectué
-        createTemplate(
-            NotificationType.PAYOUT_PROCESSED,
-            NotificationChannel.EMAIL,
-            "Paiement effectué - {{montant}} FCFA",
-            getPayoutProcessedEmailTemplate()
-        );
+        // Tour
+        createTemplate(NotificationType.TOUR_STARTING_SOON, NotificationChannel.EMAIL,
+            "Tour {{tour}} commence bientôt", getTourStartingSoonEmailTemplate());
+        createTemplate(NotificationType.TOUR_STARTED, NotificationChannel.EMAIL,
+            "Tour {{tour}} a démarré", getTourStartedEmailTemplate());
+        createTemplate(NotificationType.YOUR_TURN_NOW, NotificationChannel.EMAIL,
+            "C'est votre tour!", getYourTurnNowEmailTemplate());
         
-        // Invitation à un groupe
-        createTemplate(
-            NotificationType.GROUP_INVITATION,
-            NotificationChannel.EMAIL,
-            "Invitation à rejoindre {{groupe}}",
-            getGroupInvitationEmailTemplate()
-        );
+        // Contributions
+        createTemplate(NotificationType.CONTRIBUTION_REMINDER_2DAYS, NotificationChannel.EMAIL,
+            "Rappel: Contribution dans 2 jours", getContributionReminderEmailTemplate());
+        createTemplate(NotificationType.CONTRIBUTION_DUE_TODAY, NotificationChannel.EMAIL,
+            "Contribution due aujourd'hui", getContributionDueTodayEmailTemplate());
+        createTemplate(NotificationType.CONTRIBUTION_PAID, NotificationChannel.EMAIL,
+            "Contribution payée avec succès", getContributionPaidEmailTemplate());
+        createTemplate(NotificationType.CONTRIBUTION_OVERDUE, NotificationChannel.EMAIL,
+            "Contribution en retard", getContributionOverdueEmailTemplate());
         
-        // Rappel de contribution
-        createTemplate(
-            NotificationType.CONTRIBUTION_REMINDER,
-            NotificationChannel.EMAIL,
-            "Rappel: Contribution à effectuer",
-            getContributionReminderEmailTemplate()
-        );
+        // Paiements
+        createTemplate(NotificationType.PAYMENT_SUCCESS, NotificationChannel.EMAIL,
+            "Paiement réussi - {{montant}} FCFA", getPaymentSuccessEmailTemplate());
+        createTemplate(NotificationType.PAYOUT_PROCESSED, NotificationChannel.EMAIL,
+            "Déboursement effectué - {{montant}} FCFA", getPayoutProcessedEmailTemplate());
     }
     
     private void createPushTemplates() {
-        // Bienvenue
-        createTemplate(
-            NotificationType.WELCOME,
-            NotificationChannel.PUSH,
-            "Bienvenue sur Pariba",
-            "Bonjour {{prenom}}, bienvenue dans la communauté Pariba!"
-        );
+        // Authentification
+        createTemplate(NotificationType.WELCOME_REGISTRATION, NotificationChannel.PUSH,
+            "Bienvenue sur Pariba!", "Bonjour {{prenom}}, bienvenue dans la communauté Pariba!");
+        createTemplate(NotificationType.FIRST_LOGIN, NotificationChannel.PUSH,
+            "Première connexion", "Félicitations {{prenom}}! Vous êtes maintenant connecté à Pariba.");
         
-        // Contribution reçue
-        createTemplate(
-            NotificationType.CONTRIBUTION_RECEIVED,
-            NotificationChannel.PUSH,
-            "Contribution reçue",
-            "Votre contribution de {{montant}} FCFA a été reçue avec succès."
-        );
+        // Groupe - Création et gestion
+        createTemplate(NotificationType.GROUP_CREATED, NotificationChannel.PUSH,
+            "Groupe créé", "Votre groupe {{groupe}} a été créé avec succès!");
+        createTemplate(NotificationType.GROUP_INVITATION_RECEIVED, NotificationChannel.PUSH,
+            "Nouvelle invitation", "Vous êtes invité à rejoindre {{groupe}}");
+        createTemplate(NotificationType.GROUP_JOINED, NotificationChannel.PUSH,
+            "Nouveau membre", "{{prenom}} a rejoint le groupe {{groupe}}");
+        createTemplate(NotificationType.MEMBER_ADDED, NotificationChannel.PUSH,
+            "Membre ajouté", "{{prenom}} {{nom}} a été ajouté au groupe {{groupe}}");
         
-        // Paiement effectué
-        createTemplate(
-            NotificationType.PAYOUT_PROCESSED,
-            NotificationChannel.PUSH,
-            "Paiement effectué",
-            "Votre paiement de {{montant}} FCFA a été traité."
-        );
+        // Tour - Rotation
+        createTemplate(NotificationType.TOUR_STARTING_SOON, NotificationChannel.PUSH,
+            "Tour dans {{jours}} jours", "Le tour {{tour}} de {{groupe}} commence bientôt. Bénéficiaire: {{beneficiaire}}");
+        createTemplate(NotificationType.TOUR_STARTED, NotificationChannel.PUSH,
+            "Tour démarré", "Le tour {{tour}} de {{groupe}} a démarré! Bénéficiaire: {{beneficiaire}}");
+        createTemplate(NotificationType.TOUR_COMPLETED, NotificationChannel.PUSH,
+            "Tour terminé", "Le tour {{tour}} de {{groupe}} est terminé. Montant collecté: {{montant}} FCFA");
+        createTemplate(NotificationType.YOUR_TURN_NEXT, NotificationChannel.PUSH,
+            "Bientôt votre tour!", "Votre tour arrive dans {{groupe}}. Préparez-vous!");
+        createTemplate(NotificationType.YOUR_TURN_NOW, NotificationChannel.PUSH,
+            "C'est votre tour!", "Vous êtes le bénéficiaire du tour actuel de {{groupe}}!");
         
-        // Invitation à un groupe
-        createTemplate(
-            NotificationType.GROUP_INVITATION,
-            NotificationChannel.PUSH,
-            "Nouvelle invitation",
-            "Vous avez été invité à rejoindre {{groupe}}"
-        );
+        // Contributions - Rappels
+        createTemplate(NotificationType.CONTRIBUTION_REMINDER_2DAYS, NotificationChannel.PUSH,
+            "Contribution dans 2 jours", "Rappel: Contribution de {{montant}} FCFA pour {{groupe}} due le {{date}}");
+        createTemplate(NotificationType.CONTRIBUTION_REMINDER_1DAY, NotificationChannel.PUSH,
+            "Contribution demain", "Rappel: Contribution de {{montant}} FCFA pour {{groupe}} due demain");
+        createTemplate(NotificationType.CONTRIBUTION_DUE_TODAY, NotificationChannel.PUSH,
+            "Contribution aujourd'hui", "Votre contribution de {{montant}} FCFA pour {{groupe}} est due aujourd'hui");
+        createTemplate(NotificationType.CONTRIBUTION_OVERDUE, NotificationChannel.PUSH,
+            "Contribution en retard", "Votre contribution de {{montant}} FCFA pour {{groupe}} est en retard");
+        createTemplate(NotificationType.CONTRIBUTION_PAID, NotificationChannel.PUSH,
+            "Contribution payée", "Votre contribution de {{montant}} FCFA a été payée avec succès");
+        createTemplate(NotificationType.CONTRIBUTION_RECEIVED, NotificationChannel.PUSH,
+            "Contribution reçue", "Contribution de {{montant}} FCFA reçue de {{prenom}} pour {{groupe}}");
         
-        // Rappel de contribution
-        createTemplate(
-            NotificationType.CONTRIBUTION_REMINDER,
-            NotificationChannel.PUSH,
-            "Rappel de contribution",
-            "N'oubliez pas votre contribution de {{montant}} FCFA"
-        );
+        // Paiements
+        createTemplate(NotificationType.PAYMENT_INITIATED, NotificationChannel.PUSH,
+            "Paiement initié", "Votre paiement de {{montant}} FCFA est en cours de traitement");
+        createTemplate(NotificationType.PAYMENT_SUCCESS, NotificationChannel.PUSH,
+            "Paiement réussi", "Votre paiement de {{montant}} FCFA a été effectué avec succès");
+        createTemplate(NotificationType.PAYMENT_FAILED, NotificationChannel.PUSH,
+            "Paiement échoué", "Votre paiement de {{montant}} FCFA a échoué. Veuillez réessayer.");
+        
+        // Déboursement
+        createTemplate(NotificationType.PAYOUT_READY, NotificationChannel.PUSH,
+            "Déboursement prêt", "Votre déboursement de {{montant}} FCFA est prêt");
+        createTemplate(NotificationType.PAYOUT_PROCESSED, NotificationChannel.PUSH,
+            "Déboursement effectué", "Votre déboursement de {{montant}} FCFA a été traité");
+        createTemplate(NotificationType.PAYOUT_RECEIVED, NotificationChannel.PUSH,
+            "Déboursement reçu", "Vous avez reçu {{montant}} FCFA de {{groupe}}");
+        
+        // Pénalités
+        createTemplate(NotificationType.LATE_PENALTY_APPLIED, NotificationChannel.PUSH,
+            "Pénalité appliquée", "Une pénalité de {{penalite}} FCFA a été appliquée pour retard");
+        createTemplate(NotificationType.GRACE_PERIOD_ENDING, NotificationChannel.PUSH,
+            "Période de grâce", "La période de grâce se termine dans {{jours}} jours");
+        
+        // Tontine - Cycle
+        createTemplate(NotificationType.TONTINE_STARTING_SOON, NotificationChannel.PUSH,
+            "Tontine bientôt", "La tontine {{groupe}} commence le {{date}}");
+        createTemplate(NotificationType.TONTINE_STARTED, NotificationChannel.PUSH,
+            "Tontine démarrée", "La tontine {{groupe}} a officiellement démarré!");
+        createTemplate(NotificationType.TONTINE_COMPLETED, NotificationChannel.PUSH,
+            "Tontine terminée", "La tontine {{groupe}} est terminée. Merci à tous!");
+        
+        // Membres - Gestion
+        createTemplate(NotificationType.MEMBER_REMOVED, NotificationChannel.PUSH,
+            "Retiré du groupe", "Vous avez été retiré du groupe {{groupe}}");
+        createTemplate(NotificationType.MEMBER_ROLE_CHANGED, NotificationChannel.PUSH,
+            "Rôle modifié", "Votre rôle dans {{groupe}} a été modifié");
+        
+        // Système - Abonnements
+        createTemplate(NotificationType.SYSTEM_UPDATE, NotificationChannel.PUSH,
+            "Mise à jour", "Mise à jour de votre compte Pariba");
     }
     
     private void createSmsTemplates() {
         // Invitation SMS
-        createTemplate(
-            NotificationType.GROUP_INVITATION,
-            NotificationChannel.SMS,
-            null,
-            "🎉 Vous êtes invité à rejoindre le groupe *{{groupe}}* sur Pariba!\n\n" +
-            "Contribution: {{montant}} FCFA\n" +
-            "Code d'invitation: {{code}}\n\n" +
-            "Cliquez ici pour rejoindre: {{lien}}\n\n" +
-            "⏰ Ce lien expire dans 24h"
-        );
+        createTemplate(NotificationType.GROUP_INVITATION_RECEIVED, NotificationChannel.SMS, null,
+            "Pariba: Vous êtes invité à rejoindre {{groupe}}. Contribution: {{montant}} FCFA. Code: {{code}}. Lien: {{lien}}");
         
-        // Rappel de contribution SMS
-        createTemplate(
-            NotificationType.CONTRIBUTION_REMINDER,
-            NotificationChannel.SMS,
-            null,
-            "Rappel Pariba: Votre contribution de {{montant}} FCFA pour {{groupe}} est attendue. Merci!"
-        );
+        // Rappels de contribution
+        createTemplate(NotificationType.CONTRIBUTION_REMINDER_2DAYS, NotificationChannel.SMS, null,
+            "Pariba: Rappel - Contribution de {{montant}} FCFA pour {{groupe}} due dans 2 jours.");
+        createTemplate(NotificationType.CONTRIBUTION_DUE_TODAY, NotificationChannel.SMS, null,
+            "Pariba: URGENT - Votre contribution de {{montant}} FCFA pour {{groupe}} est due aujourd'hui!");
+        createTemplate(NotificationType.CONTRIBUTION_OVERDUE, NotificationChannel.SMS, null,
+            "Pariba: Contribution en retard! {{montant}} FCFA pour {{groupe}}. Pénalité possible.");
+        
+        // Paiements
+        createTemplate(NotificationType.PAYMENT_SUCCESS, NotificationChannel.SMS, null,
+            "Pariba: Paiement de {{montant}} FCFA effectué avec succès. Ref: {{reference}}");
+        createTemplate(NotificationType.PAYOUT_RECEIVED, NotificationChannel.SMS, null,
+            "Pariba: Vous avez reçu {{montant}} FCFA de {{groupe}}. Ref: {{reference}}");
     }
     
     private void createWhatsAppTemplates() {
         // Invitation WhatsApp
-        createTemplate(
-            NotificationType.GROUP_INVITATION,
-            NotificationChannel.WHATSAPP,
-            null,
+        createTemplate(NotificationType.GROUP_INVITATION_RECEIVED, NotificationChannel.WHATSAPP, null,
             "🎉 *Invitation Pariba*\n\n" +
             "Bonjour {{prenom}},\n\n" +
-            "Vous êtes invité à rejoindre le groupe:\n" +
-            "*{{groupe}}*\n\n" +
+            "Vous êtes invité à rejoindre:\n*{{groupe}}*\n\n" +
             "📊 *Détails:*\n" +
             "• Contribution: {{montant}} FCFA\n" +
             "• Fréquence: {{frequence}}\n" +
-            "• Membres actuels: {{membres}}\n\n" +
-            "🔑 *Code d'invitation:* {{code}}\n\n" +
-            "👉 Cliquez sur ce lien pour rejoindre:\n{{lien}}\n\n" +
-            "⏰ _Ce lien expire dans 24h_\n\n" +
-            "---\n" +
-            "Pariba - Votre plateforme de tontine digitale"
-        );
+            "• Membres: {{membres}}\n\n" +
+            "🔑 Code: {{code}}\n" +
+            "👉 Lien: {{lien}}\n\n" +
+            "⏰ _Expire dans 24h_");
+        
+        // Tour
+        createTemplate(NotificationType.YOUR_TURN_NOW, NotificationChannel.WHATSAPP, null,
+            "🎉 *C'est votre tour!*\n\n" +
+            "Félicitations {{prenom}}!\n\n" +
+            "Vous êtes le bénéficiaire du tour actuel de *{{groupe}}*.\n\n" +
+            "💰 Montant attendu: {{montant}} FCFA\n" +
+            "📅 Date: {{date}}");
     }
     
     private void createOtpTemplates() {
@@ -471,6 +510,347 @@ public class NotificationTemplateSeeder implements CommandLineRunner {
                         <p style="text-align: center;">
                             <a href="{{lien}}" class="button">Effectuer ma contribution</a>
                         </p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getFirstLoginEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>✅ Première Connexion Réussie!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour <strong>{{prenom}} {{nom}}</strong>,</p>
+                        <p>Félicitations! Vous venez de vous connecter pour la première fois à Pariba.</p>
+                        <p>Vous pouvez maintenant profiter de toutes les fonctionnalités de la plateforme.</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getGroupCreatedEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🎉 Groupe Créé!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour <strong>{{prenom}}</strong>,</p>
+                        <p>Votre groupe <strong>{{groupe}}</strong> a été créé avec succès!</p>
+                        <p><strong>Détails:</strong></p>
+                        <ul>
+                            <li>Contribution: {{montant}} FCFA</li>
+                            <li>Fréquence: {{frequence}}</li>
+                            <li>Nombre de tours: {{tours}}</li>
+                        </ul>
+                        <p>Vous pouvez maintenant inviter des membres à rejoindre votre groupe.</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getGroupJoinedEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>👥 Nouveau Membre!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour,</p>
+                        <p><strong>{{prenom}} {{nom}}</strong> a rejoint le groupe <strong>{{groupe}}</strong>!</p>
+                        <p>Le groupe compte maintenant {{membres}} membres.</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getTourStartingSoonEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>⏰ Tour Bientôt!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour,</p>
+                        <p>Le tour <strong>{{tour}}</strong> du groupe <strong>{{groupe}}</strong> commence dans {{jours}} jours.</p>
+                        <p><strong>Bénéficiaire:</strong> {{beneficiaire}}</p>
+                        <p><strong>Date de début:</strong> {{date}}</p>
+                        <p>Assurez-vous d'être prêt pour votre contribution!</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getTourStartedEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🚀 Tour Démarré!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour,</p>
+                        <p>Le tour <strong>{{tour}}</strong> du groupe <strong>{{groupe}}</strong> a officiellement démarré!</p>
+                        <p><strong>Bénéficiaire:</strong> {{beneficiaire}}</p>
+                        <p><strong>Montant attendu:</strong> {{montant}} FCFA</p>
+                        <p>Effectuez votre contribution dès maintenant.</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getYourTurnNowEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .amount { font-size: 36px; color: #8b5cf6; font-weight: bold; text-align: center; margin: 20px 0; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🎉 C'est Votre Tour!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour <strong>{{prenom}}</strong>,</p>
+                        <p>Félicitations! Vous êtes le bénéficiaire du tour actuel du groupe <strong>{{groupe}}</strong>!</p>
+                        <div class="amount">{{montant}} FCFA</div>
+                        <p>Vous recevrez le montant collecté une fois que tous les membres auront effectué leur contribution.</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getContributionDueTodayEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .amount { font-size: 32px; color: #ef4444; font-weight: bold; text-align: center; margin: 20px 0; }
+                    .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🔔 Contribution Due Aujourd'hui!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour <strong>{{prenom}}</strong>,</p>
+                        <p>Votre contribution pour le groupe <strong>{{groupe}}</strong> est due aujourd'hui!</p>
+                        <div class="amount">{{montant}} FCFA</div>
+                        <p>Effectuez votre paiement dès maintenant pour éviter les pénalités de retard.</p>
+                        <p style="text-align: center;">
+                            <a href="{{lien}}" class="button">Payer Maintenant</a>
+                        </p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getContributionPaidEmailTemplate() {
+        return getContributionReceivedEmailTemplate();
+    }
+    
+    private String getContributionOverdueEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #dc2626, #991b1b); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .amount { font-size: 32px; color: #dc2626; font-weight: bold; text-align: center; margin: 20px 0; }
+                    .warning { background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; }
+                    .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #dc2626, #991b1b); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>❌ Contribution En Retard!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour <strong>{{prenom}}</strong>,</p>
+                        <p>Votre contribution pour le groupe <strong>{{groupe}}</strong> est en retard.</p>
+                        <div class="amount">{{montant}} FCFA</div>
+                        <div class="warning">
+                            <strong>⚠️ Attention:</strong> Des pénalités de retard peuvent s'appliquer. Veuillez effectuer votre paiement immédiatement.
+                        </div>
+                        <p style="text-align: center;">
+                            <a href="{{lien}}" class="button">Payer Immédiatement</a>
+                        </p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 Pariba - Plateforme de Tontines</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """;
+    }
+    
+    private String getPaymentSuccessEmailTemplate() {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; color: #333; line-height: 1.6; }
+                    .amount { font-size: 36px; color: #10b981; font-weight: bold; text-align: center; margin: 20px 0; }
+                    .success-badge { background: #d1fae5; color: #065f46; padding: 10px 20px; border-radius: 20px; display: inline-block; margin: 10px 0; }
+                    .footer { background: #f8f8f8; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>✅ Paiement Réussi!</h1>
+                    </div>
+                    <div class="content">
+                        <p>Bonjour <strong>{{prenom}}</strong>,</p>
+                        <p>Votre paiement a été effectué avec succès!</p>
+                        <div class="amount">{{montant}} FCFA</div>
+                        <div style="text-align: center;">
+                            <span class="success-badge">✓ Paiement Confirmé</span>
+                        </div>
+                        <p><strong>Détails:</strong></p>
+                        <ul>
+                            <li>Groupe: {{groupe}}</li>
+                            <li>Date: {{date}}</li>
+                            <li>Référence: {{reference}}</li>
+                            <li>Méthode: {{methode}}</li>
+                        </ul>
+                        <p>Merci pour votre contribution!</p>
                     </div>
                     <div class="footer">
                         <p>© 2025 Pariba - Plateforme de Tontines</p>

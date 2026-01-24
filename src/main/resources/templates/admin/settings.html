@@ -86,9 +86,12 @@
                     <div class="flex-grow-1">
                         <h5 class="mb-1">API Swagger</h5>
                         <p class="text-muted mb-0">Documentation API</p>
-                        <small class="text-danger"><i class="fas fa-times-circle"></i> Désactivé temporairement (incompatibilité Spring Boot 3.5.7)</small>
+                        <small class="text-success"><i class="fas fa-check-circle"></i> Actif</small>
+                        <br><a th:href="${baseUrl + ':' + serverPort + '/swagger-ui.html'}" target="_blank" class="text-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>Ouvrir Swagger UI
+                        </a>
                     </div>
-                    <span class="badge bg-danger">Désactivé</span>
+                    <span class="badge bg-success">Activé</span>
                 </div>
             </div>
             
@@ -100,7 +103,7 @@
                     <div class="flex-grow-1">
                         <h5 class="mb-1">Templates de Notifications</h5>
                         <p class="text-muted mb-0">Gérer les templates d'emails et de notifications push</p>
-                        <small class="text-success"><i class="fas fa-check-circle"></i> Configuré - 10 templates par défaut</small>
+                        <small class="text-success"><i class="fas fa-check-circle"></i> Configuré les templates par défaut</small>
                     </div>
                     <a href="/admin/notification-templates" class="btn btn-primary">
                         <i class="fas fa-cog me-1"></i>Gérer

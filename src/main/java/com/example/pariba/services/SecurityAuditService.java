@@ -27,6 +27,7 @@ public class SecurityAuditService {
     public void logSecurityEvent(String eventType, String username, String ipAddress, String details) {
         try {
             AuditLog auditLog = new AuditLog();
+            auditLog.setAction(eventType); // Définir action avec eventType pour satisfaire la contrainte NOT NULL
             auditLog.setEventType(eventType);
             auditLog.setUsername(username);
             auditLog.setIpAddress(ipAddress);

@@ -1,10 +1,12 @@
 package com.example.pariba.controllers.admin;
 
 import com.example.pariba.models.Person;
+import com.example.pariba.models.TontineGroup;
 import com.example.pariba.repositories.*;
 import com.example.pariba.services.SimpleDashboardStatsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,6 +40,9 @@ public class AdminDashboardController {
     private final TontineGroupRepository tontineGroupRepository;
     private final PaymentRepository paymentRepository;
     private final AuditLogRepository auditLogRepository;
+    
+    @Value("${server.port}")
+    private String serverPort;
     
     /**
      * Page d'accueil du dashboard admin
@@ -282,6 +288,30 @@ public class AdminDashboardController {
         log.info(" Accès aux paramètres système");
         
         model.addAttribute("pageTitle", "Paramètres Système");
+        model.addAttribute("serverPort", serverPort);
+        model.addAttribute("baseUrl", "http://localhost");
+        
         return "admin/settings";
+    }
+    
+    /**
+     * Page d'envoi de notifications
+     */
+    @GetMapping("/send-notification")
+    @PreAuthorize("hasRole('SUPERADMIN')")
+    public String sendNotificationPage(Model model) {
+        log.info("📧 Accès à la page d'envoi de notifications");
+        
+        // Récupérer tous les utilisateurs pour la liste déroulante
+        List<Person> users = personRepository.findAll();
+        
+        // Récupérer tous les groupes pour la liste déroulante
+        List<TontineGroup> groups = tontineGroupRepository.findAll();
+        
+        model.addAttribute("pageTitle", "Envoyer une Notification");
+        model.addAttribute("users", users);
+        model.addAttribute("groups", groups);
+        
+        return "admin/send-notification";
     }
 }

@@ -14,7 +14,7 @@ spring:
         enabled: true
   web:
     resources:
-      add-mappings: false
+      add-mappings: true
   servlet:
     multipart:
       enabled: true
@@ -35,7 +35,7 @@ spring:
     default-encoding: UTF-8
 
 server:
-  port: 8082
+  port: 8085
   servlet:
     # Pas de context-path - géré par BaseRestController
     session:
@@ -50,12 +50,17 @@ logging:
     org.hibernate.SQL: off
     org.springframework.web: info
 
-# Désactiver Swagger temporairement (incompatibilité avec Spring Boot 3.5.7)
+# Configuration Swagger/OpenAPI
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
+    path: /v3/api-docs
   swagger-ui:
-    enabled: false
+    enabled: true
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+  show-actuator: true
 
 # Quotas par défaut (profil par défaut)
 app:

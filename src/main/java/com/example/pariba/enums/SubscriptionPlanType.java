@@ -1,3 +1,17 @@
 package com.example.pariba.enums;
 
-public enum SubscriptionPlanType { FREE, BASIC, PRO }
+public enum SubscriptionPlanType { 
+    FREE("Gratuit"), 
+    BASIC("Basique"), 
+    PRO("Professionnel");
+    
+    private final String label;
+    
+    SubscriptionPlanType(String label) {
+        this.label = label;
+    }
+    
+    public String getLabel() {
+        return label;
+    }
+}

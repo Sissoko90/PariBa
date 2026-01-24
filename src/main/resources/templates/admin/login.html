@@ -149,7 +149,7 @@
             </div>
             
             <!-- Formulaire de connexion -->
-            <form th:action="@{/admin/login}" method="post">
+            <form th:action="@{/admin/perform-login}" method="post">
                 <!-- Token CSRF (automatique avec Thymeleaf) -->
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                 

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Statistiques d'Abonnement</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <link rel="stylesheet" href="/css/admin-responsive.css">
+    
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-bg: #1f2937;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ffffff 0%, #79638f 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+        
+        .stat-card.success::before {
+            background: linear-gradient(90deg, var(--success-color), #059669);
+        }
+        
+        .stat-card.danger::before {
+            background: linear-gradient(90deg, var(--danger-color), #dc2626);
+        }
+        
+        .stat-card.info::before {
+            background: linear-gradient(90deg, var(--info-color), #2563eb);
+        }
+        
+        .stat-card.secondary::before {
+            background: linear-gradient(90deg, #6b7280, #4b5563);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-icon.success { background: linear-gradient(135deg, var(--success-color), #059669); color: white; }
+        .stat-icon.danger { background: linear-gradient(135deg, var(--danger-color), #dc2626); color: white; }
+        .stat-icon.info { background: linear-gradient(135deg, var(--info-color), #2563eb); color: white; }
+        .stat-icon.secondary { background: linear-gradient(135deg, #6b7280, #4b5563); color: white; }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 10px 0 5px 0;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .card-header.bg-success {
+            background: linear-gradient(135deg, var(--success-color), #059669) !important;
+        }
+        
+        .card-header.bg-info {
+            background: linear-gradient(135deg, var(--info-color), #2563eb) !important;
+        }
+        
+        .card-header.bg-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid px-4">
+        <a th:href="@{/admin/dashboard}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Retour au Dashboard
+        </a>
+        <!-- En-tête -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-chart-line text-info"></i> Statistiques d'Abonnement</h2>
+                <a th:href="@{/admin/subscriptions}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> Liste des Abonnements
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistiques Globales -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card success">
+                    <div class="stat-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-value" th:text="${stats.totalActive}">0</div>
+                    <div class="stat-label">Abonnements Actifs</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card danger">
+                    <div class="stat-icon danger">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-value" th:text="${stats.totalExpired}">0</div>
+                    <div class="stat-label">Abonnements Expirés</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card secondary">
+                    <div class="stat-icon secondary">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <div class="stat-value" th:text="${stats.totalCancelled}">0</div>
+                    <div class="stat-label">Abonnements Annulés</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card info">
+                    <div class="stat-icon info">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <div class="stat-value" th:text="${stats.recentSubscriptions}">0</div>
+                    <div class="stat-label">Nouveaux (30 jours)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenus et Taux de Renouvellement -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Revenus Mensuels Estimés</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <h2 class="text-success" th:text="${#numbers.formatDecimal(stats.estimatedMonthlyRevenue, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</h2>
+                        <p class="text-muted">Basé sur les abonnements actifs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-sync-alt"></i> Taux de Rétention</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <h2 class="text-info" th:text="${stats.renewalRate} + '%'">0%</h2>
+                        <p class="text-muted">Pourcentage d'abonnements maintenus</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="row mb-4">
+            <!-- Répartition par Statut -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Répartition par Statut</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Répartition par Plan -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Abonnements par Plan</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="planChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Détails par Plan -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-crown"></i> Détails par Plan d'Abonnement</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Plan</th>
+                                <th>Type</th>
+                                <th>Prix</th>
+                                <th>Abonnés Actifs</th>
+                                <th>Revenus Mensuels</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="plan : ${plans}">
+                                <td>
+                                    <strong th:text="${plan.name}">Plan</strong>
+                                </td>
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${plan.type.name() == 'FREE'} ? 'bg-secondary' : 
+                                                         (${plan.type.name() == 'BASIC'} ? 'bg-info' : 
+                                                         (${plan.type.name() == 'PRO'} ? 'bg-primary' : 'bg-warning'))"
+                                          th:text="${plan.type}">Type</span>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(plan.price, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">Prix</td>
+                                <td>
+                                    <strong th:text="${stats.byPlan.get(plan.name) ?: 0}">0</strong>
+                                </td>
+                                <td>
+                                    <strong th:text="${#numbers.formatDecimal((stats.byPlan.get(plan.name) ?: 0) * plan.price, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts pour les graphiques -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function() {
+            // Graphique Répartition par Statut
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Actifs', 'Expirés', 'Annulés'],
+                    datasets: [{
+                        data: [
+                            /*[[${stats.totalActive}]]*/ 0,
+                            /*[[${stats.totalExpired}]]*/ 0,
+                            /*[[${stats.totalCancelled}]]*/ 0
+                        ],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(107, 114, 128, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(107, 114, 128, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Graphique Répartition par Plan
+            const planCtx = document.getElementById('planChart').getContext('2d');
+            const planLabels = [];
+            const planData = [];
+            const planColors = [];
+            
+            /*[# th:each="plan : ${plans}"]*/
+            planLabels.push(/*[[${plan.name}]]*/ 'Plan');
+            planData.push(/*[[${stats.byPlan.get(plan.name) ?: 0}]]*/ 0);
+            
+            const type = /*[[${plan.type.name()}]]*/ 'FREE';
+            if (type === 'FREE') {
+                planColors.push('rgba(107, 114, 128, 0.8)');
+            } else if (type === 'BASIC') {
+                planColors.push('rgba(59, 130, 246, 0.8)');
+            } else if (type === 'PRO') {
+                planColors.push('rgba(102, 126, 234, 0.8)');
+            } else {
+                planColors.push('rgba(245, 158, 11, 0.8)');
+            }
+            /*[/]*/
+
+            new Chart(planCtx, {
+                type: 'bar',
+                data: {
+                    labels: planLabels,
+                    datasets: [{
+                        label: 'Abonnés Actifs',
+                        data: planData,
+                        backgroundColor: planColors,
+                        borderColor: planColors.map(c => c.replace('0.8', '1')),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+        /*]]>*/
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

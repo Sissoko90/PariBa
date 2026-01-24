@@ -4,32 +4,42 @@ import com.example.pariba.constants.AppConstants;
 import com.example.pariba.constants.MessageConstants;
 import com.example.pariba.dtos.requests.UpdateMemberRoleRequest;
 import com.example.pariba.dtos.responses.MembershipResponse;
+import com.example.pariba.enums.NotificationChannel;
+import com.example.pariba.enums.NotificationType;
 import com.example.pariba.exceptions.BadRequestException;
 import com.example.pariba.exceptions.ResourceNotFoundException;
 import com.example.pariba.models.GroupMembership;
 import com.example.pariba.repositories.GroupMembershipRepository;
 import com.example.pariba.services.IAuditService;
 import com.example.pariba.services.IMembershipService;
+import com.example.pariba.services.INotificationService;
 import com.example.pariba.services.ITontineGroupService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class MembershipServiceImpl implements IMembershipService {
 
     private final GroupMembershipRepository membershipRepository;
     private final ITontineGroupService groupService;
     private final IAuditService auditService;
+    private final INotificationService notificationService;
 
     public MembershipServiceImpl(GroupMembershipRepository membershipRepository,
                                 ITontineGroupService groupService,
-                                IAuditService auditService) {
+                                IAuditService auditService,
+                                INotificationService notificationService) {
         this.membershipRepository = membershipRepository;
         this.groupService = groupService;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -148,10 +158,30 @@ public class MembershipServiceImpl implements IMembershipService {
             throw new BadRequestException(MessageConstants.MEMBER_ERROR_CANNOT_REMOVE_CREATOR);
         }
 
+        String groupName = membership.getGroup().getNom();
+        String removedPersonId = membership.getPerson().getId();
+        
         membershipRepository.delete(membership);
 
         // Audit log
         auditService.log(requesterId, AppConstants.AUDIT_REMOVE_MEMBER, "TontineGroup", groupId, null);
+        
+        // Envoyer notification de retrait
+        try {
+            Map<String, String> variables = new HashMap<>();
+            variables.put("groupe", groupName);
+            
+            notificationService.sendNotificationWithTemplate(
+                removedPersonId,
+                NotificationType.MEMBER_REMOVED,
+                NotificationChannel.PUSH,
+                variables
+            );
+            
+            log.info("✅ Notification retrait membre envoyée");
+        } catch (Exception e) {
+            log.error("❌ Erreur notification retrait: {}", e.getMessage());
+        }
     }
 
     public long countMembersByGroup(String groupId) {

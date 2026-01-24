@@ -38,4 +38,9 @@ public interface ContributionRepository extends JpaRepository<Contribution, Stri
     List<Contribution> findLateContributions(@Param("date") LocalDate date);
     
     long countByTourIdAndStatus(String tourId, ContributionStatus status);
+    
+    // Méthodes pour le scheduler de notifications
+    List<Contribution> findByDueDateAndStatus(LocalDate dueDate, ContributionStatus status);
+    
+    List<Contribution> findByDueDateBeforeAndStatus(LocalDate dueDate, ContributionStatus status);
 }

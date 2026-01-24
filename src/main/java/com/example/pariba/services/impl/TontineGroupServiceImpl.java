@@ -6,6 +6,8 @@ import com.example.pariba.dtos.requests.CreateGroupRequest;
 import com.example.pariba.dtos.requests.UpdateGroupRequest;
 import com.example.pariba.dtos.responses.GroupResponse;
 import com.example.pariba.enums.GroupRole;
+import com.example.pariba.enums.NotificationChannel;
+import com.example.pariba.enums.NotificationType;
 import com.example.pariba.exceptions.BadRequestException;
 import com.example.pariba.exceptions.ForbiddenException;
 import com.example.pariba.exceptions.ResourceNotFoundException;
@@ -17,12 +19,15 @@ import com.example.pariba.repositories.GroupMembershipRepository;
 import com.example.pariba.repositories.PersonRepository;
 import com.example.pariba.repositories.TontineGroupRepository;
 import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.INotificationService;
 import com.example.pariba.services.ITontineGroupService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,15 +38,18 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
     private final PersonRepository personRepository;
     private final GroupMembershipRepository membershipRepository;
     private final IAuditService auditService;
+    private final INotificationService notificationService;
 
     public TontineGroupServiceImpl(TontineGroupRepository groupRepository,
                                   PersonRepository personRepository,
                                   GroupMembershipRepository membershipRepository,
-                                  IAuditService auditService) {
+                                  IAuditService auditService,
+                                  INotificationService notificationService) {
         this.groupRepository = groupRepository;
         this.personRepository = personRepository;
         this.membershipRepository = membershipRepository;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -74,6 +82,40 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
 
         // Audit log
         auditService.log(creatorId, AppConstants.AUDIT_CREATE_GROUP, "TontineGroup", group.getId(), null);
+
+        // Envoyer notification de création de groupe
+        try {
+            String frequence = switch (group.getFrequency()) {
+                case WEEKLY -> "Hebdomadaire";
+                case BIWEEKLY -> "Bi-hebdomadaire";
+                case MONTHLY -> "Mensuelle";
+            };
+            
+            Map<String, String> variables = new HashMap<>();
+            variables.put("groupe", group.getNom());
+            variables.put("montant", String.format("%,.0f", group.getMontant()));
+            variables.put("frequence", frequence);
+            variables.put("tours", String.valueOf(group.getTotalTours()));
+            
+            notificationService.sendNotificationWithTemplate(
+                creatorId,
+                NotificationType.GROUP_CREATED,
+                NotificationChannel.PUSH,
+                variables
+            );
+            
+            // Envoyer aussi par Email
+            notificationService.sendNotificationWithTemplate(
+                creatorId,
+                NotificationType.GROUP_CREATED,
+                NotificationChannel.EMAIL,
+                variables
+            );
+            
+            log.info("✅ Notifications création groupe envoyées à {}", creator.getEmail());
+        } catch (Exception e) {
+            log.error("❌ Erreur notification création groupe: {}", e.getMessage());
+        }
 
         return new GroupResponse(group);
     }
