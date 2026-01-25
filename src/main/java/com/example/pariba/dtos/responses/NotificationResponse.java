@@ -9,6 +9,7 @@ import java.time.Instant;
 public class NotificationResponse {
     
     private String id;
+    private String personId;
     private NotificationType type;
     private NotificationChannel channel;
     private String title;
@@ -17,11 +18,13 @@ public class NotificationResponse {
     private Instant sentAt;
     private boolean readFlag;
     private Instant createdAt;
+    private Instant updatedAt;
 
     public NotificationResponse() {}
 
     public NotificationResponse(Notification notification) {
         this.id = notification.getId();
+        this.personId = notification.getPerson() != null ? notification.getPerson().getId() : null;
         this.type = notification.getType();
         this.channel = notification.getChannel();
         this.title = notification.getTitle();
@@ -30,6 +33,7 @@ public class NotificationResponse {
         this.sentAt = notification.getSentAt();
         this.readFlag = notification.isReadFlag();
         this.createdAt = notification.getCreatedAt();
+        this.updatedAt = notification.getUpdatedAt();
     }
 
     public String getId() { return id; }
@@ -50,4 +54,8 @@ public class NotificationResponse {
     public void setReadFlag(boolean readFlag) { this.readFlag = readFlag; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public String getPersonId() { return personId; }
+    public void setPersonId(String personId) { this.personId = personId; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -15,6 +15,7 @@ public class Advertisement extends BaseEntity {
     private String imageUrl;
 
     private String linkUrl;
+    private String videoUrl; // URL de la vidéo (uniquement pour FULLSCREEN)
     private String targetingJson; // pays, plan, etc.
     private String title;
     private String description;
@@ -23,7 +24,6 @@ public class Advertisement extends BaseEntity {
     private Integer clicks = 0;
     private java.time.LocalDateTime startDate;
     private java.time.LocalDateTime endDate;
-    
     private boolean active = true;
 
     public AdPlacement getPlacement() { return placement; }
@@ -31,7 +31,30 @@ public class Advertisement extends BaseEntity {
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public String getLinkUrl() { return linkUrl; }
-    public void setLinkUrl(String linkUrl) { this.linkUrl = linkUrl; }
+    public void setLinkUrl(String linkUrl) { 
+        if (linkUrl != null && !linkUrl.isEmpty()) {
+            // Décoder les entités HTML (&#x2F; -> /, etc.)
+            String decodedUrl = linkUrl
+                .replace("&#x2F;", "/")
+                .replace("&#x3A;", ":")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'");
+            
+            // Supprimer le doublon https://https:// si présent
+            if (decodedUrl.startsWith("https://https://")) {
+                decodedUrl = decodedUrl.substring(8); // Enlever le premier "https://"
+            } else if (decodedUrl.startsWith("http://http://")) {
+                decodedUrl = decodedUrl.substring(7); // Enlever le premier "http://"
+            }
+            
+            this.linkUrl = decodedUrl.trim();
+        } else {
+            this.linkUrl = linkUrl;
+        }
+    }
     public String getTargetingJson() { return targetingJson; }
     public void setTargetingJson(String targetingJson) { this.targetingJson = targetingJson; }
     public String getTitle() { return title; }
@@ -48,6 +71,8 @@ public class Advertisement extends BaseEntity {
     public void setStartDate(java.time.LocalDateTime startDate) { this.startDate = startDate; }
     public java.time.LocalDateTime getEndDate() { return endDate; }
     public void setEndDate(java.time.LocalDateTime endDate) { this.endDate = endDate; }
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     public boolean getActive() { return active; }

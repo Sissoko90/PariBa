@@ -25,16 +25,18 @@ public class AdvertisementController {
     private final IAdvertisementService advertisementService;
     
     /**
-     * Récupère les publicités actives pour un placement donné
+     * Récupère les publicités actives pour un placement donné (optionnel)
+     * Si placement n'est pas spécifié, retourne toutes les publicités actives
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<AdvertisementResponse>>> getActiveAdvertisements(
-            @RequestParam String placement,
+            @RequestParam(required = false) String placement,
             @AuthenticationPrincipal UserDetails userDetails) {
         
         log.info("GET /advertisements - placement: {}", placement);
         
-        String personId = userDetails.getUsername();
+        // Si l'utilisateur n'est pas authentifié, utiliser null comme personId
+        String personId = userDetails != null ? userDetails.getUsername() : null;
         List<AdvertisementResponse> ads = advertisementService
                 .getActiveAdvertisements(placement, personId);
         
@@ -50,8 +52,13 @@ public class AdvertisementController {
             @AuthenticationPrincipal UserDetails userDetails) {
         
         log.info("POST /advertisements/{}/impression", adId);
+        log.info("UserDetails: {}", userDetails);
+        log.info("UserDetails class: {}", userDetails != null ? userDetails.getClass().getName() : "null");
+        log.info("Username: {}", userDetails != null ? userDetails.getUsername() : "null");
         
         String personId = userDetails.getUsername();
+        log.info("PersonId extracted: {}", personId);
+        
         advertisementService.recordImpression(adId, personId);
         
         return ResponseEntity.ok(ApiResponse.success(UiConstants.SUCCESS_IMPRESSION_RECORDED, null));
@@ -65,7 +72,7 @@ public class AdvertisementController {
             @PathVariable String adId,
             @AuthenticationPrincipal UserDetails userDetails) {
         
-        log.info("POST /advertisements/{}/click", adId);
+        log.info("POST /advertisements/{}/click - User: {}", adId, userDetails.getUsername());
         
         String personId = userDetails.getUsername();
         advertisementService.recordClick(adId, personId);

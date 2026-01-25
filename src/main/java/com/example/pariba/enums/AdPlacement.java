@@ -1,10 +1,9 @@
 package com.example.pariba.enums;
 
 public enum AdPlacement { 
-    HOME_TOP("Haut de page d'accueil"), 
-    HOME_LIST("Liste d'accueil"), 
-    GROUP_HEADER("En-tête de groupe"), 
-    HISTORY_BANNER("Bannière historique");
+    FULLSCREEN("Plein écran"), 
+    BANNER("Bannière"), 
+    POPUP("Popup");
     
     private final String label;
     

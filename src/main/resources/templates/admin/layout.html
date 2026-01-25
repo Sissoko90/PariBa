@@ -179,6 +179,37 @@
                                 Publicités
                             </a>
                         </li>
+                        
+                        <!-- Support Menu -->
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/support/tickets}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/support/tickets')} ? 'active' : ''">
+                                <i class="fas fa-ticket-alt"></i>
+                                Tickets Support
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/support/faqs}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/support/faqs')} ? 'active' : ''">
+                                <i class="fas fa-question-circle"></i>
+                                FAQs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/support/guides}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/support/guides')} ? 'active' : ''">
+                                <i class="fas fa-book-open"></i>
+                                Guides
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/admin/support/contact}"
+                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/support/contact')} ? 'active' : ''">
+                                <i class="fas fa-cog"></i>
+                                Config Support
+                            </a>
+                        </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/stats}"
                                th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/stats')} ? 'active' : ''">

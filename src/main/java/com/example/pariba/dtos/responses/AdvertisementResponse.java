@@ -42,6 +42,11 @@ public class AdvertisementResponse {
     private String linkUrl;
     
     /**
+     * URL de la vidéo (pour FULLSCREEN uniquement)
+     */
+    private String videoUrl;
+    
+    /**
      * Placement de la publicité (banner, interstitial, native)
      */
     private String placement;

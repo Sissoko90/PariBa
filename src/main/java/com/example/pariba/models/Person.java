@@ -9,17 +9,28 @@ import jakarta.persistence.*;
   @Index(columnList = "email", unique = true)
 })
 public class Person extends BaseEntity {
-
-    @Column(nullable = false) private String prenom;
-    @Column(nullable = false) private String nom;
-    @Column(unique = true) private String email;
-    @Column(unique = true) private String phone;
+    
+    @Column(nullable = false) 
+    private String prenom;
+    
+    @Column(nullable = false) 
+    private String nom;
+    
+    @Column(unique = true) 
+    private String email;
+    
+    @Column(unique = true) 
+    private String phone;
+    
     private String photo; // url/base64
-
+    
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AppRole role = AppRole.USER;
-
+    
     @OneToOne(mappedBy = "person", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
     private User user;
 
@@ -33,6 +44,8 @@ public class Person extends BaseEntity {
     public void setPhone(String phone) { this.phone = phone; }
     public String getPhoto() { return photo; }
     public void setPhoto(String photo) { this.photo = photo; }
+    public String getFcmToken() { return fcmToken; }
+    public void setFcmToken(String fcmToken) { this.fcmToken = fcmToken; }
     public AppRole getRole() { return role; }
     public void setRole(AppRole role) { this.role = role; }
     public User getUser() { return user; }

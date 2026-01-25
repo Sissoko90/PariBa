@@ -276,10 +276,10 @@ public class NotificationServiceImpl implements INotificationService {
         try {
             Person person = notification.getPerson();
             
-            // Récupérer les tokens de l'utilisateur
-            var tokens = deviceTokenRepository.findByPersonIdAndActiveTrue(person.getId());
+            // Vérifier si la personne a un token FCM
+            String fcmToken = person.getFcmToken();
             
-            if (tokens.isEmpty()) {
+            if (fcmToken == null || fcmToken.isEmpty()) {
                 log.warn("Pas de token FCM pour la personne: {}", person.getId());
                 return;
             }
@@ -289,21 +289,49 @@ public class NotificationServiceImpl implements INotificationService {
             data.put("notificationId", notification.getId());
             data.put("type", notification.getType().name());
             
-            // Envoyer à tous les appareils
-            List<String> tokenStrings = tokens.stream()
-                .map(t -> t.getToken())
-                .collect(Collectors.toList());
-            
-            pushService.sendToMultipleDevices(
-                tokenStrings,
+            // Envoyer la notification push
+            pushService.sendToDevice(
+                fcmToken,
                 notification.getTitle(),
                 notification.getBody(),
                 data
             );
             
-            log.info("Push envoyé à {} appareils", tokens.size());
+            log.info("Push envoyé à la personne: {}", person.getId());
         } catch (Exception e) {
             log.error("Erreur lors de l'envoi du push: {}", e.getMessage());
         }
     }
+     @Override
+    public void saveFcmToken(String personId, String fcmToken) {
+        Person person = personRepository.findById(personId)
+            .orElseThrow(() -> new ResourceNotFoundException("Person", "id", personId));
+        person.setFcmToken(fcmToken);
+        personRepository.save(person);
+        log.info("Token FCM enregistré pour la personne: {}", personId);
+    }
+
+    @Override
+    public void deleteNotification(String notificationId, String personId) {
+        Notification notification = notificationRepository.findById(notificationId)
+            .orElseThrow(() -> new ResourceNotFoundException("Notification", "id", notificationId));
+        
+        // Vérifier que la notification appartient bien à la personne
+        if (!notification.getPerson().getId().equals(personId)) {
+            throw new IllegalArgumentException("Cette notification ne vous appartient pas");
+        }
+        
+        notificationRepository.delete(notification);
+        log.info("Notification {} supprimée pour la personne: {}", notificationId, personId);
+    }
+
+    @Override
+    public void deleteAllNotifications(String personId) {
+        List<Notification> notifications = notificationRepository.findByPersonIdOrderByCreatedAtDesc(personId);
+        notificationRepository.deleteAll(notifications);
+        log.info("Toutes les notifications supprimées pour la personne: {}", personId);
+    }
+
 }
+
+   

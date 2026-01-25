@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .ignoringRequestMatchers("/api/v1/**")  // API REST sans CSRF
                 .ignoringRequestMatchers("/admin/subscription-plans/**")  // API REST admin pour plans d'abonnement
                 .ignoringRequestMatchers("/admin/api/**")  // API REST admin pour notifications et autres
+                .ignoringRequestMatchers("/admin/advertisements/upload-image")  // Upload d'images de publicités
                 .ignoringRequestMatchers("/admin/subscriptions", "/admin/subscription-stats", "/admin/subscription-plans-view")  // Pages admin en lecture seule
                 // Dashboard admin avec CSRF activé pour les formulaires HTML
             )

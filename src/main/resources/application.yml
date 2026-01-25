@@ -66,6 +66,8 @@ springdoc:
 app:
   seed:
       enabled: true
+  upload:
+    dir: uploads/advertisements
       
   rate-limit:
     capacity: 100
@@ -102,7 +104,7 @@ file:
 
 # Configuration Firebase (notifications push)
 firebase:
-  enabled: true  # Activer après configuration
+  enabled: true  # Activer après avoir configuré firebase-adminsdk.json
   config:
     file: firebase-adminsdk.json  # Chemin vers le fichier de configuration Firebase
 
@@ -133,9 +135,9 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:abdaty11@gmail.com}
+    username: ${MAIL_USERNAME:makenzyks6@gmail.com}
     from: ${MAIL_FROM:${spring.mail.username}}
-    password: ${MAIL_PASSWORD:lyiv qoia uwep xrqj}
+    password: ${MAIL_PASSWORD:dtas yfru noki bdaa}
     properties:
       mail:
         smtp:
@@ -236,6 +238,7 @@ spring:
 
 # Tests: valeurs par défaut; les tests peuvent override via @SpringBootTest(properties)
 app:
+  base-url: ${APP_BASE_URL:http://192.168.100.99:8085}
   rate-limit:
     capacity: 100
     refill-tokens: 100

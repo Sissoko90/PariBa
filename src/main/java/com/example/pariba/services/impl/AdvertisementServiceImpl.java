@@ -2,6 +2,7 @@ package com.example.pariba.services.impl;
 
 import com.example.pariba.dtos.responses.AdvertisementResponse;
 import com.example.pariba.enums.AdEventType;
+import com.example.pariba.enums.AdPlacement;
 import com.example.pariba.enums.SubscriptionStatus;
 import com.example.pariba.exceptions.ResourceNotFoundException;
 import com.example.pariba.models.AdEvent;
@@ -48,7 +49,22 @@ public class AdvertisementServiceImpl implements IAdvertisementService {
         }
         
         LocalDateTime now = LocalDateTime.now();
-        List<Advertisement> ads = advertisementRepository.findByPlacementAndActiveTrue(placement);
+        List<Advertisement> ads;
+        
+        // Si placement est null, récupérer toutes les publicités actives
+        if (placement == null || placement.isEmpty()) {
+            log.info("Récupération de toutes les publicités actives");
+            ads = advertisementRepository.findByActiveTrue();
+        } else {
+            log.info("Récupération des publicités pour placement: {}", placement);
+            try {
+                AdPlacement adPlacement = AdPlacement.valueOf(placement);
+                ads = advertisementRepository.findByPlacementAndActiveTrue(adPlacement);
+            } catch (IllegalArgumentException e) {
+                log.error("Placement invalide: {}", placement);
+                return Collections.emptyList();
+            }
+        }
         
         // Filtrer les publicités selon les dates de validité
         return ads.stream()
@@ -63,6 +79,12 @@ public class AdvertisementServiceImpl implements IAdvertisementService {
      */
     private boolean hasActiveSubscription(String personId) {
         try {
+            // Si personId est null (utilisateur non authentifié), pas d'abonnement
+            if (personId == null || personId.isEmpty()) {
+                log.info("PersonId null - Utilisateur non authentifié, pas d'abonnement");
+                return false;
+            }
+            
             Person person = personRepository.findById(personId)
                     .orElse(null);
             
@@ -91,6 +113,7 @@ public class AdvertisementServiceImpl implements IAdvertisementService {
     public void recordImpression(String adId, String personId) {
         log.info("Enregistrement d'une impression pour ad: {}, person: {}", adId, personId);
         
+        // Vérifier que la publicité existe
         Advertisement ad = advertisementRepository.findById(adId)
                 .orElseThrow(() -> new ResourceNotFoundException("Publicité non trouvée"));
         
@@ -106,9 +129,8 @@ public class AdvertisementServiceImpl implements IAdvertisementService {
         
         adEventRepository.save(event);
         
-        // Incrémenter le compteur d'impressions
-        ad.setImpressions(ad.getImpressions() + 1);
-        advertisementRepository.save(ad);
+        // Incrémenter atomiquement le compteur d'impressions (évite les deadlocks)
+        advertisementRepository.incrementImpressions(adId);
     }
     
     @Override
@@ -116,6 +138,7 @@ public class AdvertisementServiceImpl implements IAdvertisementService {
     public void recordClick(String adId, String personId) {
         log.info("Enregistrement d'un clic pour ad: {}, person: {}", adId, personId);
         
+        // Vérifier que la publicité existe
         Advertisement ad = advertisementRepository.findById(adId)
                 .orElseThrow(() -> new ResourceNotFoundException("Publicité non trouvée"));
         
@@ -131,9 +154,8 @@ public class AdvertisementServiceImpl implements IAdvertisementService {
         
         adEventRepository.save(event);
         
-        // Incrémenter le compteur de clics
-        ad.setClicks(ad.getClicks() + 1);
-        advertisementRepository.save(ad);
+        // Incrémenter atomiquement le compteur de clics (évite les deadlocks)
+        advertisementRepository.incrementClicks(adId);
     }
     
     @Override
@@ -156,6 +178,7 @@ public class AdvertisementServiceImpl implements IAdvertisementService {
                 .description(ad.getDescription())
                 .imageUrl(ad.getImageUrl())
                 .linkUrl(ad.getLinkUrl())
+                .videoUrl(ad.getVideoUrl())
                 .placement(ad.getPlacement().name())
                 .targetingCriteria(ad.getTargetingCriteria())
                 .active(ad.getActive())

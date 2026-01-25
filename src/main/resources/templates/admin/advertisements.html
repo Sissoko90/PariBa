@@ -38,6 +38,39 @@
             background: #ef4444;
             color: white;
         }
+        .ad-image {
+            width: 120px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .ad-title {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .stats-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin: 2px;
+        }
+        .stats-impressions {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .stats-clicks {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .placement-badge {
+            background: #f3e8ff;
+            color: #6b21a8;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -74,40 +107,62 @@
         <div class="table-card">
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <thead>
+                    <thead class="table-light">
                         <tr>
-                            <th>Titre</th>
-                            <th>Description</th>
-                            <th>Image</th>
+                            <th style="width: 80px;">Image</th>
+                            <th>Publicité</th>
+                            <th>Emplacement</th>
                             <th>Période</th>
-                            <th>Stats</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
+                            <th>Statistiques</th>
+                            <th style="width: 100px;">Statut</th>
+                            <th style="width: 150px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="ad : ${advertisements}">
-                            <td th:text="${ad.title}">Titre</td>
-                            <td th:text="${ad.description}">Description</td>
                             <td>
                                 <img th:if="${ad.imageUrl}" th:src="${ad.imageUrl}" 
-                                     style="max-width: 100px; border-radius: 8px;" alt="Pub">
+                                     class="ad-image" alt="Publicité">
+                                <div th:unless="${ad.imageUrl}" class="ad-image bg-light d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-image text-muted fa-2x"></i>
+                                </div>
                             </td>
                             <td>
-                                <small th:if="${ad.startDate}">
-                                    Du <span th:text="${#temporals.format(ad.startDate, 'dd/MM/yyyy')}"></span>
-                                </small><br>
-                                <small th:if="${ad.endDate}">
-                                    Au <span th:text="${#temporals.format(ad.endDate, 'dd/MM/yyyy')}"></span>
+                                <div class="ad-title" th:text="${ad.title}">Titre</div>
+                                <small class="text-muted" th:text="${ad.description}">Description</small>
+                                <div th:if="${ad.linkUrl}" class="mt-1">
+                                    <a th:href="${ad.linkUrl}" target="_blank" class="text-primary text-decoration-none">
+                                        <i class="fas fa-external-link-alt"></i> <small>Lien</small>
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="placement-badge" th:text="${ad.placement?.label}">Emplacement</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    <div th:if="${ad.startDate}">
+                                        <i class="fas fa-calendar-alt"></i> <span th:text="${#temporals.format(ad.startDate, 'dd/MM/yyyy')}"></span>
+                                    </div>
+                                    <div th:if="${ad.endDate}">
+                                        <i class="fas fa-calendar-check"></i> <span th:text="${#temporals.format(ad.endDate, 'dd/MM/yyyy')}"></span>
+                                    </div>
+                                    <div th:unless="${ad.startDate}" class="text-muted fst-italic">Permanent</div>
                                 </small>
                             </td>
                             <td>
-                                <small>
-                                    <i class="fas fa-eye"></i> <span th:text="${ad.impressions}">0</span><br>
-                                    <i class="fas fa-mouse-pointer"></i> <span th:text="${ad.clicks}">0</span>
-                                </small>
+                                <div>
+                                    <span class="stats-badge stats-impressions">
+                                        <i class="fas fa-eye"></i> <span th:text="${ad.impressions}">0</span>
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="stats-badge stats-clicks">
+                                        <i class="fas fa-mouse-pointer"></i> <span th:text="${ad.clicks}">0</span>
+                                    </span>
+                                </div>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 <span th:class="${ad.active} ? 'badge badge-active' : 'badge badge-inactive'"
                                       th:text="${ad.active} ? 'Active' : 'Inactive'">
                                 </span>
@@ -136,7 +191,7 @@
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(advertisements)}">
-                            <td colspan="7" class="text-center text-muted">
+                            <td colspan="7" class="text-center text-muted py-5">
                                 <i class="fas fa-inbox fa-3x mb-3"></i>
                                 <p>Aucune publicité pour le moment</p>
                             </td>

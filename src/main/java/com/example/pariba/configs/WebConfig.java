@@ -32,7 +32,11 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // Servir les fichiers uploadés
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadDir + "/");
+                .addResourceLocations("file:" + uploadDir + "/")
+                .addResourceLocations("file:uploads/");
+        
+        // Log pour debug
+        System.out.println("📁 Serving static files from: file:" + uploadDir + "/");
     }
     
     @Override

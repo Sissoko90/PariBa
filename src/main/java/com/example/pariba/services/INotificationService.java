@@ -15,4 +15,8 @@ public interface INotificationService {
     List<NotificationResponse> getUnreadNotifications(String personId);
     void markAsRead(String notificationId, String personId);
     void markAllAsRead(String personId);
+    void saveFcmToken(String personId, String fcmToken);
+    void deleteNotification(String notificationId, String personId);
+    void deleteAllNotifications(String personId);
 }
+    

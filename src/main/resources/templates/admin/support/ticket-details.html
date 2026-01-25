@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails du Ticket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; }
+        .header-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .ticket-card { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .response-card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .info-box { background: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-ticket-alt me-2"></i>Détails du Ticket</h2>
+                    <p class="text-muted mb-0">Gérer et répondre au ticket de support</p>
+                </div>
+                <a href="/admin/support/tickets" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour</a>
+            </div>
+        </div>
+
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i><span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="ticket-card">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h4 th:text="${ticket.subject}">Sujet du ticket</h4>
+                            <div class="mt-2">
+                                <span class="badge bg-info me-2" th:text="${ticket.type.label}">Type</span>
+                                <span class="badge me-2" 
+                                      th:classappend="${ticket.status.name() == 'OPEN' ? 'bg-warning' : 
+                                                       ticket.status.name() == 'IN_PROGRESS' ? 'bg-primary' :
+                                                       ticket.status.name() == 'RESOLVED' ? 'bg-success' : 'bg-secondary'}"
+                                      th:text="${ticket.status.label}">Statut</span>
+                                <span class="badge"
+                                      th:classappend="${ticket.priority.name() == 'LOW' ? 'bg-success' :
+                                                       ticket.priority.name() == 'MEDIUM' ? 'bg-info' :
+                                                       ticket.priority.name() == 'HIGH' ? 'bg-warning' : 'bg-danger'}"
+                                      th:text="${ticket.priority.label}">Priorité</span>
+                            </div>
+                        </div>
+                        <small class="text-muted" th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy HH:mm')}">Date</small>
+                    </div>
+
+                    <div class="info-box">
+                        <p class="mb-0" th:text="${ticket.message}">Message du ticket...</p>
+                    </div>
+
+                    <div th:if="${ticket.adminResponse}" class="mt-4">
+                        <h5><i class="fas fa-reply me-2"></i>Réponse de l'administrateur</h5>
+                        <div class="alert alert-info">
+                            <p class="mb-0" th:text="${ticket.adminResponse}"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="response-card">
+                    <h5 class="mb-3"><i class="fas fa-comment-dots me-2"></i>Répondre au ticket</h5>
+                    <form th:action="@{/admin/support/tickets/{id}/respond(id=${ticket.id})}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Votre réponse</label>
+                            <textarea name="response" class="form-control" rows="5" required placeholder="Écrivez votre réponse ici..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Changer le statut</label>
+                            <select name="status" class="form-select">
+                                <option th:each="status : ${statuses}" 
+                                        th:value="${status}" 
+                                        th:text="${status.label}"
+                                        th:selected="${status == ticket.status}"></option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Envoyer la réponse
+                            </button>
+                            <form th:action="@{/admin/support/tickets/{id}/delete(id=${ticket.id})}" 
+                                  method="post" style="display: inline;"
+                                  onsubmit="return confirm('Supprimer ce ticket ?');">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>Supprimer
+                                </button>
+                            </form>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="ticket-card">
+                    <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Informations</h5>
+                    <div class="mb-3">
+                        <small class="text-muted">Créé le</small>
+                        <p class="mb-0 fw-bold" th:text="${#temporals.format(ticket.createdAt, 'dd/MM/yyyy à HH:mm')}"></p>
+                    </div>
+                    <div class="mb-3" th:if="${ticket.updatedAt}">
+                        <small class="text-muted">Dernière mise à jour</small>
+                        <p class="mb-0 fw-bold" th:text="${#temporals.format(ticket.updatedAt, 'dd/MM/yyyy à HH:mm')}"></p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Type</small>
+                        <p class="mb-0 fw-bold" th:text="${ticket.type.label}"></p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Priorité</small>
+                        <p class="mb-0 fw-bold" th:text="${ticket.priority.label}"></p>
+                    </div>
+                    <div>
+                        <small class="text-muted">Statut actuel</small>
+                        <p class="mb-0 fw-bold" th:text="${ticket.status.label}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

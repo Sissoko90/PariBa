@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isEdit ? 'Modifier le Guide' : 'Nouveau Guide'}">Guide</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1000px; }
+        .header-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .form-card { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-book-open me-2"></i><span th:text="${isEdit ? 'Modifier le Guide' : 'Nouveau Guide'}"></span></h2>
+                    <p class="text-muted mb-0">Créer un guide d'utilisation pour les utilisateurs</p>
+                </div>
+                <a href="/admin/support/guides" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Retour</a>
+            </div>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i><span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="form-card">
+            <form th:action="${isEdit ? '/admin/support/guides/' + guide.id + '/edit' : '/admin/support/guides/new'}" method="post" th:object="${guide}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-heading me-1"></i>Titre *</label>
+                    <input type="text" class="form-control" th:field="*{title}" required placeholder="Titre du guide">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-align-left me-1"></i>Description courte</label>
+                    <input type="text" class="form-control" th:field="*{description}" placeholder="Brève description du guide">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-file-alt me-1"></i>Contenu *</label>
+                    <textarea class="form-control" th:field="*{content}" rows="10" required placeholder="Contenu du guide (Markdown supporté)"></textarea>
+                    <small class="text-muted">Vous pouvez utiliser Markdown pour formater le texte</small>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-tag me-1"></i>Catégorie *</label>
+                        <select class="form-select" th:field="*{category}" required>
+                            <option value="">Sélectionner une catégorie</option>
+                            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat.label}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-clock me-1"></i>Temps de lecture (minutes)</label>
+                        <input type="number" class="form-control" th:field="*{estimatedReadTime}" placeholder="5">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-icons me-1"></i>Icône (optionnel)</label>
+                        <input type="text" class="form-control" th:field="*{iconName}" placeholder="book">
+                        <small class="text-muted">Nom de l'icône Bootstrap Icons (ex: book, gear, person)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-sort-numeric-up me-1"></i>Ordre d'affichage</label>
+                        <input type="number" class="form-control" th:field="*{displayOrder}" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" th:field="*{active}">
+                        <label class="form-check-label">Guide actif (visible dans l'application)</label>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-2"></i><span th:text="${isEdit ? 'Mettre à jour' : 'Créer'}"></span>
+                    </button>
+                    <a href="/admin/support/guides" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
