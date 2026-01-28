@@ -2,7 +2,6 @@ package com.example.pariba.services;
 
 import com.example.pariba.dtos.requests.DeclarePaymentRequest;
 import com.example.pariba.dtos.requests.PaymentRequest;
-import com.example.pariba.dtos.requests.CashPaymentRequest;
 import com.example.pariba.dtos.requests.ValidatePaymentRequest;
 import com.example.pariba.dtos.responses.PaymentResponse;
 
@@ -17,7 +16,6 @@ public interface IPaymentService {
 
     // ADMIN
     PaymentResponse validatePayment(String adminId, ValidatePaymentRequest request);
-    PaymentResponse validateCashPayment(String adminId, CashPaymentRequest request);
 
     // Compat legacy / fallback
     PaymentResponse processPayment(String personId, PaymentRequest request);
@@ -27,6 +25,6 @@ public interface IPaymentService {
     List<PaymentResponse> getPaymentsByContribution(String contributionId);
     List<PaymentResponse> getPaymentsByPerson(String personId);
     List<PaymentResponse> getPaymentsByGroup(String groupId);
-    List<PaymentResponse> getPendingPayments(String groupId);
+    List<PaymentResponse> getPendingPayments(String adminId, String groupId); // Nécessite admin du groupe
     List<PaymentResponse> getMyPendingPayments(String personId);
 }

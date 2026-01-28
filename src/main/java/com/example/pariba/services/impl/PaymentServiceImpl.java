@@ -4,7 +4,6 @@ import com.example.pariba.constants.AppConstants;
 import com.example.pariba.constants.MessageConstants;
 import com.example.pariba.dtos.requests.DeclarePaymentRequest;
 import com.example.pariba.dtos.requests.PaymentRequest;
-import com.example.pariba.dtos.requests.CashPaymentRequest;
 import com.example.pariba.dtos.requests.ValidatePaymentRequest;
 import com.example.pariba.dtos.responses.PaymentResponse;
 import com.example.pariba.enums.ContributionStatus;
@@ -15,7 +14,6 @@ import com.example.pariba.enums.PaymentType;
 import com.example.pariba.exceptions.BadRequestException;
 import com.example.pariba.exceptions.ResourceNotFoundException;
 import com.example.pariba.models.Contribution;
-import com.example.pariba.models.GroupMembership;
 import com.example.pariba.models.Payment;
 import com.example.pariba.repositories.ContributionRepository;
 import com.example.pariba.repositories.GroupMembershipRepository;
@@ -98,8 +96,15 @@ public class PaymentServiceImpl implements IPaymentService {
         payment.setPayer(personRepository.findById(personId).orElseThrow());
         payment.setAmount(request.getAmount());
         payment.setPaymentType(request.getPaymentType());
-        payment.setStatus(PaymentStatus.PENDING); // IMPORTANT: En attente de validation
-        payment.setExternalRef(request.getTransactionRef());
+        payment.setStatus(PaymentStatus.PENDING); // IMPORTANT: En attente de validation (pour tous les types, y compris CASH)
+        
+        // Générer une référence pour les paiements CASH
+        if (request.getPaymentType() == PaymentType.CASH) {
+            payment.setExternalRef("CASH-" + System.currentTimeMillis());
+        } else {
+            payment.setExternalRef(request.getTransactionRef());
+        }
+        
         payment.setNotes(request.getNotes());
         payment.setPayout(false);
 
@@ -111,7 +116,7 @@ public class PaymentServiceImpl implements IPaymentService {
         // Audit log
         auditService.log(personId, AppConstants.AUDIT_DECLARE_PAYMENT, "Payment", payment.getId(),
             String.format("{\"amount\": %s, \"type\": \"%s\", \"ref\": \"%s\"}", 
-                request.getAmount(), request.getPaymentType(), request.getTransactionRef()));
+                request.getAmount(), request.getPaymentType(), payment.getExternalRef()));
 
         // Envoyer notification de déclaration de paiement à l'admin
         try {
@@ -154,7 +159,7 @@ public class PaymentServiceImpl implements IPaymentService {
                 userVars
             );
             
-            log.info("✅ Notifications déclaration paiement envoyées");
+            log.info("✅ Notifications déclaration paiement envoyées (type: {})", payment.getPaymentType());
         } catch (Exception e) {
             log.error("❌ Erreur notification déclaration paiement: {}", e.getMessage());
         }
@@ -292,87 +297,6 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    @Transactional
-    public PaymentResponse validateCashPayment(String adminId, CashPaymentRequest request) {
-        // Vérifier que l'admin est bien admin du groupe
-        Contribution contribution = contributionRepository.findById(request.getContributionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Contribution", "id", request.getContributionId()));
-        
-        // Vérifier que la personne est admin du groupe
-        boolean isAdmin = membershipRepository.findByGroupIdAndPersonId(contribution.getGroup().getId(), adminId)
-                .map(membership -> membership.getRole().name().equals("ADMIN"))
-                .orElse(false);
-        
-        if (!isAdmin) {
-            throw new BadRequestException("Seul l'administrateur du groupe peut valider les paiements cash");
-        }
-        
-        // Créer le paiement cash (déjà confirmé par l'admin)
-        Payment payment = new Payment();
-        payment.setContribution(contribution);
-        payment.setGroup(contribution.getGroup());
-        payment.setPayer(contribution.getMember());
-        payment.setAmount(request.getAmount());
-        payment.setPaymentType(PaymentType.CASH);
-        payment.setStatus(PaymentStatus.CONFIRMED); // Directement confirmé par l'admin
-        payment.setExternalRef("CASH-" + System.currentTimeMillis());
-        payment.setNotes(request.getNotes());
-        payment.setPayout(false);
-        payment.setValidatedBy(personRepository.findById(adminId).orElseThrow());
-        payment.setValidatedAt(LocalDateTime.now());
-        
-        payment = paymentRepository.save(payment);
-        
-        // Mettre à jour le statut de la contribution
-        BigDecimal totalPaid = paymentRepository.findByContributionId(contribution.getId())
-                .stream()
-                .filter(p -> p.getStatus() == PaymentStatus.CONFIRMED)
-                .map(Payment::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        if (totalPaid.compareTo(contribution.getAmountDue()) >= 0) {
-            contributionService.markAsPaid(contribution.getId());
-        } else if (totalPaid.compareTo(BigDecimal.ZERO) > 0) {
-            contribution.setStatus(ContributionStatus.PARTIAL);
-            contributionRepository.save(contribution);
-        }
-        
-        // Audit log
-        auditService.log(adminId, "VALIDATE_CASH_PAYMENT", "Payment", payment.getId(), 
-            String.format("{\"amount\": %s, \"member\": \"%s\", \"notes\": \"%s\"}", 
-                request.getAmount(), contribution.getMember().getId(), request.getNotes()));
-        
-        // Envoyer notification au membre
-        try {
-            Map<String, String> variables = new HashMap<>();
-            variables.put("montant", String.format("%,.0f", payment.getAmount()));
-            variables.put("groupe", contribution.getGroup().getNom());
-            variables.put("date", LocalDate.now().toString());
-            variables.put("reference", payment.getExternalRef());
-            
-            notificationService.sendNotificationWithTemplate(
-                contribution.getMember().getId(),
-                NotificationType.PAYMENT_VALIDATED,
-                NotificationChannel.PUSH,
-                variables
-            );
-            
-            notificationService.sendNotificationWithTemplate(
-                contribution.getMember().getId(),
-                NotificationType.PAYMENT_VALIDATED,
-                NotificationChannel.SMS,
-                variables
-            );
-            
-            log.info("✅ Notifications paiement cash envoyées");
-        } catch (Exception e) {
-            log.error("❌ Erreur notification paiement cash: {}", e.getMessage());
-        }
-        
-        return new PaymentResponse(payment);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public PaymentResponse getPaymentById(String paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
@@ -409,7 +333,16 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PaymentResponse> getPendingPayments(String groupId) {
+    public List<PaymentResponse> getPendingPayments(String adminId, String groupId) {
+        // Vérifier que la personne est admin du groupe
+        boolean isAdmin = membershipRepository.findByGroupIdAndPersonId(groupId, adminId)
+                .map(membership -> membership.getRole().name().equals("ADMIN"))
+                .orElse(false);
+        
+        if (!isAdmin) {
+            throw new BadRequestException("Seul l'administrateur du groupe peut voir les paiements en attente de tous les membres");
+        }
+        
         return paymentRepository.findByGroupIdAndStatus(groupId, PaymentStatus.PENDING)
                 .stream()
                 .map(PaymentResponse::new)

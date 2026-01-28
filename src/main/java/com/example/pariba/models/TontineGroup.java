@@ -19,11 +19,11 @@ public class TontineGroup extends BaseEntity {
     private BigDecimal montant; // par tour et par membre
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private Frequency frequency = Frequency.MENSUEL;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private RotationMode rotationMode = RotationMode.FIXED_ORDER;
 
     @Column(nullable = false) private Integer totalTours;

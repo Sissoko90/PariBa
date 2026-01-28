@@ -329,6 +329,7 @@ public class TourServiceImpl implements ITourService {
 
         for (GroupMembership membership : members) {
             Contribution contribution = new Contribution();
+            contribution.setGroup(group);
             contribution.setTour(tour);
             contribution.setMember(membership.getPerson());
             contribution.setAmountDue(group.getMontant());
