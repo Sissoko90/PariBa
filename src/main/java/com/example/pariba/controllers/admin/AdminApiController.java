@@ -275,6 +275,7 @@ public class AdminApiController {
      * Export groupes en PDF
      */
     @GetMapping("/export/groups/pdf")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<Resource> exportGroupsPdf() {
         log.info("📄 Export groupes en PDF");
         
@@ -298,6 +299,7 @@ public class AdminApiController {
      * Export groupes en Excel
      */
     @GetMapping("/export/groups/excel")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<Resource> exportGroupsExcel() {
         log.info("📊 Export groupes en Excel");
         
@@ -321,6 +323,7 @@ public class AdminApiController {
      * Export paiements en PDF
      */
     @GetMapping("/export/payments/pdf")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<Resource> exportPaymentsPdf() {
         log.info("📄 Export paiements en PDF");
         
@@ -344,6 +347,7 @@ public class AdminApiController {
      * Export paiements en Excel
      */
     @GetMapping("/export/payments/excel")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<Resource> exportPaymentsExcel() {
         log.info("📊 Export paiements en Excel");
         

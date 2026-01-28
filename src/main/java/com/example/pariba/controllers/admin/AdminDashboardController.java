@@ -189,8 +189,16 @@ public class AdminDashboardController {
             var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
             var paymentsPage = paymentRepository.findAll(pageable);
             
+            // Convertir les entités Payment en PaymentResponse pour éviter LazyInitializationException
+            var paymentResponses = paymentsPage.getContent().stream()
+                .map(payment -> {
+                    var response = new com.example.pariba.dtos.responses.PaymentResponse(payment);
+                    return response;
+                })
+                .toList();
+            
             model.addAttribute("pageTitle", "Gestion des Paiements");
-            model.addAttribute("payments", paymentsPage.getContent());
+            model.addAttribute("payments", paymentResponses);
             model.addAttribute("currentPage", page);
             model.addAttribute("totalPages", paymentsPage.getTotalPages());
             model.addAttribute("totalPayments", paymentsPage.getTotalElements());
@@ -257,8 +265,25 @@ public class AdminDashboardController {
                     // Charger l'acteur si présent
                     if (auditLog.getActor() != null) {
                         dto.put("actorName", auditLog.getActor().getPrenom() + " " + auditLog.getActor().getNom());
+                    } else if (auditLog.getUsername() != null) {
+                        // Si username ressemble à un UUID, essayer de charger la personne
+                        String username = auditLog.getUsername();
+                        if (username.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
+                            try {
+                                var person = personRepository.findById(username);
+                                if (person.isPresent()) {
+                                    dto.put("actorName", person.get().getPrenom() + " " + person.get().getNom());
+                                } else {
+                                    dto.put("actorName", "Utilisateur inconnu");
+                                }
+                            } catch (Exception e) {
+                                dto.put("actorName", "Utilisateur inconnu");
+                            }
+                        } else {
+                            dto.put("actorName", username);
+                        }
                     } else {
-                        dto.put("actorName", auditLog.getUsername() != null ? auditLog.getUsername() : "Système");
+                        dto.put("actorName", "Système");
                     }
                     
                     return dto;

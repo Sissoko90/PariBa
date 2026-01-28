@@ -186,21 +186,30 @@
                     <tbody id="paymentsTableBody">
                         <tr th:each="payment : ${payments}">
                             <td><code th:text="${#strings.substring(payment.id, 0, 8)}">abc12345</code></td>
-                            <td th:text="${payment.person?.prenom + ' ' + payment.person?.nom}">John Doe</td>
+                            <td th:text="${payment.payer?.prenom + ' ' + payment.payer?.nom}">John Doe</td>
                             <td><strong th:text="${payment.amount + ' FCFA'}">5000 FCFA</strong></td>
-                            <td th:text="${payment.type}">CONTRIBUTION</td>
+                            <td th:text="${payment.paymentType}">ORANGE_MONEY</td>
                             <td>
+                                <span th:if="${payment.status.name() == 'CONFIRMED'}" class="badge-success">
+                                    <i class="fas fa-check-circle me-1"></i>CONFIRMÉ
+                                </span>
                                 <span th:if="${payment.status.name() == 'SUCCESS'}" class="badge-success">
                                     <i class="fas fa-check-circle me-1"></i>RÉUSSI
                                 </span>
                                 <span th:if="${payment.status.name() == 'PENDING'}" class="badge-pending">
                                     <i class="fas fa-clock me-1"></i>EN ATTENTE
                                 </span>
+                                <span th:if="${payment.status.name() == 'PROCESSING'}" class="badge-pending">
+                                    <i class="fas fa-spinner me-1"></i>EN COURS
+                                </span>
+                                <span th:if="${payment.status.name() == 'REJECTED'}" class="badge-failed">
+                                    <i class="fas fa-ban me-1"></i>REJETÉ
+                                </span>
                                 <span th:if="${payment.status.name() == 'FAILED'}" class="badge-failed">
                                     <i class="fas fa-times-circle me-1"></i>ÉCHOUÉ
                                 </span>
                             </td>
-                            <td th:text="${payment.paymentMethod}">MOBILE_MONEY</td>
+                            <td th:text="${payment.paymentType}">ORANGE_MONEY</td>
                             <td th:text="${#temporals.format(payment.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</td>
                         </tr>
                     </tbody>

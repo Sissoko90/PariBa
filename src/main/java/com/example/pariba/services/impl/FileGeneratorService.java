@@ -251,15 +251,25 @@ public class FileGeneratorService {
             title.setSpacingAfter(20);
             document.add(title);
             
-            PdfPTable table = new PdfPTable(5);
+            PdfPTable table = new PdfPTable(6);
             table.setWidthPercentage(100);
+            table.setWidths(new float[]{2, 3, 2, 2, 2, 2});
             
             com.itextpdf.text.Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.WHITE);
-            addTableHeader(table, headerFont, "ID", "Montant", "Statut", "Méthode", "Date");
+            addTableHeader(table, headerFont, "ID", "Utilisateur", "Montant", "Statut", "Méthode", "Date");
             
             com.itextpdf.text.Font dataFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
             for (Payment payment : payments) {
                 addTableCell(table, dataFont, payment.getId().substring(0, 8));
+                String payerName = "N/A";
+                try {
+                    if (payment.getPayer() != null) {
+                        payerName = payment.getPayer().getPrenom() + " " + payment.getPayer().getNom();
+                    }
+                } catch (Exception e) {
+                    log.warn("Impossible de charger le payeur pour le paiement {}", payment.getId());
+                }
+                addTableCell(table, dataFont, payerName);
                 addTableCell(table, dataFont, payment.getAmount() + " FCFA");
                 addTableCell(table, dataFont, payment.getStatus().name());
                 addTableCell(table, dataFont, payment.getPaymentType() != null ? payment.getPaymentType().name() : "N/A");
@@ -290,7 +300,7 @@ public class FileGeneratorService {
         CellStyle headerStyle = createHeaderStyle(workbook, IndexedColors.ORANGE);
         
         Row headerRow = sheet.createRow(0);
-        String[] headers = {"ID", "Montant", "Statut", "Méthode", "Date"};
+        String[] headers = {"ID", "Utilisateur", "Montant", "Statut", "Méthode", "Date"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -301,10 +311,19 @@ public class FileGeneratorService {
         for (Payment payment : payments) {
             Row row = sheet.createRow(rowNum++);
             row.createCell(0).setCellValue(payment.getId().substring(0, 8));
-            row.createCell(1).setCellValue(payment.getAmount() + " FCFA");
-            row.createCell(2).setCellValue(payment.getStatus().name());
-            row.createCell(3).setCellValue(payment.getPaymentType() != null ? payment.getPaymentType().name() : "N/A");
-            row.createCell(4).setCellValue(payment.getCreatedAt().toString().substring(0, 16));
+            String payerName = "N/A";
+            try {
+                if (payment.getPayer() != null) {
+                    payerName = payment.getPayer().getPrenom() + " " + payment.getPayer().getNom();
+                }
+            } catch (Exception e) {
+                log.warn("Impossible de charger le payeur pour le paiement {}", payment.getId());
+            }
+            row.createCell(1).setCellValue(payerName);
+            row.createCell(2).setCellValue(payment.getAmount() + " FCFA");
+            row.createCell(3).setCellValue(payment.getStatus().name());
+            row.createCell(4).setCellValue(payment.getPaymentType() != null ? payment.getPaymentType().name() : "N/A");
+            row.createCell(5).setCellValue(payment.getCreatedAt().toString().substring(0, 16));
         }
         
         for (int i = 0; i < headers.length; i++) {

@@ -24,7 +24,7 @@ public class SecurityAuditService {
      * Enregistre un événement de sécurité de manière asynchrone
      */
     @Async
-    public void logSecurityEvent(String eventType, String username, String ipAddress, String details) {
+    public void logSecurityEvent(String eventType, String username, String ipAddress, String details, String entityType) {
         try {
             AuditLog auditLog = new AuditLog();
             auditLog.setAction(eventType); // Définir action avec eventType pour satisfaire la contrainte NOT NULL
@@ -32,6 +32,7 @@ public class SecurityAuditService {
             auditLog.setUsername(username);
             auditLog.setIpAddress(ipAddress);
             auditLog.setDetails(details);
+            auditLog.setEntityType(entityType); // Ajouter le type de ressource
             auditLog.setTimestamp(Instant.now());
             
             auditLogRepository.save(auditLog);
@@ -47,7 +48,7 @@ public class SecurityAuditService {
      */
     public void logFailedLogin(String username, String ipAddress) {
         logSecurityEvent("FAILED_LOGIN", username, ipAddress, 
-                        "Tentative de connexion échouée");
+                        "Tentative de connexion échouée", "Authentication");
     }
 
     /**
@@ -55,7 +56,7 @@ public class SecurityAuditService {
      */
     public void logSuccessfulLogin(String username, String ipAddress) {
         logSecurityEvent("SUCCESSFUL_LOGIN", username, ipAddress, 
-                        "Connexion réussie");
+                        "Connexion réussie", "Authentication");
     }
 
     /**
@@ -63,7 +64,7 @@ public class SecurityAuditService {
      */
     public void logUnauthorizedAccess(String username, String resource, String ipAddress) {
         logSecurityEvent("UNAUTHORIZED_ACCESS", username, ipAddress, 
-                        "Tentative d'accès non autorisé à: " + resource);
+                        "Tentative d'accès non autorisé à: " + resource, "Security");
     }
 
     /**
@@ -71,7 +72,7 @@ public class SecurityAuditService {
      */
     public void logDataModification(String username, String entityType, String entityId, String action) {
         logSecurityEvent("DATA_MODIFICATION", username, null, 
-                        String.format("Action: %s sur %s (ID: %s)", action, entityType, entityId));
+                        String.format("Action: %s sur %s (ID: %s)", action, entityType, entityId), entityType);
     }
 
     /**
@@ -79,7 +80,7 @@ public class SecurityAuditService {
      */
     public void logUserCreation(String adminUsername, String newUserPhone) {
         logSecurityEvent("USER_CREATED", adminUsername, null, 
-                        "Nouvel utilisateur créé: " + newUserPhone);
+                        "Nouvel utilisateur créé: " + newUserPhone, "Person");
     }
 
     /**
@@ -87,7 +88,7 @@ public class SecurityAuditService {
      */
     public void logUserDeletion(String adminUsername, String deletedUserPhone) {
         logSecurityEvent("USER_DELETED", adminUsername, null, 
-                        "Utilisateur supprimé: " + deletedUserPhone);
+                        "Utilisateur supprimé: " + deletedUserPhone, "Person");
     }
 
     /**
@@ -95,7 +96,7 @@ public class SecurityAuditService {
      */
     public void logRoleChange(String adminUsername, String targetUser, String oldRole, String newRole) {
         logSecurityEvent("ROLE_CHANGED", adminUsername, null, 
-                        String.format("Rôle de %s changé de %s à %s", targetUser, oldRole, newRole));
+                        String.format("Rôle de %s changé de %s à %s", targetUser, oldRole, newRole), "Person");
     }
 
     /**
@@ -103,7 +104,7 @@ public class SecurityAuditService {
      */
     public void logAdminDashboardAccess(String username, String ipAddress) {
         logSecurityEvent("ADMIN_DASHBOARD_ACCESS", username, ipAddress, 
-                        "Accès au dashboard administrateur");
+                        "Accès au dashboard administrateur", "Dashboard");
     }
 
     /**
@@ -111,7 +112,7 @@ public class SecurityAuditService {
      */
     public void logDataExport(String username, String exportType) {
         logSecurityEvent("DATA_EXPORT", username, null, 
-                        "Export de données: " + exportType);
+                        "Export de données: " + exportType, "Export");
     }
 
     /**
@@ -119,6 +120,6 @@ public class SecurityAuditService {
      */
     public void logSystemConfigChange(String adminUsername, String configKey, String oldValue, String newValue) {
         logSecurityEvent("SYSTEM_CONFIG_CHANGE", adminUsername, null, 
-                        String.format("Configuration %s changée de '%s' à '%s'", configKey, oldValue, newValue));
+                        String.format("Configuration %s changée de '%s' à '%s'", configKey, oldValue, newValue), "Configuration");
     }
 }
