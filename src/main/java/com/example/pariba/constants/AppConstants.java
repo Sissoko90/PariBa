@@ -1,7 +1,8 @@
 package com.example.pariba.constants;
 
 public class AppConstants {
-    
+    public static final String AUDIT_DECLARE_PAYMENT = "DECLARE_PAYMENT";
+    public static final String AUDIT_VALIDATE_PAYMENT = "VALIDATE_PAYMENT";
     // JWT
     public static final String JWT_TOKEN_PREFIX = "Bearer ";
     public static final String JWT_HEADER = "Authorization";

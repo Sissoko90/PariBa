@@ -20,42 +20,28 @@ import java.util.List;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminPaymentController {
-    
+
     private final IPaymentService paymentService;
-    
-    /**
-     * Valider un paiement cash pour un membre
-     */
+
     @PostMapping("/cash/validate")
     public ResponseEntity<PaymentResponse> validateCashPayment(
             @Valid @RequestBody CashPaymentRequest request,
             Principal principal) {
-        
+
         PaymentResponse payment = paymentService.validateCashPayment(
-            principal.getName(), 
-            request
+                principal.getName(),
+                request
         );
-        
         return ResponseEntity.ok(payment);
     }
-    
-    /**
-     * Obtenir tous les paiements d'un groupe
-     */
+
     @GetMapping("/group/{groupId}")
-    public ResponseEntity<List<PaymentResponse>> getGroupPayments(
-            @PathVariable String groupId) {
-        
-        List<PaymentResponse> payments = paymentService.getPaymentsByGroup(groupId);
-        return ResponseEntity.ok(payments);
+    public ResponseEntity<List<PaymentResponse>> getGroupPayments(@PathVariable String groupId) {
+        return ResponseEntity.ok(paymentService.getPaymentsByGroup(groupId));
     }
-    
-    /**
-     * Obtenir les paiements en attente de validation
-     */
-    @GetMapping("/pending")
-    public ResponseEntity<List<PaymentResponse>> getPendingPayments() {
-        List<PaymentResponse> payments = paymentService.getPendingPayments();
-        return ResponseEntity.ok(payments);
+
+    @GetMapping("/group/{groupId}/pending")
+    public ResponseEntity<List<PaymentResponse>> getPendingPayments(@PathVariable String groupId) {
+        return ResponseEntity.ok(paymentService.getPendingPayments(groupId));
     }
 }

@@ -114,7 +114,7 @@ curl "http://localhost:3000/deviceTokens?active=true"
 curl "http://localhost:3000/notifications?readFlag=false"
 
 # Groupes par fréquence
-curl "http://localhost:3000/tontineGroups?frequency=MONTHLY"
+curl "http://localhost:3000/tontineGroups?frequency=MENSUEL"
 ```
 
 ### Pagination

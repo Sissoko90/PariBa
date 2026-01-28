@@ -8,14 +8,13 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public class PaymentResponse {
-    
+
     private String id;
     private PersonResponse payer;
     private BigDecimal amount;
     private PaymentType paymentType;
     private PaymentStatus status;
     private String externalRef;
-    private String invoice;
     private boolean payout;
     private Instant createdAt;
 
@@ -28,7 +27,6 @@ public class PaymentResponse {
         this.paymentType = payment.getPaymentType();
         this.status = payment.getStatus();
         this.externalRef = payment.getExternalRef();
-        this.invoice = payment.getInvoice();
         this.payout = payment.isPayout();
         this.createdAt = payment.getCreatedAt();
     }
@@ -45,8 +43,6 @@ public class PaymentResponse {
     public void setStatus(PaymentStatus status) { this.status = status; }
     public String getExternalRef() { return externalRef; }
     public void setExternalRef(String externalRef) { this.externalRef = externalRef; }
-    public String getInvoice() { return invoice; }
-    public void setInvoice(String invoice) { this.invoice = invoice; }
     public boolean isPayout() { return payout; }
     public void setPayout(boolean payout) { this.payout = payout; }
     public Instant getCreatedAt() { return createdAt; }

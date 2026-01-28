@@ -180,7 +180,7 @@
                             <td th:text="${group.creator != null ? (group.creator.prenom + ' ' + group.creator.nom) : 'N/A'}">John Doe</td>
                             <td><span class="badge bg-primary" th:text="${group.totalTours}">10</span></td>
                             <td><strong th:text="${group.montant + ' FCFA'}">5000 FCFA</strong></td>
-                            <td th:text="${group.frequency}">MONTHLY</td>
+                            <td th:text="${group.frequency}">MENSUEL</td>
                             <td>
                                 <span th:if="${group.startDate != null and group.startDate.isBefore(T(java.time.LocalDate).now())}" class="badge-active">
                                     <i class="fas fa-check-circle me-1"></i>ACTIF

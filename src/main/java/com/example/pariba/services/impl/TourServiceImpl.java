@@ -313,11 +313,11 @@ public class TourServiceImpl implements ITourService {
 
     private LocalDate calculateEndDate(LocalDate startDate, Frequency frequency) {
         switch (frequency) {
-            case WEEKLY:
+            case HEBDOMADAIRE:
                 return startDate.plusWeeks(1).minusDays(1);
-            case BIWEEKLY:
+            case BIHEBDOMADAIRE:
                 return startDate.plusWeeks(2).minusDays(1);
-            case MONTHLY:
+            case MENSUEL:
                 return startDate.plusMonths(1).minusDays(1);
             default:
                 return startDate.plusMonths(1).minusDays(1);

@@ -1,6 +1,7 @@
 package com.example.pariba.controllers;
 
 import com.example.pariba.constants.MessageConstants;
+import com.example.pariba.dtos.requests.DeclarePaymentRequest;
 import com.example.pariba.dtos.requests.PaymentRequest;
 import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.PaymentResponse;
@@ -12,6 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import com.example.pariba.dtos.requests.ValidatePaymentRequest;
+import com.example.pariba.dtos.requests.CashPaymentRequest;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,28 +34,19 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
-    @PostMapping
+     @PostMapping
     @PreAuthorize("hasRole('USER')")
-    @Operation(summary = "Effectuer un paiement", description = "Traite un paiement pour une contribution")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Paiement traité"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Données invalides")
-    })
-    public ResponseEntity<ApiResponse<PaymentResponse>> processPayment(
+    @Operation(summary = "Déclarer un paiement", description = "Déclare un paiement pour une contribution")
+    public ResponseEntity<ApiResponse<PaymentResponse>> declarePayment(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody PaymentRequest request) {
-        String personId = userDetails.getUsername();
-        PaymentResponse payment = paymentService.processPayment(personId, request);
+            @Valid @RequestBody DeclarePaymentRequest request) {
+        PaymentResponse payment = paymentService.declarePayment(userDetails.getUsername(), request);
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.PAYMENT_SUCCESS_PROCESSED, payment));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('USER')")
-    @Operation(summary = "Détails d'un paiement", description = "Récupère les détails d'un paiement")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Paiement trouvé"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Paiement non trouvé")
-    })
+    @Operation(summary = "Détails d'un paiement")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentById(@PathVariable String id) {
         PaymentResponse payment = paymentService.getPaymentById(id);
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, payment));
@@ -59,10 +54,7 @@ public class PaymentController {
 
     @GetMapping("/contribution/{contributionId}")
     @PreAuthorize("hasRole('USER')")
-    @Operation(summary = "Paiements d'une contribution", description = "Récupère tous les paiements d'une contribution")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Liste des paiements")
-    })
+    @Operation(summary = "Paiements d'une contribution")
     public ResponseEntity<ApiResponse<List<PaymentResponse>>> getPaymentsByContribution(@PathVariable String contributionId) {
         List<PaymentResponse> payments = paymentService.getPaymentsByContribution(contributionId);
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, payments));
@@ -70,47 +62,77 @@ public class PaymentController {
 
     @GetMapping("/person/{personId}")
     @PreAuthorize("hasRole('USER')")
-    @Operation(summary = "Paiements d'une personne", description = "Récupère tous les paiements d'une personne")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Liste des paiements")
-    })
+    @Operation(summary = "Paiements d'une personne")
     public ResponseEntity<ApiResponse<List<PaymentResponse>>> getPaymentsByPerson(@PathVariable String personId) {
         List<PaymentResponse> payments = paymentService.getPaymentsByPerson(personId);
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, payments));
     }
 
+    @GetMapping("/group/{groupId}")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Paiements d'un groupe")
+    public ResponseEntity<ApiResponse<List<PaymentResponse>>> getPaymentsByGroup(@PathVariable String groupId) {
+        List<PaymentResponse> payments = paymentService.getPaymentsByGroup(groupId);
+        return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, payments));
+    }
+
+    @GetMapping("/group/{groupId}/pending")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Paiements en attente d'un groupe")
+    public ResponseEntity<ApiResponse<List<PaymentResponse>>> getPendingPayments(@PathVariable String groupId) {
+        List<PaymentResponse> payments = paymentService.getPendingPayments(groupId);
+        return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, payments));
+    }
+
+    @GetMapping("/me/pending")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Mes paiements en attente")
+    public ResponseEntity<ApiResponse<List<PaymentResponse>>> getMyPendingPayments(@AuthenticationPrincipal UserDetails userDetails) {
+        List<PaymentResponse> payments = paymentService.getMyPendingPayments(userDetails.getUsername());
+        return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, payments));
+    }
+
+    // ===================== ADMIN =====================
+
     @PostMapping("/{id}/verify")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Vérifier un paiement", description = "Vérifie et valide un paiement. Nécessite d'être ADMIN ou TREASURER du groupe.")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Paiement vérifié"),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Non autorisé")
-    })
-    public ResponseEntity<ApiResponse<Void>> verifyPayment(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String id) {
-        String personId = userDetails.getUsername();
-        paymentService.verifyPayment(id, personId);
+    @Operation(summary = "Vérifier un paiement")
+    public ResponseEntity<ApiResponse<Void>> verifyPayment(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String id) {
+        paymentService.verifyPayment(id, userDetails.getUsername());
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, null));
     }
 
+    @PostMapping("/validate")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Valider un paiement (confirmé ou rejeté)")
+    public ResponseEntity<ApiResponse<PaymentResponse>> validatePayment(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody ValidatePaymentRequest request) {
+        PaymentResponse payment = paymentService.validatePayment(userDetails.getUsername(), request);
+        return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, payment));
+    }
+
+    @PostMapping("/validate-cash")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Valider un paiement cash")
+    public ResponseEntity<ApiResponse<PaymentResponse>> validateCashPayment(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody CashPaymentRequest request) {
+        PaymentResponse payment = paymentService.validateCashPayment(userDetails.getUsername(), request);
+        return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, payment));
+    }
+
+    // ===================== CALLBACK =====================
+
     @PostMapping("/orange/callback")
-    @Operation(summary = "Callback Orange Money", description = "Endpoint de callback pour les notifications Orange Money")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Callback traité")
-    })
+    @Operation(summary = "Callback Orange Money")
     public ResponseEntity<String> orangeMoneyCallback(@RequestBody String payload) {
-        // TODO: Implémenter le callback Orange Money
         return ResponseEntity.ok("OK");
     }
 
     @PostMapping("/moov/callback")
-    @Operation(summary = "Callback Moov Money", description = "Endpoint de callback pour les notifications Moov Money")
-    @ApiResponses(value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Callback traité")
-    })
+    @Operation(summary = "Callback Moov Money")
     public ResponseEntity<String> moovMoneyCallback(@RequestBody String payload) {
-        // TODO: Implémenter le callback Moov Money
         return ResponseEntity.ok("OK");
     }
 }

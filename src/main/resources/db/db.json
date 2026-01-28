@@ -163,7 +163,7 @@
       "nom": "PariBa ACI 2000",
       "description": "Mensuelle, ordre fixe, 3 membres",
       "montant": 25000,
-      "frequency": "MONTHLY",
+      "frequency": "MENSUEL",
       "rotationMode": "FIXED_ORDER",
       "totalTours": 3,
       "startDate": "2025-10-01",
@@ -178,7 +178,7 @@
       "nom": "Tontine Hebdo Bamako",
       "description": "Tontine hebdomadaire pour entrepreneurs",
       "montant": 50000,
-      "frequency": "WEEKLY",
+      "frequency": "HEBDOMADAIRE",
       "rotationMode": "RANDOM",
       "totalTours": 5,
       "startDate": "2025-11-18",
@@ -191,7 +191,7 @@
       "nom": "test",
       "description": "teest",
       "montant": 10000,
-      "frequency": "MONTHLY",
+      "frequency": "MENSUEL",
       "rotationMode": "RANDOM",
       "totalTours": 12,
       "startDate": "2025-11-18",
@@ -515,7 +515,7 @@
       "action": "CREATE_GROUP",
       "entityType": "TontineGroup",
       "entityId": "g-1",
-      "detailsJson": "{\"montant\":25000,\"frequency\":\"MONTHLY\"}"
+      "detailsJson": "{\"montant\":25000,\"frequency\":\"MENSUEL\"}"
     }
   ],
   "delegations": [

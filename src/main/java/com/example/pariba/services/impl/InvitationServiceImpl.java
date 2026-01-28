@@ -159,9 +159,9 @@ public class InvitationServiceImpl implements IInvitationService {
         
         // Formater la fréquence de manière lisible
         String frequence = switch (group.getFrequency()) {
-            case WEEKLY -> "Hebdomadaire";
-            case BIWEEKLY -> "Bi-hebdomadaire";
-            case MONTHLY -> "Mensuelle";
+            case HEBDOMADAIRE -> "Hebdomadaire";
+            case BIHEBDOMADAIRE -> "Bi-hebdomadaire";
+            case MENSUEL -> "Mensuelle";
         };
         
         variables.put("prenom", ""); // Sera rempli par le service de notification

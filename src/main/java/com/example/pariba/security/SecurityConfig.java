@@ -23,13 +23,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
-/**
- * Configuration de sécurité Spring Security
- * - Authentification JWT
- * - Autorisation par rôles
- * - CORS configuré
- * - Endpoints publics/protégés
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -46,85 +39,72 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // CSRF: Désactivé pour API REST et endpoints admin JSON
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/v1/**")  // API REST sans CSRF
-                .ignoringRequestMatchers("/admin/subscription-plans/**")  // API REST admin pour plans d'abonnement
-                .ignoringRequestMatchers("/admin/api/**")  // API REST admin pour notifications et autres
-                .ignoringRequestMatchers("/admin/advertisements/upload-image")  // Upload d'images de publicités
-                .ignoringRequestMatchers("/admin/subscriptions", "/admin/subscription-stats", "/admin/subscription-plans-view")  // Pages admin en lecture seule
-                // Dashboard admin avec CSRF activé pour les formulaires HTML
+                .ignoringRequestMatchers("/api/v1/**")
+                .ignoringRequestMatchers("/admin/subscription-plans/**")
+                .ignoringRequestMatchers("/admin/api/**")
+                .ignoringRequestMatchers("/admin/advertisements/upload-image")
+                .ignoringRequestMatchers("/admin/subscriptions", "/admin/subscription-stats", "/admin/subscription-plans-view")
             )
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // Sessions: Stateless pour API, avec session pour admin dashboard
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                .maximumSessions(3)  // Max 3 sessions par utilisateur (navigateur, mobile, etc.)
-                .maxSessionsPreventsLogin(false)  // Invalider l'ancienne session au lieu de bloquer
+                .maximumSessions(3)
+                .maxSessionsPreventsLogin(false)
                 .expiredUrl("/admin/login?expired=true")
             )
             .authorizeHttpRequests(auth -> auth
-                // Endpoints publics - Health check et Debug
+
+                // ---------- Swagger / OpenAPI ----------
+                .requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**"
+                ).permitAll()
+
+                // ---------- Endpoints publics ----------
                 .requestMatchers("/api/v1/health").permitAll()
                 .requestMatchers("/api/v1/debug/**").permitAll()
-                
-                // Endpoints publics - Authentification (ORDRE IMPORTANT: spécifique avant général)
+
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
                 .requestMatchers("/api/v1/auth/otp/send").permitAll()
                 .requestMatchers("/api/v1/auth/otp/verify").permitAll()
                 .requestMatchers("/api/v1/auth/password/forgot").permitAll()
                 .requestMatchers("/api/v1/auth/password/reset").permitAll()
-                
-                // Endpoints protégés - Authentification (nécessitent un token JWT)
-                .requestMatchers("/api/v1/auth/password/change").authenticated()
-                .requestMatchers("/api/v1/auth/profile/**").authenticated()
-                .requestMatchers("/api/v1/auth/logout").authenticated()
-                
-                // Endpoints publics - Invitations (lien unique)
+
                 .requestMatchers("/api/v1/invitations/accept/**").permitAll()
-                
-                // Endpoints publics - Callbacks paiements
                 .requestMatchers("/api/v1/payments/orange/callback").permitAll()
                 .requestMatchers("/api/v1/payments/moov/callback").permitAll()
-                
-                // Endpoints publics - Fichiers et monitoring
+
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/actuator/info").permitAll()
-                
-                // IMPORTANT: Ressources statiques AVANT toute autre règle
+
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/favicon.ico").permitAll()
-                
-                // Swagger/OpenAPI - Public pour faciliter le développement
-                .requestMatchers("/swagger-ui/**").permitAll()
-                .requestMatchers("/v3/api-docs/**").permitAll()
-                .requestMatchers("/swagger-resources/**").permitAll()
-                .requestMatchers("/webjars/**").permitAll()
-                
-                // Page de login admin - Public (AVANT /admin/**)
+
+                // ---------- Admin login ----------
                 .requestMatchers("/admin/login", "/admin/perform-login", "/admin/logout").permitAll()
-                
-                // Interface Admin Thymeleaf - Réservé aux SUPERADMIN uniquement
+
+                // ---------- Admin sécurisé ----------
                 .requestMatchers("/admin/**").hasRole("SUPERADMIN")
-                
-                // Endpoints protégés - Actuator (monitoring)
                 .requestMatchers("/actuator/**").hasRole("SUPERADMIN")
-                
-                // Tous les autres endpoints nécessitent une authentification
+
+                // ---------- Auth obligatoire ----------
                 .anyRequest().authenticated()
             )
-            // Configuration login form pour dashboard admin
             .formLogin(form -> form
                 .loginPage("/admin/login")
-                .loginProcessingUrl("/admin/perform-login")  // URL différente pour le traitement
+                .loginProcessingUrl("/admin/perform-login")
                 .usernameParameter("username")
                 .passwordParameter("password")
                 .successHandler(adminLoginSuccessHandler)
                 .failureHandler(adminLoginFailureHandler)
                 .permitAll()
             )
-            // Gestion des accès non autorisés
             .exceptionHandling(exception -> exception
                 .accessDeniedPage("/admin/login?error=access_denied")
                 .authenticationEntryPoint((request, response, authException) -> {
@@ -135,7 +115,6 @@ public class SecurityConfig {
                     }
                 })
             )
-            // Configuration logout
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/admin/login?logout=true")
@@ -143,50 +122,39 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             )
-            // Headers de sécurité
             .headers(headers -> headers
                 .httpStrictTransportSecurity(hsts -> hsts
                     .includeSubDomains(true)
-                    .maxAgeInSeconds(31536000)  // 1 an
+                    .maxAgeInSeconds(31536000)
                 )
                 .contentSecurityPolicy(csp -> csp
                     .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' https://cdnjs.cloudflare.com;")
                 )
                 .frameOptions(frame -> frame.deny())
-                .xssProtection(xss -> xss.disable())  // Notre filtre XSS personnalisé
+                .xssProtection(xss -> xss.disable())
             )
             .authenticationProvider(authenticationProvider())
-            // Ordre des filtres: Rate Limiting -> XSS -> JWT
             .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(xssFilter, RateLimitingFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, XSSFilter.class);
 
         return http.build();
     }
-    
-    /**
-     * Configuration CORS
-     */
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Origines autorisées (à configurer selon l'environnement)
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",      // React dev
-            "http://localhost:4200",      // Angular dev
-            "http://localhost:8081",      // Mobile dev
-            "https://pariba.com",         // Production
-            "https://www.pariba.com",     // Production
-            "https://admin.pariba.com"    // Admin production
+            "http://localhost:3000",
+            "http://localhost:4200",
+            "http://localhost:8081",
+            "https://pariba.com",
+            "https://www.pariba.com",
+            "https://admin.pariba.com"
         ));
-        
-        // Méthodes HTTP autorisées
         configuration.setAllowedMethods(Arrays.asList(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
-        
-        // Headers autorisés
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization",
             "Content-Type",
@@ -194,47 +162,30 @@ public class SecurityConfig {
             "X-Requested-With",
             "Cache-Control"
         ));
-        
-        // Headers exposés
         configuration.setExposedHeaders(Arrays.asList(
             "Authorization",
             "Content-Disposition"
         ));
-        
-        // Autoriser les credentials (cookies, authorization headers)
         configuration.setAllowCredentials(true);
-        
-        // Durée de cache de la configuration CORS (1 heure)
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        
         return source;
     }
-    
-    /**
-     * PasswordEncoder pour le cryptage des mots de passe
-     */
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12); // Force 12 pour plus de sécurité
+        return new BCryptPasswordEncoder(12);
     }
-    
-    /**
-     * AuthenticationProvider avec UserDetailsService et PasswordEncoder
-     * Utilise la nouvelle API non dépréciée
-     */
+
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(passwordEncoder());
         authProvider.setUserDetailsService(userDetailsService);
         return authProvider;
     }
-    
-    /**
-     * AuthenticationManager pour l'authentification
-     */
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

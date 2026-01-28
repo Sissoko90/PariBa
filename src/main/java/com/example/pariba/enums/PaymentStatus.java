@@ -3,6 +3,8 @@ package com.example.pariba.enums;
 public enum PaymentStatus { 
     PENDING("En attente"), 
     CONFIRMED("Confirmé"), 
+    PROCESSING("En cours de traitement"),
+    REJECTED("Rejeté"),
     SUCCESS("Réussi"), 
     FAILED("Échoué");
     

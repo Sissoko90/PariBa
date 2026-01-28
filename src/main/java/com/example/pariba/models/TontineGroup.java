@@ -20,7 +20,7 @@ public class TontineGroup extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Frequency frequency = Frequency.MONTHLY;
+    private Frequency frequency = Frequency.MENSUEL;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

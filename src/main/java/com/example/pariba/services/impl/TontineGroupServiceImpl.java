@@ -86,9 +86,9 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
         // Envoyer notification de création de groupe
         try {
             String frequence = switch (group.getFrequency()) {
-                case WEEKLY -> "Hebdomadaire";
-                case BIWEEKLY -> "Bi-hebdomadaire";
-                case MONTHLY -> "Mensuelle";
+                case HEBDOMADAIRE -> "Hebdomadaire";
+                case BIHEBDOMADAIRE -> "Bi-hebdomadaire";
+                case MENSUEL -> "Mensuelle";
             };
             
             Map<String, String> variables = new HashMap<>();

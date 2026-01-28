@@ -1,9 +1,9 @@
 package com.example.pariba.enums;
 
 public enum Frequency { 
-    WEEKLY("Hebdomadaire"), 
-    BIWEEKLY("Bi-hebdomadaire"), 
-    MONTHLY("Mensuel");
+    HEBDOMADAIRE("Hebdomadaire"), 
+    BIHEBDOMADAIRE("Bi-hebdomadaire"), 
+    MENSUEL("Mensuel");
     
     private final String label;
     
