@@ -22,7 +22,7 @@ public class AdminCashPaymentViewController {
     private final TontineGroupRepository tontineGroupRepository;
     
     @GetMapping("/cash-payments")
-    @PreAuthorize("hasRole('SUPERADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public String cashPayments(Model model, Authentication authentication) {
         log.info("💵 Accès à la validation des paiements cash par: {}", authentication.getName());
         

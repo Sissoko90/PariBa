@@ -10,7 +10,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/support/contact")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+@PreAuthorize("hasRole('SUPERADMIN')")
 public class AdminSupportContactController {
     
     private final ISupportContactService contactService;

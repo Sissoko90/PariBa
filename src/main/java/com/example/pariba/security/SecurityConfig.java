@@ -3,6 +3,7 @@ package com.example.pariba.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -67,7 +68,7 @@ public class SecurityConfig {
 
                 // ---------- Endpoints publics ----------
                 .requestMatchers("/api/v1/health").permitAll()
-                .requestMatchers("/api/v1/debug/**").permitAll()
+                // Debug endpoints désactivés en production (voir profil dev)
 
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
@@ -86,8 +87,10 @@ public class SecurityConfig {
 
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/favicon.ico").permitAll()
 
-                // ---------- Admin login ----------
+                // ---------- Admin login et réinitialisation mot de passe ----------
                 .requestMatchers("/admin/login", "/admin/perform-login", "/admin/logout").permitAll()
+                .requestMatchers(HttpMethod.GET, "/admin/forgot-password", "/admin/reset-password").permitAll()
+                .requestMatchers(HttpMethod.POST, "/admin/forgot-password", "/admin/reset-password").permitAll()
 
                 // ---------- Admin sécurisé ----------
                 .requestMatchers("/admin/**").hasRole("SUPERADMIN")

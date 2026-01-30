@@ -14,7 +14,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/admin/support/tickets")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+@PreAuthorize("hasRole('SUPERADMIN')")
 public class AdminSupportTicketController {
     
     private final ISupportTicketService supportTicketService;

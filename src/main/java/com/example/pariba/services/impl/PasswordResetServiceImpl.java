@@ -218,6 +218,127 @@ public class PasswordResetServiceImpl implements IPasswordResetService {
         smsService.sendOtpSms(phoneNumber, otpCode);
     }
     
+    @Override
+    public void sendResetPasswordEmail(String email) {
+        log.info("📧 Envoi d'email de réinitialisation pour: {}", email);
+        
+        // Générer un token sécurisé
+        String token = generateSecureToken();
+        
+        // Stocker le token avec expiration (30 minutes)
+        Person person = personRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+        
+        ResetTokenData tokenData = new ResetTokenData(
+            token,
+            LocalDateTime.now().plusMinutes(30),
+            person.getId()
+        );
+        resetTokenStorage.put(token, tokenData);
+        
+        // Envoyer l'email avec le lien de réinitialisation
+        String resetLink = "http://localhost:8085/admin/reset-password?token=" + token;
+        String subject = "Réinitialisation de votre mot de passe - Pariba Admin";
+        String body = String.format(
+            "Bonjour %s,\n\n" +
+            "Vous avez demandé la réinitialisation de votre mot de passe.\n\n" +
+            "Cliquez sur le lien suivant pour réinitialiser votre mot de passe:\n%s\n\n" +
+            "Ce lien expirera dans 30 minutes.\n\n" +
+            "Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.\n\n" +
+            "Cordialement,\nL'équipe Pariba",
+            person.getPrenom(),
+            resetLink
+        );
+        
+        emailService.sendHtmlEmail(email, subject, body);
+        log.info("✅ Email de réinitialisation envoyé à: {}", email);
+    }
+    
+    @Override
+    public boolean validateResetToken(String token) {
+        ResetTokenData tokenData = resetTokenStorage.get(token);
+        
+        if (tokenData == null) {
+            log.warn("❌ Token non trouvé: {}", token);
+            return false;
+        }
+        
+        if (LocalDateTime.now().isAfter(tokenData.getExpiresAt())) {
+            log.warn("❌ Token expiré: {}", token);
+            resetTokenStorage.remove(token);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public boolean resetPassword(String token, String newPassword) {
+        ResetTokenData tokenData = resetTokenStorage.get(token);
+        
+        if (tokenData == null || LocalDateTime.now().isAfter(tokenData.getExpiresAt())) {
+            log.warn("❌ Token invalide ou expiré");
+            return false;
+        }
+        
+        try {
+            // Récupérer la personne
+            Person person = personRepository.findById(tokenData.getPersonId())
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+            
+            // Changer le mot de passe
+            person.getUser().setPassword(passwordEncoder.encode(newPassword));
+            personRepository.save(person);
+            
+            // Supprimer le token utilisé
+            resetTokenStorage.remove(token);
+            
+            log.info("✅ Mot de passe réinitialisé pour: {}", person.getEmail());
+            return true;
+            
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de la réinitialisation du mot de passe", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Générer un token sécurisé
+     */
+    private String generateSecureToken() {
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        
+        StringBuilder token = new StringBuilder();
+        for (byte b : bytes) {
+            token.append(String.format("%02x", b));
+        }
+        return token.toString();
+    }
+    
+    // Stockage temporaire des tokens de réinitialisation (en production, utiliser Redis)
+    private final Map<String, ResetTokenData> resetTokenStorage = new HashMap<>();
+    
+    /**
+     * Classe interne pour stocker les données de token de réinitialisation
+     */
+    private static class ResetTokenData {
+        private final String token;
+        private final LocalDateTime expiresAt;
+        private final String personId;
+        
+        public ResetTokenData(String token, LocalDateTime expiresAt, String personId) {
+            this.token = token;
+            this.expiresAt = expiresAt;
+            this.personId = personId;
+        }
+        
+        public String getToken() { return token; }
+        public LocalDateTime getExpiresAt() { return expiresAt; }
+        public String getPersonId() { return personId; }
+    }
+    
     /**
      * Classe interne pour stocker les données OTP
      */

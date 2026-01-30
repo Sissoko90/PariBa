@@ -13,7 +13,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/admin/support/guides")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+@PreAuthorize("hasRole('SUPERADMIN')")
 public class AdminGuideController {
     
     private final IGuideService guideService;
