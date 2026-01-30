@@ -36,5 +36,14 @@ build/
 firebase-adminsdk*.json
 src/main/resources/firebase-adminsdk*.json
 
+### Environment Variables (SECRETS) ###
+# .env
+# .env.local
+# .env.*.local
+
+### Uploads ###
+uploads/
+exports/
+
 ### Flutter Project (separate repo) ###
 /pariba

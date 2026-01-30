@@ -17,17 +17,16 @@ public class RegisterRequest {
     @Size(min = 2, max = 50, message = ValidationMessages.SIZE_NOM)
     private String nom;
     
-    @NotBlank(message = ValidationMessages.REQUIRED_EMAIL)
     @Email(message = ValidationMessages.INVALID_EMAIL)
-    private String email;
+    private String email; // Email optionnel
     
     @NotBlank(message = ValidationMessages.REQUIRED_PHONE)
     @Pattern(regexp = AppConstants.PHONE_REGEX, message = ValidationMessages.INVALID_PHONE)
     private String phone;
     
     @NotBlank(message = ValidationMessages.REQUIRED_PASSWORD)
-    @Size(min = 8, message = ValidationMessages.SIZE_PASSWORD)
-    private String password;
+    @Size(min = 8, message = "Le mot de passe doit contenir au moins 4 chiffres")
+    private String password; // Mot de passe: chiffres uniquement, min 4
     
     private String photo;
 

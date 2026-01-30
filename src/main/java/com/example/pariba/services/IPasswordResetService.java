@@ -31,4 +31,28 @@ public interface IPasswordResetService {
      * @param newPassword Nouveau mot de passe
      */
     void changePassword(String personId, String oldPassword, String newPassword);
+    
+    /**
+     * Envoyer un email de réinitialisation avec token (pour admin dashboard)
+     * 
+     * @param email Email de l'administrateur
+     */
+    void sendResetPasswordEmail(String email);
+    
+    /**
+     * Valider un token de réinitialisation
+     * 
+     * @param token Token de réinitialisation
+     * @return true si le token est valide, false sinon
+     */
+    boolean validateResetToken(String token);
+    
+    /**
+     * Réinitialiser le mot de passe avec un token (pour admin dashboard)
+     * 
+     * @param token Token de réinitialisation
+     * @param newPassword Nouveau mot de passe
+     * @return true si la réinitialisation a réussi, false sinon
+     */
+    boolean resetPassword(String token, String newPassword);
 }

@@ -35,15 +35,15 @@ spring:
     default-encoding: UTF-8
 
 server:
-  port: 8085
+  port: ${PORT:8085}
   address: 0.0.0.0
   servlet:
     # Pas de context-path - géré par BaseRestController
     session:
-      timeout: 15m  # Timeout session pour dashboard admin
+      timeout: 5m  # Timeout session pour dashboard admin (sécurité renforcée)
       cookie:
         http-only: true
-        secure: false  # Mettre true en production avec HTTPS
+        secure: ${SESSION_COOKIE_SECURE:false}  # true en production avec HTTPS
         same-site: strict
 
 logging:
@@ -89,8 +89,8 @@ management:
 
 security:
   jwt:
-    # Clé HS256 en base64 pour DEV (à changer en local si besoin)
-    secret: bXktZGV2LXNlY3JldC1sb25nLXNlY3JldC1iYXNlNjQ=
+    # Clé HS256 en base64 (utiliser variable d'environnement)
+    secret: ${JWT_SECRET:bXktZGV2LXNlY3JldC1sb25nLXNlY3JldC1iYXNlNjQ=}
     expiration: 86400000  # 24 heures en millisecondes
 
 # Configuration JWT (utilisé par JwtServiceImpl)
@@ -101,20 +101,20 @@ jwt:
 # Répertoire de stockage des fichiers
 file:
   upload:
-    dir: ./uploads
+    dir: ${FILE_UPLOAD_DIR:./uploads}
 
 # Configuration Firebase (notifications push)
 firebase:
-  enabled: true  # Activer après avoir configuré firebase-adminsdk.json
+  enabled: ${FIREBASE_ENABLED:true}
   config:
-    file: firebase-adminsdk.json  # Chemin vers le fichier de configuration Firebase
+    file: ${FIREBASE_CONFIG_FILE:firebase-adminsdk.json}
 
 # Configuration Twilio (SMS)
 twilio:
-  enabled: false  # Activer après configuration
-  account-sid: YOUR_TWILIO_ACCOUNT_SID
-  auth-token: YOUR_TWILIO_AUTH_TOKEN
-  phone-number: +1234567890  # Votre numéro Twilio
+  enabled: ${TWILIO_ENABLED:false}
+  account-sid: ${TWILIO_ACCOUNT_SID:YOUR_TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN:YOUR_TWILIO_AUTH_TOKEN}
+  phone-number: ${TWILIO_PHONE_NUMBER:+1234567890}
 
 ---
 spring:
@@ -122,9 +122,9 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: jdbc:mysql://localhost:8889/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true
-    username: root
-    password: root
+    url: ${DB_URL:jdbc:mysql://localhost:8889/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -136,9 +136,9 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:makenzyks6@gmail.com}
-    from: ${MAIL_FROM:${spring.mail.username}}
-    password: ${MAIL_PASSWORD:dtas yfru noki bdaa}
+    username: ${MAIL_USERNAME:}
+    from: ${MAIL_FROM:makenzyks6@gmail.com}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -150,11 +150,11 @@ spring:
 app:
   cors:
     # Origines de développement (exemple: React/Angular locaux)
-    allowed-origins: http://localhost:3000,http://localhost:4200,http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200,http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174}
   rate-limit:
-    capacity: 200
-    refill-tokens: 200
-    refill-period-seconds: 60
+    capacity: ${RATE_LIMIT_CAPACITY:200}
+    refill-tokens: ${RATE_LIMIT_REFILL_TOKENS:200}
+    refill-period-seconds: ${RATE_LIMIT_REFILL_PERIOD_SECONDS:60}
 
 
 

@@ -134,8 +134,27 @@
         </div>
         
         <div class="login-body">
-            <!-- Message d'erreur -->
-            <div th:if="${param.error}" class="alert alert-danger">
+            <!-- Compte bloqué -->
+            <div th:if="${param.error != null and param.error[0] == 'locked'}" class="alert alert-danger" id="lockAlert">
+                <i class="fas fa-lock me-2"></i>
+                <strong>⛔ Compte temporairement bloqué!</strong><br/>
+                Trop de tentatives de connexion échouées.<br/>
+                <strong>Réessayez dans <span id="countdown"><span th:text="${param.minutes != null ? param.minutes[0] : '15'}">15</span> minutes</span></strong>
+                <input type="hidden" id="lockMinutes" th:value="${param.minutes != null ? param.minutes[0] : '15'}">
+            </div>
+            
+            <!-- Identifiants incorrects avec tentatives restantes -->
+            <div th:if="${param.error != null and param.error[0] == 'invalid'}" class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>⚠️ Identifiants incorrects!</strong><br/>
+                Vérifiez votre nom d'utilisateur et mot de passe.<br/>
+                <strong>Il vous reste <span th:text="${param.remaining != null ? param.remaining[0] : 'X'}">X</span> tentative(s).</strong><br/>
+                <small class="text-muted">Utilisez votre numéro de téléphone comme nom d'utilisateur.</small>
+            </div>
+            
+            <!-- Erreur générique -->
+            <div th:if="${param.error != null and (param.error[0] == null or (param.error[0] != 'locked' and param.error[0] != 'invalid'))}" 
+                 class="alert alert-danger">
                 <i class="fas fa-exclamation-circle me-2"></i>
                 <strong>Erreur de connexion!</strong><br/>
                 Vérifiez votre nom d'utilisateur et mot de passe.<br/>
@@ -146,6 +165,12 @@
             <div th:if="${param.logout}" class="alert alert-success">
                 <i class="fas fa-check-circle me-2"></i>
                 Vous avez été déconnecté avec succès.
+            </div>
+            
+            <!-- Session expirée -->
+            <div th:if="${param.expired}" class="alert alert-warning">
+                <i class="fas fa-clock me-2"></i>
+                Votre session a expiré. Veuillez vous reconnecter.
             </div>
             
             <!-- Formulaire de connexion -->
@@ -194,6 +219,13 @@
                 </button>
             </form>
             
+            <div class="text-center mt-3">
+                <a href="/admin/forgot-password" class="text-muted" style="text-decoration: none; font-size: 14px;">
+                    <i class="fas fa-key me-1"></i>
+                    Mot de passe oublié ?
+                </a>
+            </div>
+            
             <div class="security-notice">
                 <i class="fas fa-lock"></i>
                 Connexion sécurisée SSL/TLS
@@ -209,13 +241,103 @@
             }
         });
         
-        // Effacer les messages après 5 secondes
+        // Gestion du compte à rebours et blocage du formulaire
+        const lockAlert = document.getElementById('lockAlert');
+        const lockMinutesInput = document.getElementById('lockMinutes');
+        const loginForm = document.querySelector('form');
+        const submitButton = document.querySelector('.btn-login');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        
+        if (lockAlert && lockMinutesInput) {
+            // Vérifier si un temps de déblocage existe déjà dans localStorage
+            let unlockTime = localStorage.getItem('unlockTime');
+            
+            if (!unlockTime || parseInt(unlockTime) < Date.now()) {
+                // Pas de blocage actif ou expiré, créer un nouveau
+                const lockMinutes = parseInt(lockMinutesInput.value);
+                unlockTime = Date.now() + (lockMinutes * 60 * 1000);
+                localStorage.setItem('unlockTime', unlockTime);
+            } else {
+                // Utiliser le temps existant
+                unlockTime = parseInt(unlockTime);
+            }
+            
+            // Désactiver le formulaire
+            if (submitButton) submitButton.disabled = true;
+            if (usernameInput) usernameInput.disabled = true;
+            if (passwordInput) passwordInput.disabled = true;
+            
+            // Fonction de mise à jour du compte à rebours
+            function updateCountdown() {
+                const now = Date.now();
+                const timeLeft = unlockTime - now;
+                
+                if (timeLeft <= 0) {
+                    // Déblocage automatique
+                    localStorage.removeItem('unlockTime');
+                    lockAlert.innerHTML = '<i class="fas fa-check-circle me-2"></i><strong>✅ Compte débloqué!</strong><br/>Vous pouvez maintenant vous reconnecter.';
+                    lockAlert.className = 'alert alert-success';
+                    
+                    // Réactiver le formulaire
+                    if (submitButton) submitButton.disabled = false;
+                    if (usernameInput) usernameInput.disabled = false;
+                    if (passwordInput) passwordInput.disabled = false;
+                    
+                    // Recharger la page après 2 secondes
+                    setTimeout(() => {
+                        window.location.href = '/admin/login';
+                    }, 2000);
+                } else {
+                    // Calculer le temps restant
+                    const minutes = Math.floor(timeLeft / 60000);
+                    const seconds = Math.floor((timeLeft % 60000) / 1000);
+                    
+                    // Mettre à jour l'affichage
+                    const countdownElement = document.getElementById('countdown');
+                    if (countdownElement) {
+                        if (minutes > 0) {
+                            countdownElement.textContent = minutes + ' minute' + (minutes > 1 ? 's' : '') + ' et ' + seconds + ' seconde' + (seconds > 1 ? 's' : '');
+                        } else {
+                            countdownElement.textContent = seconds + ' seconde' + (seconds > 1 ? 's' : '');
+                        }
+                    }
+                    
+                    // Continuer le compte à rebours
+                    setTimeout(updateCountdown, 1000);
+                }
+            }
+            
+            // Démarrer le compte à rebours
+            updateCountdown();
+        } else {
+            // Vérifier si un blocage est toujours actif (localStorage)
+            const storedUnlockTime = localStorage.getItem('unlockTime');
+            if (storedUnlockTime) {
+                const unlockTime = parseInt(storedUnlockTime);
+                const now = Date.now();
+                
+                if (now < unlockTime) {
+                    // Le compte est toujours bloqué
+                    const timeLeft = unlockTime - now;
+                    const minutes = Math.ceil(timeLeft / 60000);
+                    window.location.href = '/admin/login?error=locked&minutes=' + minutes;
+                } else {
+                    // Le blocage est expiré
+                    localStorage.removeItem('unlockTime');
+                }
+            }
+        }
+        
+        // Effacer les messages de succès après 5 secondes (sauf le blocage)
         setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
+            const alerts = document.querySelectorAll('.alert:not(#lockAlert)');
             alerts.forEach(alert => {
-                alert.style.transition = 'opacity 0.5s';
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
+                if (!alert.classList.contains('alert-danger')) {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }
             });
         }, 5000);
     </script>

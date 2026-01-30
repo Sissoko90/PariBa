@@ -13,7 +13,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/admin/support/faqs")
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
+@PreAuthorize("hasRole('SUPERADMIN')")
 public class AdminFAQController {
     
     private final IFAQService faqService;
