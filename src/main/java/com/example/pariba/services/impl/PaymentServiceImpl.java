@@ -6,6 +6,7 @@ import com.example.pariba.dtos.requests.DeclarePaymentRequest;
 import com.example.pariba.dtos.requests.PaymentRequest;
 import com.example.pariba.dtos.requests.ValidatePaymentRequest;
 import com.example.pariba.dtos.responses.PaymentResponse;
+ import com.example.pariba.dtos.responses.PaymentHistoryResponse;
 import com.example.pariba.enums.ContributionStatus;
 import com.example.pariba.enums.NotificationChannel;
 import com.example.pariba.enums.NotificationType;
@@ -15,6 +16,7 @@ import com.example.pariba.exceptions.BadRequestException;
 import com.example.pariba.exceptions.ResourceNotFoundException;
 import com.example.pariba.models.Contribution;
 import com.example.pariba.models.Payment;
+import com.example.pariba.models.Tour;
 import com.example.pariba.repositories.ContributionRepository;
 import com.example.pariba.repositories.GroupMembershipRepository;
 import com.example.pariba.repositories.PaymentRepository;
@@ -26,7 +28,8 @@ import com.example.pariba.services.IPaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.time.ZoneId;
 
 @Service
 @Slf4j
@@ -358,4 +362,109 @@ public class PaymentServiceImpl implements IPaymentService {
                 .map(PaymentResponse::new)
                 .collect(Collectors.toList());
     }
+@Override
+@Transactional(readOnly = true)
+public List<PaymentHistoryResponse> getPaymentHistory(String personId, String groupId) {
+    // Vérifier que l'utilisateur est membre du groupe
+    boolean isMember = membershipRepository.findByGroupIdAndPersonId(groupId, personId).isPresent();
+    
+    if (!isMember) {
+        throw new BadRequestException("Vous n'êtes pas membre de ce groupe");
+    }
+    
+    // Récupérer tous les paiements de la personne dans ce groupe
+    List<Payment> payments = paymentRepository.findByGroupIdAndPayerId(groupId, personId);
+    
+    // Filtrer seulement les paiements confirmés (SUCCESS/CONFIRMED) qui ne sont pas des payouts
+    // Et trier par date décroissante (les plus récents d'abord)
+    return payments.stream()
+            .filter(p -> p.getStatus() == PaymentStatus.CONFIRMED || p.getStatus() == PaymentStatus.SUCCESS)
+            .filter(p -> !p.isPayout())
+            .sorted((p1, p2) -> {
+                // Obtenir les dates pour comparaison
+                LocalDateTime date1 = getPaymentDateTime(p1);
+                LocalDateTime date2 = getPaymentDateTime(p2);
+                return date2.compareTo(date1);
+            })
+            .limit(10) // Limiter à 10 derniers paiements pour l'historique
+            .map(this::convertToHistoryResponse)
+            .collect(Collectors.toList());
+}
+
+private PaymentHistoryResponse convertToHistoryResponse(Payment payment) {
+    PaymentHistoryResponse response = new PaymentHistoryResponse();
+    
+    response.setId(payment.getId());
+    response.setAmount(payment.getAmount());
+    response.setPaymentType(payment.getPaymentType());
+    response.setStatus(payment.getStatus());
+    response.setPayout(payment.isPayout());
+    
+    // Conversion de Instant à LocalDate
+    LocalDate paymentDate = payment.getCreatedAt()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate();
+    response.setPaymentDate(paymentDate);
+    
+    // Formater la date
+    response.setFormattedDate(formatDate(paymentDate));
+    
+    // Obtenir le numéro de tour depuis la contribution
+    Contribution contribution = payment.getContribution();
+    if (contribution != null) {
+        // Vérifier si la contribution a un tour associé
+        if (contribution.getTour() != null) {
+            Tour tour = contribution.getTour();
+            // Utiliser indexInGroup pour le numéro de tour
+            response.setTourNumber("Tour #" + tour.getIndexInGroup());
+            
+            // Générer le titre du tour
+            String tourTitle = generateTourTitle(tour);
+            response.setTourTitle(tourTitle);
+        } else {
+            // Si pas de tour associé
+            response.setTourNumber("Paiement");
+            response.setTourTitle("Paiement");
+        }
+    } else {
+        // Si pas de contribution associée
+        response.setTourNumber("Paiement");
+        response.setTourTitle("Paiement");
+    }
+    
+    return response;
+}
+
+// Méthode pour générer un titre de tour
+private String generateTourTitle(Tour tour) {
+    if (tour.getBeneficiary() != null) {
+        String beneficiaryName = tour.getBeneficiary().getPrenom() + " " + tour.getBeneficiary().getNom();
+        return "Tour de " + beneficiaryName;
+    } else if (tour.getScheduledDate() != null) {
+        return "Tour du " + formatDate(tour.getScheduledDate());
+    } else {
+        return "Tour #" + tour.getIndexInGroup();
+    }
+}
+
+private String formatDate(LocalDate date) {
+    // Formater la date comme "15 Nov 2025"
+    try {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.FRENCH);
+        return date.format(formatter);
+    } catch (Exception e) {
+        return date.toString();
+    }
+}
+private LocalDateTime getPaymentDateTime(Payment payment) {
+    if (payment.getValidatedAt() != null) {
+        return payment.getValidatedAt();
+    } else if (payment.getCreatedAt() != null) {
+        return payment.getCreatedAt()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+    } else {
+        return LocalDateTime.now();
+    }
+}
 }
