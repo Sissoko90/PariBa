@@ -3,6 +3,7 @@ package com.example.pariba.controllers;
 import com.example.pariba.constants.MessageConstants;
 import com.example.pariba.dtos.requests.DeclarePaymentRequest;
 import com.example.pariba.dtos.responses.ApiResponse;
+import com.example.pariba.dtos.responses.PaymentHistoryResponse;
 import com.example.pariba.dtos.responses.PaymentResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -135,5 +136,20 @@ public class PaymentController {
     @Operation(summary = "Callback Moov Money")
     public ResponseEntity<String> moovMoneyCallback(@RequestBody String payload) {
         return ResponseEntity.ok("OK");
+    }
+
+    @GetMapping("/history/group/{groupId}")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Historique des paiements personnels dans un groupe", 
+            description = "Retourne les derniers paiements confirmés de l'utilisateur dans un groupe spécifique")
+    public ResponseEntity<ApiResponse<List<PaymentHistoryResponse>>> getPaymentHistory(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String groupId) {
+        
+        List<PaymentHistoryResponse> history = paymentService.getPaymentHistory(userDetails.getUsername(), groupId);
+        
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, history)
+        );
     }
 }

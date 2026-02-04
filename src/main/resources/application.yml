@@ -122,9 +122,10 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:8889/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+     #url: jdbc:mysql://localhost:8889/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true
+    username: kalash
+    password: Kalash@2024!
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -188,7 +189,7 @@ spring:
             enable: true
     default-encoding: UTF-8
 server:
-  port: ${PORT:8082}
+  port: ${PORT:8085}
   servlet:
     session:
       cookie:

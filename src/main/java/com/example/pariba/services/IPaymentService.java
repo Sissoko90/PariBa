@@ -3,7 +3,10 @@ package com.example.pariba.services;
 import com.example.pariba.dtos.requests.DeclarePaymentRequest;
 import com.example.pariba.dtos.requests.PaymentRequest;
 import com.example.pariba.dtos.requests.ValidatePaymentRequest;
+import com.example.pariba.dtos.responses.PaymentHistoryResponse;
 import com.example.pariba.dtos.responses.PaymentResponse;
+
+
 
 import java.util.List;
 
@@ -27,4 +30,6 @@ public interface IPaymentService {
     List<PaymentResponse> getPaymentsByGroup(String groupId);
     List<PaymentResponse> getPendingPayments(String adminId, String groupId); // Nécessite admin du groupe
     List<PaymentResponse> getMyPendingPayments(String personId);
+
+    List<PaymentHistoryResponse> getPaymentHistory(String personId, String groupId);
 }
