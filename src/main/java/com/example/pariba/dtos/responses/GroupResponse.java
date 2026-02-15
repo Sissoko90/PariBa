@@ -1,6 +1,7 @@
 package com.example.pariba.dtos.responses;
 
 import com.example.pariba.enums.Frequency;
+import com.example.pariba.enums.GroupRole;
 import com.example.pariba.enums.RotationMode;
 import com.example.pariba.models.TontineGroup;
 
@@ -22,6 +23,7 @@ public class GroupResponse {
     private Integer graceDays;
     private PersonResponse creator;
     private Integer memberCount;
+    private GroupRole currentUserRole;
     private Instant createdAt;
 
     public GroupResponse() {}
@@ -66,6 +68,8 @@ public class GroupResponse {
     public void setCreator(PersonResponse creator) { this.creator = creator; }
     public Integer getMemberCount() { return memberCount; }
     public void setMemberCount(Integer memberCount) { this.memberCount = memberCount; }
+    public GroupRole getCurrentUserRole() { return currentUserRole; }
+    public void setCurrentUserRole(GroupRole currentUserRole) { this.currentUserRole = currentUserRole; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

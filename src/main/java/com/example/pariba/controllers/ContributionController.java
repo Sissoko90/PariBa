@@ -38,6 +38,17 @@ public class ContributionController {
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, contribution));
     }
 
+    @GetMapping("/group/{groupId}")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Contributions d'un groupe", description = "Récupère toutes les contributions d'un groupe")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Liste des contributions")
+    })
+    public ResponseEntity<ApiResponse<List<ContributionResponse>>> getContributionsByGroup(@PathVariable String groupId) {
+        List<ContributionResponse> contributions = contributionService.getContributionsByGroup(groupId);
+        return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, contributions));
+    }
+
     @GetMapping("/tour/{tourId}")
     @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Contributions d'un tour", description = "Récupère toutes les contributions d'un tour")

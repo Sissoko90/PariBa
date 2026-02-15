@@ -2,8 +2,12 @@ package com.example.pariba.models;
 
 import com.example.pariba.enums.NotificationChannel;
 import com.example.pariba.enums.NotificationType;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "notifications", indexes = { @Index(columnList = "person_id"), @Index(columnList = "type") })
@@ -27,6 +31,12 @@ public class Notification extends BaseEntity {
     private Instant scheduledAt;
     private Instant sentAt;
     private boolean readFlag = false;
+    
+    @Column(columnDefinition = "TEXT")
+    private String metadataJson;
+    
+    @Transient
+    private Map<String, String> metadata;
 
     public Person getPerson() { return person; }
     public void setPerson(Person person) { this.person = person; }
@@ -44,4 +54,30 @@ public class Notification extends BaseEntity {
     public void setSentAt(Instant sentAt) { this.sentAt = sentAt; }
     public boolean isReadFlag() { return readFlag; }
     public void setReadFlag(boolean readFlag) { this.readFlag = readFlag; }
+    
+    public Map<String, String> getMetadata() {
+        if (metadata == null && metadataJson != null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                metadata = mapper.readValue(metadataJson, new TypeReference<Map<String, String>>(){});
+            } catch (Exception e) {
+                metadata = new HashMap<>();
+            }
+        }
+        return metadata;
+    }
+    
+    public void setMetadata(Map<String, String> metadata) {
+        this.metadata = metadata;
+        if (metadata != null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                this.metadataJson = mapper.writeValueAsString(metadata);
+            } catch (Exception e) {
+                this.metadataJson = null;
+            }
+        } else {
+            this.metadataJson = null;
+        }
+    }
 }

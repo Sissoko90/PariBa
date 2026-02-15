@@ -31,7 +31,7 @@ public interface ContributionRepository extends JpaRepository<Contribution, Stri
     @Query("SELECT c FROM Contribution c WHERE c.member.id = :memberId AND c.status = 'DUE' ORDER BY c.dueDate ASC")
     List<Contribution> findPendingContributionsByMember(@Param("memberId") String memberId);
     
-    @Query("SELECT c FROM Contribution c WHERE c.group.id = :groupId AND c.status = 'DUE' ORDER BY c.dueDate ASC")
+    @Query("SELECT c FROM Contribution c WHERE c.group.id = :groupId AND c.status = 'PENDING' ORDER BY c.dueDate ASC")
     List<Contribution> findPendingContributionsByGroup(@Param("groupId") String groupId);
     
     @Query("SELECT c FROM Contribution c WHERE c.status = 'DUE' AND c.dueDate < :date ORDER BY c.dueDate ASC")

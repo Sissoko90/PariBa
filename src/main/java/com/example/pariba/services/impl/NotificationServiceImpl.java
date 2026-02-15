@@ -125,6 +125,12 @@ public class NotificationServiceImpl implements INotificationService {
                 notification.setBody(body);
                 notification.setChannel(channel);
                 notification.setReadFlag(false);
+                
+                // Ajouter les metadata (notamment le code d'invitation pour GROUP_INVITATION_RECEIVED)
+                if (variables != null && !variables.isEmpty()) {
+                    notification.setMetadata(variables);
+                }
+                
                 notificationRepository.save(notification);
                 
                 sendPushNotification(notification);

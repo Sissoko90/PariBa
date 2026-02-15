@@ -106,7 +106,7 @@ public class NotificationTemplateSeeder implements CommandLineRunner {
         createTemplate(NotificationType.GROUP_CREATED, NotificationChannel.PUSH,
             "Groupe créé", "Votre groupe {{groupe}} a été créé avec succès!");
         createTemplate(NotificationType.GROUP_INVITATION_RECEIVED, NotificationChannel.PUSH,
-            "Nouvelle invitation", "Vous êtes invité à rejoindre {{groupe}}");
+            "Nouvelle invitation", "Vous êtes invité à rejoindre {{groupe}}. Code: {{code}}");
         createTemplate(NotificationType.GROUP_JOINED, NotificationChannel.PUSH,
             "Nouveau membre", "{{prenom}} a rejoint le groupe {{groupe}}");
         createTemplate(NotificationType.MEMBER_ADDED, NotificationChannel.PUSH,

@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface IContributionService {
     ContributionResponse getContributionById(String contributionId);
+    List<ContributionResponse> getContributionsByGroup(String groupId);
     List<ContributionResponse> getContributionsByTour(String tourId);
     List<ContributionResponse> getContributionsByMember(String personId);
     List<ContributionResponse> getPendingContributions(String groupId);

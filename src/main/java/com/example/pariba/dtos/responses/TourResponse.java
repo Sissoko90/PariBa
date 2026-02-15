@@ -26,7 +26,8 @@ public class TourResponse {
         this.beneficiary = new PersonResponse(tour.getBeneficiary());
         this.scheduledDate = tour.getScheduledDate();
         this.status = tour.getStatus();
-        this.totalDue = tour.getTotalDue();
+        // Utiliser expectedAmount si totalDue est null (pour les tours PENDING)
+        this.totalDue = tour.getTotalDue() != null ? tour.getTotalDue() : tour.getExpectedAmount();
         this.totalCollected = tour.getTotalCollected();
         this.createdAt = tour.getCreatedAt();
     }

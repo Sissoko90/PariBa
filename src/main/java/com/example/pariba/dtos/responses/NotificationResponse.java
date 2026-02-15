@@ -5,6 +5,7 @@ import com.example.pariba.enums.NotificationType;
 import com.example.pariba.models.Notification;
 
 import java.time.Instant;
+import java.util.Map;
 
 public class NotificationResponse {
     
@@ -19,6 +20,7 @@ public class NotificationResponse {
     private boolean readFlag;
     private Instant createdAt;
     private Instant updatedAt;
+    private Map<String, String> metadata;
 
     public NotificationResponse() {}
 
@@ -34,6 +36,7 @@ public class NotificationResponse {
         this.readFlag = notification.isReadFlag();
         this.createdAt = notification.getCreatedAt();
         this.updatedAt = notification.getUpdatedAt();
+        this.metadata = notification.getMetadata();
     }
 
     public String getId() { return id; }
@@ -58,4 +61,6 @@ public class NotificationResponse {
     public void setPersonId(String personId) { this.personId = personId; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+    public Map<String, String> getMetadata() { return metadata; }
+    public void setMetadata(Map<String, String> metadata) { this.metadata = metadata; }
 }
