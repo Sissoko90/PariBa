@@ -123,9 +123,9 @@ spring:
       on-profile: dev
   datasource:
      #url: jdbc:mysql://localhost:8889/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true
-    url: jdbc:mysql://localhost:3306/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true
-    username: kalash
-    password: Kalash@2024!
+    url: jdbc:mysql://localhost:8889/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true
+    username: root
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:

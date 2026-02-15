@@ -37,6 +37,15 @@ public class ContributionServiceImpl implements IContributionService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ContributionResponse> getContributionsByGroup(String groupId) {
+        return contributionRepository.findByGroupId(groupId)
+                .stream()
+                .map(ContributionResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ContributionResponse> getContributionsByTour(String tourId) {
         return contributionRepository.findByTourId(tourId)
                 .stream()

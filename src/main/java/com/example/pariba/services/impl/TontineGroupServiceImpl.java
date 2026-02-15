@@ -161,9 +161,26 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
 
     @Transactional(readOnly = true)
     public List<GroupResponse> getGroupsByPerson(String personId) {
-        return groupRepository.findAllGroupsForPerson(personId)
-                .stream()
-                .map(GroupResponse::new)
+        List<TontineGroup> groups = groupRepository.findAllGroupsForPerson(personId);
+        
+        // Charger tous les memberships de l'utilisateur en une seule requête (évite N+1)
+        List<GroupMembership> memberships = membershipRepository.findByPersonId(personId);
+        Map<String, GroupRole> rolesByGroupId = memberships.stream()
+                .collect(Collectors.toMap(
+                    m -> m.getGroup().getId(),
+                    GroupMembership::getRole
+                ));
+        
+        return groups.stream()
+                .map(group -> {
+                    GroupResponse response = new GroupResponse(group);
+                    // Récupérer le rôle depuis la map (pas de requête DB)
+                    GroupRole role = rolesByGroupId.get(group.getId());
+                    if (role != null) {
+                        response.setCurrentUserRole(role);
+                    }
+                    return response;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -252,7 +269,7 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
         GroupMembership membership = membershipRepository.findByGroupIdAndPersonId(groupId, personId)
                 .orElseThrow(() -> new ForbiddenException(MessageConstants.ERROR_FORBIDDEN));
 
-        if (membership.getRole() != GroupRole.ADMIN && membership.getRole() != GroupRole.TREASURER) {
+        if (membership.getRole() != GroupRole.ADMIN) {
             throw new ForbiddenException(MessageConstants.GROUP_ERROR_NOT_ADMIN);
         }
     }

@@ -49,22 +49,34 @@ public class AuthServiceImpl implements IAuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // Vérifier si l'email existe déjà
-        if (personRepository.existsByEmail(request.getEmail())) {
-            throw new AlreadyExistsException("Person", "email", request.getEmail());
+        // Vérifier si l'email existe déjà (seulement si l'email est fourni et non vide)
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            if (personRepository.existsByEmail(request.getEmail())) {
+                throw new AlreadyExistsException("Person", "email", request.getEmail());
+            }
         }
 
         // Vérifier si le téléphone existe déjà
-        if (personRepository.existsByPhone(request.getPhone())) {
-            throw new AlreadyExistsException("Person", "phone", request.getPhone());
+        if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            if (personRepository.existsByPhone(request.getPhone())) {
+                throw new AlreadyExistsException("Person", "phone", request.getPhone());
+            }
+        }
+
+        // Au moins un identifiant (email ou phone) doit être fourni
+        boolean hasEmail = request.getEmail() != null && !request.getEmail().trim().isEmpty();
+        boolean hasPhone = request.getPhone() != null && !request.getPhone().trim().isEmpty();
+        
+        if (!hasEmail && !hasPhone) {
+            throw new IllegalArgumentException("Au moins un email ou un numéro de téléphone doit être fourni");
         }
 
         // Créer la personne
         Person person = new Person();
         person.setPrenom(request.getPrenom());
         person.setNom(request.getNom());
-        person.setEmail(request.getEmail());
-        person.setPhone(request.getPhone());
+        person.setEmail(hasEmail ? request.getEmail() : null);
+        person.setPhone(hasPhone ? request.getPhone() : null);
         person.setPhoto(request.getPhoto());
         person.setRole(AppRole.USER);
         person = personRepository.save(person);
@@ -72,7 +84,8 @@ public class AuthServiceImpl implements IAuthService {
         // Créer l'utilisateur
         User user = new User();
         user.setPerson(person);
-        user.setUsername(request.getEmail()); // Utiliser l'email comme username
+        // Utiliser l'email comme username, sinon le téléphone
+        user.setUsername(hasEmail ? request.getEmail() : request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
 

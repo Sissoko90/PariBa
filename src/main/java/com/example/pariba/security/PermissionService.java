@@ -51,7 +51,7 @@ public class PermissionService {
         }
         
         GroupRole role = membership.get().getRole();
-        return role == GroupRole.ADMIN || role == GroupRole.TREASURER;
+        return role == GroupRole.ADMIN;
     }
     
     /**

@@ -6,6 +6,7 @@ import com.example.pariba.models.Payment;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 public class PaymentResponse {
 
@@ -17,6 +18,10 @@ public class PaymentResponse {
     private String externalRef;
     private boolean payout;
     private Instant createdAt;
+    private String groupName;
+    private String notes;
+    private String adminNotes;
+    private LocalDateTime validatedAt;
 
     public PaymentResponse() {}
 
@@ -29,6 +34,10 @@ public class PaymentResponse {
         this.externalRef = payment.getExternalRef();
         this.payout = payment.isPayout();
         this.createdAt = payment.getCreatedAt();
+        this.groupName = payment.getGroup() != null ? payment.getGroup().getNom() : null;
+        this.notes = payment.getNotes();
+        this.adminNotes = payment.getAdminNotes();
+        this.validatedAt = payment.getValidatedAt();
     }
 
     public String getId() { return id; }
@@ -47,4 +56,12 @@ public class PaymentResponse {
     public void setPayout(boolean payout) { this.payout = payout; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public String getGroupName() { return groupName; }
+    public void setGroupName(String groupName) { this.groupName = groupName; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+    public String getAdminNotes() { return adminNotes; }
+    public void setAdminNotes(String adminNotes) { this.adminNotes = adminNotes; }
+    public LocalDateTime getValidatedAt() { return validatedAt; }
+    public void setValidatedAt(LocalDateTime validatedAt) { this.validatedAt = validatedAt; }
 }

@@ -2,7 +2,7 @@ package com.example.pariba.enums;
 
 public enum GroupRole { 
     ADMIN("Administrateur"), 
-    TREASURER("Trésorier"), 
+    // TREASURER("Trésorier"), 
     MEMBER("Membre");
     
     private final String label;
