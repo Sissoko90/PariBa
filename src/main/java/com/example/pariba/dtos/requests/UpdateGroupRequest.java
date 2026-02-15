@@ -1,6 +1,8 @@
 package com.example.pariba.dtos.requests;
 
 import com.example.pariba.constants.ValidationMessages;
+import com.example.pariba.enums.Frequency;
+import com.example.pariba.enums.RotationMode;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -16,6 +18,13 @@ public class UpdateGroupRequest {
     @Size(max = 2048, message = ValidationMessages.SIZE_DESCRIPTION)
     private String description;
     
+    @DecimalMin(value = "1.0", message = ValidationMessages.MIN_AMOUNT)
+    private BigDecimal montant;
+    
+    private Frequency frequency;
+    
+    private RotationMode rotationMode;
+    
     @DecimalMin(value = "0.0", message = ValidationMessages.MIN_PENALTY)
     private BigDecimal latePenaltyAmount;
     
@@ -27,6 +36,12 @@ public class UpdateGroupRequest {
     public void setNom(String nom) { this.nom = nom; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public BigDecimal getMontant() { return montant; }
+    public void setMontant(BigDecimal montant) { this.montant = montant; }
+    public Frequency getFrequency() { return frequency; }
+    public void setFrequency(Frequency frequency) { this.frequency = frequency; }
+    public RotationMode getRotationMode() { return rotationMode; }
+    public void setRotationMode(RotationMode rotationMode) { this.rotationMode = rotationMode; }
     public BigDecimal getLatePenaltyAmount() { return latePenaltyAmount; }
     public void setLatePenaltyAmount(BigDecimal latePenaltyAmount) { this.latePenaltyAmount = latePenaltyAmount; }
     public Integer getGraceDays() { return graceDays; }

@@ -20,6 +20,11 @@ public enum NotificationType {
     MEMBER_ADDED("Nouveau membre ajouté"),                   // Nouveau membre ajouté
     MEMBER_REMOVED("Membre retiré du groupe"),                 // Membre retiré du groupe
     MEMBER_ROLE_CHANGED("Rôle du membre modifié"),            // Rôle du membre modifié
+    
+    // Demandes d'adhésion
+    NEW_JOIN_REQUEST("Nouvelle demande d'adhésion"),          // Nouvelle demande d'adhésion (pour admin)
+    JOIN_REQUEST_APPROVED("Demande d'adhésion approuvée"),    // Demande approuvée (pour demandeur)
+    JOIN_REQUEST_REJECTED("Demande d'adhésion rejetée"),      // Demande rejetée (pour demandeur)
 
     // Tour - Rotation
     TOUR_STARTING_SOON("Tour commence bientôt (1-2 jours avant)"),             // Tour commence bientôt (1-2 jours avant)

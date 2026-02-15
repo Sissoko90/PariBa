@@ -5,6 +5,7 @@ import com.example.pariba.dtos.requests.CreateGroupRequest;
 import com.example.pariba.dtos.requests.UpdateGroupRequest;
 import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.GroupResponse;
+import com.example.pariba.dtos.responses.GroupShareLinkResponse;
 import com.example.pariba.security.CurrentUser;
 import com.example.pariba.services.ITontineGroupService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,7 +62,8 @@ public class TontineGroupController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Groupe non trouvé")
     })
     public ResponseEntity<ApiResponse<GroupResponse>> getGroupById(@PathVariable String groupId) {
-        GroupResponse response = groupService.getGroupById(groupId);
+        String personId = currentUser.getPersonId();
+        GroupResponse response = groupService.getGroupById(groupId, personId);
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_OPERATION, response));
     }
 
@@ -125,6 +127,22 @@ public class TontineGroupController {
         String personId = currentUser.getPersonId();
         groupService.deleteGroup(groupId, personId);
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_GROUP_DELETED, null));
+    }
+
+    @GetMapping("/{groupId}/share-link")
+    @Operation(
+        summary = "Générer un lien de partage",
+        description = "Génère un lien de partage pour inviter des personnes à rejoindre le groupe"
+    )
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lien généré"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Non autorisé"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Groupe non trouvé")
+    })
+    public ResponseEntity<ApiResponse<GroupShareLinkResponse>> generateShareLink(@PathVariable String groupId) {
+        String personId = currentUser.getPersonId();
+        GroupShareLinkResponse response = groupService.generateShareLink(groupId, personId);
+        return ResponseEntity.ok(ApiResponse.success("Lien de partage généré", response));
     }
 
     @PostMapping("/{groupId}/leave")

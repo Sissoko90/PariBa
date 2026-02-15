@@ -5,6 +5,7 @@ import com.example.pariba.constants.MessageConstants;
 import com.example.pariba.dtos.requests.CreateGroupRequest;
 import com.example.pariba.dtos.requests.UpdateGroupRequest;
 import com.example.pariba.dtos.responses.GroupResponse;
+import com.example.pariba.dtos.responses.GroupShareLinkResponse;
 import com.example.pariba.enums.GroupRole;
 import com.example.pariba.enums.NotificationChannel;
 import com.example.pariba.enums.NotificationType;
@@ -129,13 +130,22 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
                 .orElseThrow(() -> new ResourceNotFoundException("TontineGroup", "id", groupId));
 
         // Vérifier que la personne est admin du groupe
-        checkIsAdmin(groupId, personId);
+        GroupMembership membership = checkIsAdmin(groupId, personId);
 
         if (request.getNom() != null) {
             group.setNom(request.getNom());
         }
         if (request.getDescription() != null) {
             group.setDescription(request.getDescription());
+        }
+        if (request.getMontant() != null) {
+            group.setMontant(request.getMontant());
+        }
+        if (request.getFrequency() != null) {
+            group.setFrequency(request.getFrequency());
+        }
+        if (request.getRotationMode() != null) {
+            group.setRotationMode(request.getRotationMode());
         }
         if (request.getLatePenaltyAmount() != null) {
             group.setLatePenaltyAmount(request.getLatePenaltyAmount());
@@ -149,14 +159,23 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
         // Audit log
         auditService.log(personId, AppConstants.AUDIT_UPDATE_GROUP, "TontineGroup", group.getId(), null);
 
-        return new GroupResponse(group);
+        // Créer la réponse avec le rôle de l'utilisateur
+        GroupResponse response = new GroupResponse(group);
+        response.setCurrentUserRole(membership.getRole());
+        return response;
     }
 
     @Transactional(readOnly = true)
-    public GroupResponse getGroupById(String groupId) {
+    public GroupResponse getGroupById(String groupId, String personId) {
         TontineGroup group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new ResourceNotFoundException("TontineGroup", "id", groupId));
-        return new GroupResponse(group);
+        
+        // Récupérer le rôle de l'utilisateur dans ce groupe
+        GroupResponse response = new GroupResponse(group);
+        membershipRepository.findByGroupIdAndPersonId(groupId, personId)
+                .ifPresent(membership -> response.setCurrentUserRole(membership.getRole()));
+        
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -265,16 +284,45 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
         log.info("✅ {} a quitté le groupe {} ({} membres restants)", personId, groupId, memberCount - 1);
     }
 
-    public void checkIsAdmin(String groupId, String personId) {
+    public GroupMembership checkIsAdmin(String groupId, String personId) {
         GroupMembership membership = membershipRepository.findByGroupIdAndPersonId(groupId, personId)
                 .orElseThrow(() -> new ForbiddenException(MessageConstants.ERROR_FORBIDDEN));
 
         if (membership.getRole() != GroupRole.ADMIN) {
             throw new ForbiddenException(MessageConstants.GROUP_ERROR_NOT_ADMIN);
         }
+        
+        return membership;
     }
 
     public boolean isMember(String groupId, String personId) {
         return membershipRepository.existsByGroupIdAndPersonId(groupId, personId);
+    }
+
+    @Transactional(readOnly = true)
+    public GroupShareLinkResponse generateShareLink(String groupId, String personId) {
+        TontineGroup group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("TontineGroup", "id", groupId));
+
+        // Vérifier que la personne est membre du groupe
+        if (!isMember(groupId, personId)) {
+            throw new ForbiddenException("Vous devez être membre du groupe pour partager");
+        }
+
+        // Générer le lien de partage (deep link)
+        // Format: pariba://join-group/{groupId}
+        String deepLink = "pariba://join-group/" + groupId;
+        
+        // Générer le texte de partage
+        String shareText = String.format(
+            "🎉 Rejoignez mon groupe '%s' sur PariBa !\n\n" +
+            "👉 Lien d'invitation : %s\n\n" +
+            "💡 Si vous n'avez pas l'app, téléchargez-la ici :\n" +
+            "https://play.google.com/store/apps/details?id=com.example.pariba",
+            group.getNom(),
+            deepLink
+        );
+
+        return new GroupShareLinkResponse(groupId, group.getNom(), deepLink, shareText);
     }
 }
