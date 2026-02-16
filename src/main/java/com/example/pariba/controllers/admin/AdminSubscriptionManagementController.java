@@ -228,8 +228,9 @@ public class AdminSubscriptionManagementController {
         plan.setName(request.getName());
         plan.setDescription(request.getDescription());
         plan.setMonthlyPrice(request.getMonthlyPrice());
-        plan.setFeatures(request.getFeatures());
-        plan.setFeaturesJson(request.getFeaturesJson());
+        // Utiliser featuresJson si disponible, sinon features
+        String featuresData = request.getFeaturesJson() != null ? request.getFeaturesJson() : request.getFeatures();
+        plan.setFeaturesJson(featuresData);
         plan.setActive(request.getActive() != null ? request.getActive() : true);
         
         plan = subscriptionPlanRepository.save(plan);
@@ -250,8 +251,9 @@ public class AdminSubscriptionManagementController {
             plan.setName(request.getName());
             plan.setDescription(request.getDescription());
             plan.setMonthlyPrice(request.getMonthlyPrice());
-            plan.setFeatures(request.getFeatures());
-            plan.setFeaturesJson(request.getFeaturesJson());
+            // Utiliser featuresJson si disponible, sinon features
+            String featuresData = request.getFeaturesJson() != null ? request.getFeaturesJson() : request.getFeatures();
+            plan.setFeaturesJson(featuresData);
             plan.setActive(request.getActive() != null ? request.getActive() : true);
             
             subscriptionPlanRepository.save(plan);
@@ -281,8 +283,9 @@ public class AdminSubscriptionManagementController {
         plan.setName(request.getName());
         plan.setDescription(request.getDescription());
         plan.setMonthlyPrice(request.getMonthlyPrice());
-        plan.setFeatures(request.getFeatures());
-        plan.setFeaturesJson(request.getFeaturesJson());
+        // Utiliser featuresJson si disponible, sinon features
+        String featuresData = request.getFeaturesJson() != null ? request.getFeaturesJson() : request.getFeatures();
+        plan.setFeaturesJson(featuresData);
         if (request.getActive() != null) {
             plan.setActive(request.getActive());
         }

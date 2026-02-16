@@ -64,12 +64,13 @@
         
         .plan-card {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.3s;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
         }
         
         .plan-card::before {
@@ -83,8 +84,19 @@
         }
         
         .plan-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .plan-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102,126,234,0.05) 0%, transparent 70%);
+            pointer-events: none;
         }
         
         .plan-header {
@@ -99,21 +111,67 @@
             margin-bottom: 10px;
         }
         
+        .plan-type-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 25px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .plan-type-badge.FREE {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .plan-type-badge.BASIC {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .plan-type-badge.PRO {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+        
+        .plan-type-badge.PREMIUM {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+        
         .plan-price {
-            font-size: 36px;
-            font-weight: bold;
-            color: #1f2937;
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1f2937, #4b5563);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
         }
         
         .plan-price span {
-            font-size: 18px;
-            color: #6b7280;
+            font-size: 16px;
+            color: #9ca3af;
+            font-weight: 500;
         }
         
         .plan-description {
             color: #6b7280;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             min-height: 60px;
+            font-size: 15px;
+            line-height: 1.6;
+            text-align: center;
         }
         
         .plan-features {
@@ -123,19 +181,27 @@
         }
         
         .plan-features li {
-            padding: 8px 0;
+            padding: 12px 0;
             color: #4b5563;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .plan-features li:last-child {
+            border-bottom: none;
         }
         
         .plan-features li i {
             color: var(--success-color);
-            margin-right: 10px;
+            margin-right: 12px;
+            font-size: 16px;
         }
         
         .plan-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
+            margin-top: 25px;
         }
         
         .badge-active {
@@ -182,45 +248,51 @@
             background: var(--info-color);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
             transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 600;
         }
         
         .btn-edit:hover {
             background: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         }
         
         .btn-toggle {
             background: var(--warning-color);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
             transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 600;
         }
         
         .btn-toggle:hover {
             background: #d97706;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
         }
         
         .btn-delete {
             background: var(--danger-color);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
             transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 600;
         }
         
         .btn-delete:hover {
             background: #dc2626;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
         }
     </style>
 </head>
@@ -261,6 +333,7 @@
                 <span class="badge-inactive" th:if="${!plan.active}">Inactif</span>
                 
                 <div class="plan-header">
+                    <div class="plan-type-badge" th:classappend="${plan.type}" th:text="${plan.type}">TYPE</div>
                     <div class="plan-type" th:text="${plan.name}">Plan Name</div>
                     <div class="plan-price">
                         <span th:text="${plan.monthlyPrice}">0</span>
