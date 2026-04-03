@@ -11,6 +11,9 @@ import com.example.pariba.repositories.ExportJobRepository;
 import com.example.pariba.repositories.PersonRepository;
 import com.example.pariba.services.IAuditService;
 import com.example.pariba.services.IExportService;
+import com.example.pariba.services.ISubscriptionService;
+import com.example.pariba.exceptions.ForbiddenException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,24 +21,44 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ExportServiceImpl implements IExportService {
 
     private final ExportJobRepository exportJobRepository;
     private final PersonRepository personRepository;
     private final IAuditService auditService;
+    private final ISubscriptionService subscriptionService;
 
     public ExportServiceImpl(ExportJobRepository exportJobRepository,
                             PersonRepository personRepository,
-                            IAuditService auditService) {
+                            IAuditService auditService,
+                            ISubscriptionService subscriptionService) {
         this.exportJobRepository = exportJobRepository;
         this.personRepository = personRepository;
         this.auditService = auditService;
+        this.subscriptionService = subscriptionService;
     }
 
     @Override
     public ExportJobResponse requestExport(String personId, RequestExportRequest request) {
         Person person = personRepository.findById(personId)
                 .orElseThrow(() -> new ResourceNotFoundException("Person", "id", personId));
+
+        // Vérifier les droits d'export selon le plan d'abonnement
+        String format = request.getFormat().toUpperCase();
+        if ("PDF".equals(format)) {
+            if (!subscriptionService.canExportPdf(personId)) {
+                log.warn("⚠️ Export PDF refusé pour {} - Plan ne permet pas l'export PDF", personId);
+                throw new ForbiddenException("L'export PDF n'est pas disponible avec votre plan. Passez à un plan supérieur.");
+            }
+        } else if ("EXCEL".equals(format) || "XLSX".equals(format) || "XLS".equals(format)) {
+            if (!subscriptionService.canExportExcel(personId)) {
+                log.warn("⚠️ Export Excel refusé pour {} - Plan ne permet pas l'export Excel", personId);
+                throw new ForbiddenException("L'export Excel n'est pas disponible avec votre plan. Passez à un plan supérieur.");
+            }
+        }
+        
+        log.info("✅ Export {} autorisé pour {}", format, personId);
 
         ExportJob job = new ExportJob();
         job.setRequestedBy(person);

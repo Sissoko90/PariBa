@@ -15,31 +15,36 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class SmsServiceImpl implements ISmsService {
     
-    @Value("${twilio.account-sid:}")
+    @Value("${SMS_ACCOUNT_SID:${sms.account-sid:}}")
     private String accountSid;
     
-    @Value("${twilio.auth-token:}")
+    @Value("${SMS_AUTH_TOKEN:${sms.auth-token:}}")
     private String authToken;
     
-    @Value("${twilio.phone-number:}")
-    private String twilioPhoneNumber;
+    @Value("${SMS_SENDER_ID:${sms.sender-id:}}")
+    private String senderPhoneNumber;
     
-    @Value("${twilio.enabled:false}")
-    private boolean twilioEnabled;
+    @Value("${SMS_ENABLED:${sms.enabled:false}}")
+    private boolean smsEnabled;
+    
+    private boolean twilioInitialized = false;
     
     /**
      * Initialiser Twilio
      */
     private void initTwilio() {
-        if (twilioEnabled && accountSid != null && !accountSid.isEmpty()) {
+        if (!twilioInitialized && smsEnabled && accountSid != null && !accountSid.isEmpty()) {
+            log.info("Initialisation Twilio avec SID: {}...", accountSid.substring(0, Math.min(10, accountSid.length())));
             Twilio.init(accountSid, authToken);
+            twilioInitialized = true;
+            log.info("Twilio initialise avec succes");
         }
     }
     
     @Override
     public void sendSms(String phoneNumber, String message) {
-        if (!twilioEnabled) {
-            log.warn("Twilio n'est pas activé. SMS non envoyé à: {}", phoneNumber);
+        if (!smsEnabled) {
+            log.warn("SMS n'est pas activé. SMS non envoyé à: {}", phoneNumber);
             log.info("📱 [MODE DEV] SMS simulé vers {}: {}", phoneNumber, message);
             return;
         }
@@ -49,7 +54,7 @@ public class SmsServiceImpl implements ISmsService {
             
             Message twilioMessage = Message.creator(
                 new PhoneNumber(phoneNumber),
-                new PhoneNumber(twilioPhoneNumber),
+                new PhoneNumber(senderPhoneNumber),
                 message
             ).create();
             
@@ -74,8 +79,8 @@ public class SmsServiceImpl implements ISmsService {
     
     @Override
     public void sendWhatsApp(String phoneNumber, String message) {
-        if (!twilioEnabled) {
-            log.warn("Twilio n'est pas activé. WhatsApp non envoyé à: {}", phoneNumber);
+        if (!smsEnabled) {
+            log.warn("SMS n'est pas activé. WhatsApp non envoyé à: {}", phoneNumber);
             log.info("💬 [MODE DEV] WhatsApp simulé vers {}: {}", phoneNumber, message);
             return;
         }
@@ -85,7 +90,7 @@ public class SmsServiceImpl implements ISmsService {
             
             // Format WhatsApp: whatsapp:+22370123456
             String whatsappNumber = phoneNumber.startsWith("whatsapp:") ? phoneNumber : "whatsapp:" + phoneNumber;
-            String whatsappFrom = twilioPhoneNumber.startsWith("whatsapp:") ? twilioPhoneNumber : "whatsapp:" + twilioPhoneNumber;
+            String whatsappFrom = senderPhoneNumber.startsWith("whatsapp:") ? senderPhoneNumber : "whatsapp:" + senderPhoneNumber;
             
             Message twilioMessage = Message.creator(
                 new PhoneNumber(whatsappNumber),

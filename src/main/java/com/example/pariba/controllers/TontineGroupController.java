@@ -8,6 +8,8 @@ import com.example.pariba.dtos.responses.GroupResponse;
 import com.example.pariba.dtos.responses.GroupShareLinkResponse;
 import com.example.pariba.security.CurrentUser;
 import com.example.pariba.services.ITontineGroupService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -30,10 +32,15 @@ public class TontineGroupController {
 
     private final ITontineGroupService groupService;
     private final CurrentUser currentUser;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public TontineGroupController(ITontineGroupService groupService, CurrentUser currentUser) {
+    public TontineGroupController(ITontineGroupService groupService, CurrentUser currentUser, 
+                                  IAuditService auditService, ISystemLogService systemLogService) {
         this.groupService = groupService;
         this.currentUser = currentUser;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @PostMapping
@@ -48,6 +55,12 @@ public class TontineGroupController {
     public ResponseEntity<ApiResponse<GroupResponse>> createGroup(@Valid @RequestBody CreateGroupRequest request) {
         String creatorId = currentUser.getPersonId();
         GroupResponse response = groupService.createGroup(creatorId, request);
+        
+        // Logs
+        String details = String.format("{\"groupId\":\"%s\",\"groupName\":\"%s\"}", response.getId(), response.getNom());
+        auditService.log(creatorId, "GROUP_CREATED", "TontineGroup", response.getId(), details);
+        systemLogService.log(creatorId, "User", "GROUP_CREATED", "TontineGroup", response.getId(), details, "INFO", true);
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(MessageConstants.SUCCESS_GROUP_CREATED, response));
     }
@@ -110,6 +123,12 @@ public class TontineGroupController {
             @Valid @RequestBody UpdateGroupRequest request) {
         String personId = currentUser.getPersonId();
         GroupResponse response = groupService.updateGroup(groupId, personId, request);
+        
+        // Logs
+        String details = String.format("{\"groupId\":\"%s\",\"groupName\":\"%s\"}", groupId, response.getNom());
+        auditService.log(personId, "GROUP_UPDATED", "TontineGroup", groupId, details);
+        systemLogService.log(personId, "User", "GROUP_UPDATED", "TontineGroup", groupId, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_GROUP_UPDATED, response));
     }
 
@@ -125,6 +144,12 @@ public class TontineGroupController {
     })
     public ResponseEntity<ApiResponse<Void>> deleteGroup(@PathVariable String groupId) {
         String personId = currentUser.getPersonId();
+        
+        // Log avant suppression
+        String details = String.format("{\"groupId\":\"%s\"}", groupId);
+        auditService.log(personId, "GROUP_DELETED", "TontineGroup", groupId, details);
+        systemLogService.log(personId, "User", "GROUP_DELETED", "TontineGroup", groupId, details, "WARNING", true);
+        
         groupService.deleteGroup(groupId, personId);
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_GROUP_DELETED, null));
     }
@@ -158,6 +183,12 @@ public class TontineGroupController {
     public ResponseEntity<ApiResponse<String>> leaveGroup(@PathVariable String groupId) {
         String personId = currentUser.getPersonId();
         groupService.leaveGroup(groupId, personId);
+        
+        // Logs
+        String details = String.format("{\"groupId\":\"%s\"}", groupId);
+        auditService.log(personId, "GROUP_LEFT", "TontineGroup", groupId, details);
+        systemLogService.log(personId, "User", "GROUP_LEFT", "TontineGroup", groupId, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success("Vous avez quitté le groupe avec succès", null));
     }
 }

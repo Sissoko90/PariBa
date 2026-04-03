@@ -21,6 +21,7 @@ import com.example.pariba.repositories.PersonRepository;
 import com.example.pariba.repositories.TontineGroupRepository;
 import com.example.pariba.services.IAuditService;
 import com.example.pariba.services.INotificationService;
+import com.example.pariba.services.ISubscriptionService;
 import com.example.pariba.services.ITontineGroupService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,23 +41,29 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
     private final GroupMembershipRepository membershipRepository;
     private final IAuditService auditService;
     private final INotificationService notificationService;
+    private final ISubscriptionService subscriptionService;
 
     public TontineGroupServiceImpl(TontineGroupRepository groupRepository,
                                   PersonRepository personRepository,
                                   GroupMembershipRepository membershipRepository,
                                   IAuditService auditService,
-                                  INotificationService notificationService) {
+                                  INotificationService notificationService,
+                                  ISubscriptionService subscriptionService) {
         this.groupRepository = groupRepository;
         this.personRepository = personRepository;
         this.membershipRepository = membershipRepository;
         this.auditService = auditService;
         this.notificationService = notificationService;
+        this.subscriptionService = subscriptionService;
     }
 
     @Transactional
     public GroupResponse createGroup(String creatorId, CreateGroupRequest request) {
         Person creator = personRepository.findById(creatorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Person", "id", creatorId));
+
+        // Vérifier la limite de tontines pour les utilisateurs gratuits
+        checkGroupCreationLimit(creatorId);
 
         // Créer le groupe
         TontineGroup group = new TontineGroup();
@@ -324,5 +331,32 @@ public class TontineGroupServiceImpl implements ITontineGroupService {
         );
 
         return new GroupShareLinkResponse(groupId, group.getNom(), deepLink, shareText);
+    }
+    
+    /**
+     * Vérifie si l'utilisateur peut créer un nouveau groupe selon son plan d'abonnement
+     * La limite est définie dans le plan (maxGroups), 0 = illimité
+     */
+    private void checkGroupCreationLimit(String personId) {
+        int maxGroups = subscriptionService.getMaxGroupsForPerson(personId);
+        
+        // 0 = illimité
+        if (maxGroups == 0) {
+            log.info("✅ Utilisateur {} a un plan avec tontines illimitées", personId);
+            return;
+        }
+        
+        // Compter le nombre de groupes créés par cet utilisateur
+        long groupCount = groupRepository.countByCreatorId(personId);
+        
+        if (groupCount >= maxGroups) {
+            log.warn("⚠️ Utilisateur {} a atteint la limite de {} tontines", personId, maxGroups);
+            throw new BadRequestException(
+                String.format("Vous avez atteint la limite de %d tontines pour votre plan. " +
+                            "Passez à un plan supérieur pour créer plus de tontines.", maxGroups)
+            );
+        }
+        
+        log.info("📊 Utilisateur {} a créé {}/{} tontines", personId, groupCount, maxGroups);
     }
 }

@@ -5,6 +5,8 @@ import com.example.pariba.dtos.requests.CreateSupportTicketRequest;
 import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.SupportTicketResponse;
 import com.example.pariba.services.ISupportTicketService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,9 +28,13 @@ import java.util.List;
 public class SupportTicketController {
     
     private final ISupportTicketService supportTicketService;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
     
-    public SupportTicketController(ISupportTicketService supportTicketService) {
+    public SupportTicketController(ISupportTicketService supportTicketService, IAuditService auditService, ISystemLogService systemLogService) {
         this.supportTicketService = supportTicketService;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
     
     private String getPersonIdFromAuth() {
@@ -52,6 +58,11 @@ public class SupportTicketController {
             }
             
             SupportTicketResponse ticket = supportTicketService.createTicket(request, personId);
+            
+            String details = String.format("{\"ticketId\":\"%s\",\"subject\":\"%s\"}", ticket.getId(), request.getSubject());
+            auditService.log(personId, "SUPPORT_TICKET_CREATED", "SupportTicket", ticket.getId(), details);
+            systemLogService.log(personId, "User", "SUPPORT_TICKET_CREATED", "SupportTicket", ticket.getId(), details, "INFO", true);
+            
             return ResponseEntity.ok(new ApiResponse<>(true, "Ticket créé avec succès", ticket));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -96,6 +107,11 @@ public class SupportTicketController {
     @Operation(summary = "Supprimer un ticket", description = "Supprimer un ticket de support")
     public ResponseEntity<ApiResponse<Void>> deleteTicket(@PathVariable String id) {
         try {
+            String personId = getPersonIdFromAuth();
+            String details = String.format("{\"ticketId\":\"%s\"}", id);
+            auditService.log(personId, "SUPPORT_TICKET_DELETED", "SupportTicket", id, details);
+            systemLogService.log(personId, "User", "SUPPORT_TICKET_DELETED", "SupportTicket", id, details, "WARNING", true);
+            
             supportTicketService.deleteTicket(id);
             return ResponseEntity.ok(new ApiResponse<>(true, "Ticket supprimé avec succès", null));
         } catch (Exception e) {

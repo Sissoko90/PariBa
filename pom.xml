@@ -87,6 +87,18 @@
 			<scope>runtime</scope>
 		</dependency>
 		
+		<!-- Dotenv pour charger le fichier .env -->
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>4.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+		
 		<!-- Export PDF et Excel -->
 		<dependency>
 			<groupId>com.itextpdf</groupId>

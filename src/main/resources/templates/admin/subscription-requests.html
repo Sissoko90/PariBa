@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title th:text="${pageTitle}">Demandes d'Abonnement</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            padding: 2rem;
+        }
+        .page-header {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card.pending { border-left: 4px solid var(--warning-color); }
+        .stat-card.approved { border-left: 4px solid var(--success-color); }
+        .stat-card.rejected { border-left: 4px solid var(--danger-color); }
+        .stat-card.total { border-left: 4px solid var(--info-color); }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .requests-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            border: none;
+        }
+        .table td {
+            vertical-align: middle;
+            border-color: #f0f0f0;
+        }
+        .badge-pending {
+            background: var(--warning-color);
+            color: white;
+        }
+        .badge-approved {
+            background: var(--success-color);
+            color: white;
+        }
+        .badge-rejected {
+            background: var(--danger-color);
+            color: white;
+        }
+        .badge-cancelled {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-approve {
+            background: var(--success-color);
+            color: white;
+            border: none;
+        }
+        .btn-approve:hover {
+            background: #059669;
+            color: white;
+        }
+        .btn-reject {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+        }
+        .btn-reject:hover {
+            background: #dc2626;
+            color: white;
+        }
+        .filter-tabs {
+            background: white;
+            border-radius: 10px;
+            padding: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .filter-tabs .nav-link {
+            border-radius: 8px;
+            color: #6b7280;
+            padding: 0.5rem 1rem;
+        }
+        .filter-tabs .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-0"><i class="fas fa-clipboard-list me-2"></i> Demandes d'Abonnement</h2>
+                <p class="text-muted mb-0">Gerez les demandes d'abonnement des utilisateurs</p>
+            </div>
+            <div>
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createSubscriptionModal">
+                    <i class="fas fa-plus me-2"></i> Creer un abonnement
+                </button>
+                <a href="/admin/dashboard" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Retour
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card pending">
+                    <div class="stat-number text-warning" th:text="${stats.pending}">0</div>
+                    <div class="text-muted">En attente</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card approved">
+                    <div class="stat-number text-success" th:text="${stats.approved}">0</div>
+                    <div class="text-muted">Approuvees</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card rejected">
+                    <div class="stat-number text-danger" th:text="${stats.rejected}">0</div>
+                    <div class="text-muted">Rejetees</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card total">
+                    <div class="stat-number text-info" th:text="${stats.total}">0</div>
+                    <div class="text-muted">Total</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filter-tabs">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${selectedStatus == null} ? 'active'" 
+                       href="/admin/subscription-requests">Toutes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${selectedStatus == 'PENDING'} ? 'active'" 
+                       href="/admin/subscription-requests?status=PENDING">En attente</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${selectedStatus == 'APPROVED'} ? 'active'" 
+                       href="/admin/subscription-requests?status=APPROVED">Approuvees</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:classappend="${selectedStatus == 'REJECTED'} ? 'active'" 
+                       href="/admin/subscription-requests?status=REJECTED">Rejetees</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Tableau des demandes -->
+        <div class="requests-table">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" th:if="${!requests.isEmpty()}">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Telephone</th>
+                            <th>Plan</th>
+                            <th>Prix</th>
+                            <th>Statut</th>
+                            <th>Notes</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="request : ${requests}">
+                            <td>
+                                <strong th:text="${request.personName}">Nom</strong>
+                            </td>
+                            <td th:text="${request.personPhone}">+223...</td>
+                            <td>
+                                <span class="badge bg-primary" th:text="${request.planName}">Premium</span>
+                                <small class="text-muted d-block" th:text="${request.planType}">PREMIUM</small>
+                            </td>
+                            <td>
+                                <span th:text="${#numbers.formatDecimal(request.planPrice, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">5000 FCFA</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-pending" th:if="${request.status.name() == 'PENDING'}">
+                                    <i class="fas fa-clock me-1"></i> En attente
+                                </span>
+                                <span class="badge badge-approved" th:if="${request.status.name() == 'APPROVED'}">
+                                    <i class="fas fa-check me-1"></i> Approuvee
+                                </span>
+                                <span class="badge badge-rejected" th:if="${request.status.name() == 'REJECTED'}">
+                                    <i class="fas fa-times me-1"></i> Rejetee
+                                </span>
+                                <span class="badge badge-cancelled" th:if="${request.status.name() == 'CANCELLED'}">
+                                    <i class="fas fa-ban me-1"></i> Annulee
+                                </span>
+                            </td>
+                            <td>
+                                <div th:if="${request.notes}">
+                                    <small><strong>User:</strong> <span th:text="${request.notes}">-</span></small>
+                                </div>
+                                <div th:if="${request.adminNotes}">
+                                    <small><strong>Admin:</strong> <span th:text="${request.adminNotes}">-</span></small>
+                                </div>
+                                <small class="text-muted" th:if="${request.notes == null and request.adminNotes == null}">-</small>
+                            </td>
+                            <td>
+                                <small th:text="${#temporals.format(request.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</small>
+                            </td>
+                            <td>
+                                <div th:if="${request.status.name() == 'PENDING'}">
+                                    <button class="btn btn-sm btn-approve me-1" 
+                                            th:data-request-id="${request.id}"
+                                            onclick="approveRequest(this.dataset.requestId)">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-reject" 
+                                            th:data-request-id="${request.id}"
+                                            onclick="rejectRequest(this.dataset.requestId)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted" th:unless="${request.status.name() == 'PENDING'}">
+                                    Traite
+                                </small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <!-- Etat vide -->
+                <div class="empty-state" th:if="${requests.isEmpty()}">
+                    <i class="fas fa-inbox"></i>
+                    <h5>Aucune demande</h5>
+                    <p>Il n'y a pas de demandes d'abonnement pour le moment.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${totalPages > 1}" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/admin/subscription-requests(page=${currentPage - 1}, status=${selectedStatus})}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                    th:classappend="${i == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{/admin/subscription-requests(page=${i}, status=${selectedStatus})}" 
+                       th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/admin/subscription-requests(page=${currentPage + 1}, status=${selectedStatus})}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Modal pour creer un abonnement -->
+    <div class="modal fade" id="createSubscriptionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-crown me-2"></i> Creer un abonnement</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Creez un abonnement directement pour un utilisateur (sans demande prealable).
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Filtrer par telephone</label>
+                        <input type="text" class="form-control mb-2" id="userPhoneFilter" placeholder="Tapez pour filtrer...">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Selectionner l'utilisateur *</label>
+                        <select class="form-select" id="userSelect" required size="6" style="height: auto;">
+                            <option value="">-- Chargement des utilisateurs... --</option>
+                        </select>
+                        <small class="text-muted"><span id="userCount">0</span> utilisateur(s)</small>
+                    </div>
+                    
+                    <!-- Informations du client selectionne -->
+                    <div id="userInfoCard" class="mb-3 d-none">
+                        <div class="card border-success">
+                            <div class="card-body py-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <strong id="userFullName">-</strong>
+                                        <br>
+                                        <small class="text-muted"><i class="fas fa-phone me-1"></i><span id="userPhoneDisplay">-</span></small>
+                                        <small class="text-muted ms-2"><i class="fas fa-envelope me-1"></i><span id="userEmail">-</span></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Plan d'abonnement *</label>
+                        <select class="form-select" id="planSelect" required>
+                            <option value="">-- Selectionner un plan --</option>
+                        </select>
+                    </div>
+                    <div id="planDetails" class="d-none">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title" id="selectedPlanName">-</h6>
+                                <p class="mb-1"><strong>Prix:</strong> <span id="selectedPlanPrice">-</span> FCFA/mois</p>
+                                <p class="mb-1"><strong>Max Tontines:</strong> <span id="selectedPlanGroups">-</span></p>
+                                <p class="mb-0"><strong>Export PDF:</strong> <span id="selectedPlanPdf">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="createSubscriptionBtn">
+                        <i class="fas fa-check me-2"></i> Creer l'abonnement
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmation -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmModalMessage">Etes-vous sur?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Notes (optionnel)</label>
+                        <textarea class="form-control" id="adminNotes" rows="2" placeholder="Ajouter une note..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn" id="confirmBtn">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentRequestId = null;
+        let currentAction = null;
+
+        function approveRequest(requestId) {
+            currentRequestId = requestId;
+            currentAction = 'approve';
+            document.getElementById('confirmModalTitle').textContent = 'Approuver la demande';
+            document.getElementById('confirmModalMessage').textContent = 
+                'Voulez-vous approuver cette demande? L\'abonnement sera active immediatement.';
+            document.getElementById('confirmBtn').className = 'btn btn-success';
+            document.getElementById('confirmBtn').textContent = 'Approuver';
+            document.getElementById('adminNotes').value = '';
+            new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        }
+
+        function rejectRequest(requestId) {
+            currentRequestId = requestId;
+            currentAction = 'reject';
+            document.getElementById('confirmModalTitle').textContent = 'Rejeter la demande';
+            document.getElementById('confirmModalMessage').textContent = 
+                'Voulez-vous rejeter cette demande?';
+            document.getElementById('confirmBtn').className = 'btn btn-danger';
+            document.getElementById('confirmBtn').textContent = 'Rejeter';
+            document.getElementById('adminNotes').value = '';
+            new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        }
+
+        document.getElementById('confirmBtn').addEventListener('click', function() {
+            const adminNotes = document.getElementById('adminNotes').value;
+            const url = '/admin/subscription-requests/' + currentRequestId + '/' + currentAction;
+            
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            fetch(url + '?adminNotes=' + encodeURIComponent(adminNotes), {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Erreur lors du traitement de la demande');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors du traitement de la demande');
+            });
+        });
+
+        // ========================================
+        // Gestion du modal de creation d'abonnement
+        // ========================================
+        let plans = [];
+        let allUsers = [];
+        let selectedUser = null;
+
+        // Charger les plans et utilisateurs au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlans();
+            loadUsers();
+            setupUserFilter();
+            setupUserSelect();
+        });
+
+        function loadPlans() {
+            fetch('/admin/subscription-plans', {
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                plans = data;
+                const select = document.getElementById('planSelect');
+                select.innerHTML = '<option value="">-- Selectionner un plan --</option>';
+                plans.forEach(plan => {
+                    if (plan.active) {
+                        const option = document.createElement('option');
+                        option.value = plan.id;
+                        option.textContent = plan.name + ' (' + plan.type + ') - ' + (plan.monthlyPrice || 0) + ' FCFA';
+                        select.appendChild(option);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Erreur chargement plans:', error);
+            });
+        }
+
+        // Charger tous les utilisateurs
+        function loadUsers() {
+            fetch('/admin/users/all', {
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                allUsers = data;
+                renderUserOptions(allUsers);
+            })
+            .catch(error => {
+                console.error('Erreur chargement utilisateurs:', error);
+                document.getElementById('userSelect').innerHTML = '<option value="">Erreur de chargement</option>';
+            });
+        }
+
+        // Afficher les utilisateurs dans le select
+        function renderUserOptions(users) {
+            const select = document.getElementById('userSelect');
+            select.innerHTML = '<option value="">-- Selectionner un utilisateur --</option>';
+            
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                const nom = (user.prenom || '') + ' ' + (user.nom || '');
+                option.textContent = user.phone + ' - ' + nom.trim();
+                option.dataset.user = JSON.stringify(user);
+                select.appendChild(option);
+            });
+            
+            document.getElementById('userCount').textContent = users.length;
+        }
+
+        // Configurer le filtre par telephone
+        function setupUserFilter() {
+            const filterInput = document.getElementById('userPhoneFilter');
+            filterInput.addEventListener('input', function() {
+                const filter = this.value.trim().toLowerCase();
+                if (!filter) {
+                    renderUserOptions(allUsers);
+                    return;
+                }
+                
+                const filtered = allUsers.filter(user => {
+                    const phone = (user.phone || '').toLowerCase();
+                    const nom = (user.nom || '').toLowerCase();
+                    const prenom = (user.prenom || '').toLowerCase();
+                    return phone.includes(filter) || nom.includes(filter) || prenom.includes(filter);
+                });
+                
+                renderUserOptions(filtered);
+            });
+        }
+
+        // Configurer la selection d'utilisateur
+        function setupUserSelect() {
+            document.getElementById('userSelect').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.dataset.user) {
+                    selectedUser = JSON.parse(selectedOption.dataset.user);
+                    showUserInfo(selectedUser);
+                } else {
+                    selectedUser = null;
+                    hideUserInfo();
+                }
+            });
+        }
+
+        // Afficher les informations de l'utilisateur
+        function showUserInfo(user) {
+            const card = document.getElementById('userInfoCard');
+            document.getElementById('userFullName').textContent = (user.prenom || '') + ' ' + (user.nom || '');
+            document.getElementById('userEmail').textContent = user.email || 'Pas d\'email';
+            document.getElementById('userPhoneDisplay').textContent = user.phone || '';
+            card.classList.remove('d-none');
+        }
+
+        // Cacher les informations utilisateur
+        function hideUserInfo() {
+            document.getElementById('userInfoCard').classList.add('d-none');
+        }
+
+        // Afficher les details du plan selectionne
+        document.getElementById('planSelect').addEventListener('change', function() {
+            const planId = this.value;
+            const detailsDiv = document.getElementById('planDetails');
+            
+            if (!planId) {
+                detailsDiv.classList.add('d-none');
+                return;
+            }
+            
+            const plan = plans.find(p => p.id === planId);
+            if (plan) {
+                document.getElementById('selectedPlanName').textContent = plan.name;
+                document.getElementById('selectedPlanPrice').textContent = plan.monthlyPrice || 0;
+                document.getElementById('selectedPlanGroups').textContent = plan.maxGroups === 0 ? 'Illimite' : plan.maxGroups;
+                document.getElementById('selectedPlanPdf').textContent = plan.canExportPdf ? 'Oui' : 'Non';
+                detailsDiv.classList.remove('d-none');
+            }
+        });
+
+        // Creer l'abonnement
+        document.getElementById('createSubscriptionBtn').addEventListener('click', function() {
+            const planId = document.getElementById('planSelect').value;
+            
+            if (!selectedUser) {
+                alert('Veuillez selectionner un utilisateur');
+                return;
+            }
+            if (!planId) {
+                alert('Veuillez selectionner un plan');
+                return;
+            }
+            
+            // Confirmation
+            const userName = (selectedUser.prenom || '') + ' ' + (selectedUser.nom || '');
+            const plan = plans.find(p => p.id === planId);
+            if (!confirm('Creer l\'abonnement "' + plan.name + '" pour ' + userName + ' ?')) {
+                return;
+            }
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Creation...';
+            
+            const csrfToken2 = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader2 = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            fetch('/admin/subscriptions/create?personId=' + selectedUser.id + '&planId=' + planId, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    [csrfHeader2]: csrfToken2
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la creation');
+                }
+                return response.json();
+            })
+            .then(subscription => {
+                alert('Abonnement cree avec succes pour ' + userName + '!');
+                bootstrap.Modal.getInstance(document.getElementById('createSubscriptionModal')).hide();
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur: ' + error.message);
+            })
+            .finally(() => {
+                const btn = document.getElementById('createSubscriptionBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check me-2"></i> Creer l\'abonnement';
+            });
+        });
+
+        // Reset du modal a l'ouverture
+        document.getElementById('createSubscriptionModal').addEventListener('show.bs.modal', function() {
+            document.getElementById('userPhoneFilter').value = '';
+            document.getElementById('userSelect').value = '';
+            document.getElementById('planSelect').value = '';
+            document.getElementById('planDetails').classList.add('d-none');
+            hideUserInfo();
+            selectedUser = null;
+            renderUserOptions(allUsers);
+        });
+    </script>
+</body>
+</html>

@@ -27,6 +27,11 @@ public class SubscriptionPlanResponse {
     private Instant createdAt;
     private Instant updatedAt;
     
+    // Limites et fonctionnalités du plan
+    private Integer maxGroups;
+    private Boolean canExportPdf;
+    private Boolean canExportExcel;
+    
     public SubscriptionPlanResponse(SubscriptionPlan plan) {
         this.id = plan.getId();
         this.type = plan.getType();
@@ -38,5 +43,9 @@ public class SubscriptionPlanResponse {
         this.active = plan.getActive();
         this.createdAt = plan.getCreatedAt();
         this.updatedAt = plan.getUpdatedAt();
+        // Limites et fonctionnalités
+        this.maxGroups = plan.getMaxGroups();
+        this.canExportPdf = plan.getCanExportPdf();
+        this.canExportExcel = plan.getCanExportExcel();
     }
 }

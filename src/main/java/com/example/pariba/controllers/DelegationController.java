@@ -7,6 +7,8 @@ import com.example.pariba.dtos.responses.DelegationResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.example.pariba.services.IDelegationService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,9 +27,13 @@ import java.util.List;
 public class DelegationController {
 
     private final IDelegationService delegationService;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public DelegationController(IDelegationService delegationService) {
+    public DelegationController(IDelegationService delegationService, IAuditService auditService, ISystemLogService systemLogService) {
         this.delegationService = delegationService;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @PostMapping
@@ -42,6 +48,12 @@ public class DelegationController {
             @Valid @RequestBody CreateDelegationRequest request) {
         String personId = userDetails.getUsername();
         DelegationResponse delegation = delegationService.createDelegation(personId, request);
+        
+        String details = String.format("{\"delegationId\":\"%s\",\"groupId\":\"%s\"}", 
+            delegation.getId(), request.getGroupId());
+        auditService.log(personId, "DELEGATION_CREATED", "Delegation", delegation.getId(), details);
+        systemLogService.log(personId, "User", "DELEGATION_CREATED", "Delegation", delegation.getId(), details, "INFO", true);
+        
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.DELEGATION_SUCCESS_CREATED, delegation));
     }
 
@@ -90,6 +102,10 @@ public class DelegationController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String id) {
         String personId = userDetails.getUsername();
+        String details = String.format("{\"delegationId\":\"%s\"}", id);
+        auditService.log(personId, "DELEGATION_REVOKED", "Delegation", id, details);
+        systemLogService.log(personId, "User", "DELEGATION_REVOKED", "Delegation", id, details, "WARNING", true);
+        
         delegationService.revokeDelegation(id, personId);
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.DELEGATION_SUCCESS_REVOKED, null));
     }

@@ -8,6 +8,8 @@ import com.example.pariba.dtos.responses.PaymentResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.example.pariba.services.IPaymentService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,9 +29,13 @@ import java.util.List;
 public class PaymentController {
 
     private final IPaymentService paymentService;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public PaymentController(IPaymentService paymentService) {
+    public PaymentController(IPaymentService paymentService, IAuditService auditService, ISystemLogService systemLogService) {
         this.paymentService = paymentService;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
      @PostMapping
@@ -41,6 +47,16 @@ public class PaymentController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody DeclarePaymentRequest request) {
         PaymentResponse payment = paymentService.declarePayment(userDetails.getUsername(), request);
+        
+        // Logs
+        String payerId = payment.getPayer() != null ? payment.getPayer().getId() : null;
+        String details = String.format("{\"paymentId\":\"%s\",\"amount\":\"%s\",\"type\":\"%s\"}", 
+            payment.getId(), payment.getAmount(), payment.getPaymentType());
+        if (payerId != null) {
+            auditService.log(payerId, "PAYMENT_DECLARED", "Payment", payment.getId(), details);
+            systemLogService.log(payerId, userDetails.getUsername(), "PAYMENT_DECLARED", "Payment", payment.getId(), details, "INFO", true);
+        }
+        
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.PAYMENT_SUCCESS_PROCESSED, payment));
     }
 

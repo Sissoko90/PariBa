@@ -7,6 +7,13 @@ import com.example.pariba.models.Subscription;
 import com.example.pariba.models.SubscriptionPlan;
 import com.example.pariba.repositories.SubscriptionRepository;
 import com.example.pariba.repositories.SubscriptionPlanRepository;
+import com.example.pariba.security.CurrentUser;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -36,10 +44,14 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Admin - Plans d'abonnement", description = "Gestion des plans d'abonnement par l'administrateur")
 public class AdminSubscriptionManagementController {
 
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final IAuditService auditService;
+    private final CurrentUser currentUser;
+    private final ISystemLogService systemLogService;
 
     // ========================================
     // VUES THYMELEAF - Plans d'Abonnement
@@ -79,6 +91,7 @@ public class AdminSubscriptionManagementController {
      */
     @GetMapping("/subscriptions")
     @PreAuthorize("hasRole('SUPERADMIN')")
+    @Transactional(readOnly = true)
     public String subscriptions(Model model,
                                @RequestParam(defaultValue = "0") int page,
                                @RequestParam(defaultValue = "20") int size,
@@ -91,9 +104,9 @@ public class AdminSubscriptionManagementController {
 
             if (status != null && !status.isEmpty()) {
                 SubscriptionStatus subscriptionStatus = SubscriptionStatus.valueOf(status);
-                subscriptionsPage = subscriptionRepository.findByStatus(subscriptionStatus, pageRequest);
+                subscriptionsPage = subscriptionRepository.findByStatusWithPersonAndPlan(subscriptionStatus, pageRequest);
             } else {
-                subscriptionsPage = subscriptionRepository.findAll(pageRequest);
+                subscriptionsPage = subscriptionRepository.findAllWithPersonAndPlan(pageRequest);
             }
 
             // Statistiques
@@ -132,6 +145,7 @@ public class AdminSubscriptionManagementController {
      */
     @GetMapping("/subscription-stats")
     @PreAuthorize("hasRole('SUPERADMIN')")
+    @Transactional(readOnly = true)
     public String subscriptionStats(Model model) {
         log.info("📈 Accès aux statistiques d'abonnement");
 
@@ -145,23 +159,37 @@ public class AdminSubscriptionManagementController {
             stats.put("totalCancelled", subscriptionRepository.countByStatus(SubscriptionStatus.CANCELLED));
             stats.put("totalCanceled", subscriptionRepository.countByStatus(SubscriptionStatus.CANCELED));
             
-            // Total par plan
-            Map<String, Long> byPlan = new HashMap<>();
-            subscriptionPlanRepository.findAll().forEach(plan -> {
+            // Total par plan - utiliser l'ID comme clé pour éviter les conflits de noms
+            Map<String, Long> byPlanId = new HashMap<>();
+            List<SubscriptionPlan> allPlans = subscriptionPlanRepository.findAll();
+            log.info("📊 Nombre de plans: {}", allPlans.size());
+            
+            for (SubscriptionPlan plan : allPlans) {
                 long count = subscriptionRepository.countByPlanAndStatus(plan, SubscriptionStatus.ACTIVE);
-                byPlan.put(plan.getName(), count);
-            });
-            stats.put("byPlan", byPlan);
+                log.info("📊 Plan '{}' (ID: {}): {} abonnés actifs", plan.getName(), plan.getId(), count);
+                byPlanId.put(plan.getId(), count);
+            }
+            
+            stats.put("byPlanId", byPlanId);
             
             // Abonnements récents (30 derniers jours)
             Instant thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS);
             long recentSubscriptions = subscriptionRepository.countByCreatedAtAfter(thirtyDaysAgo);
             stats.put("recentSubscriptions", recentSubscriptions);
             
-            // Taux de renouvellement (approximatif)
+            // Taux de rétention (approximatif)
+            // Si on a des abonnements actifs et aucun expiré, le taux est 100%
+            // Sinon, c'est le ratio actifs / (actifs + expirés)
             long totalExpired = subscriptionRepository.countByStatus(SubscriptionStatus.EXPIRED);
             long totalActive = subscriptionRepository.countByStatus(SubscriptionStatus.ACTIVE);
-            double renewalRate = totalExpired > 0 ? (double) totalActive / (totalActive + totalExpired) * 100 : 0;
+            double renewalRate;
+            if (totalActive > 0 && totalExpired == 0) {
+                renewalRate = 100.0;
+            } else if (totalActive + totalExpired > 0) {
+                renewalRate = (double) totalActive / (totalActive + totalExpired) * 100;
+            } else {
+                renewalRate = 0.0;
+            }
             stats.put("renewalRate", String.format("%.1f", renewalRate));
             
             // Revenus estimés (basé sur les abonnements actifs)
@@ -193,7 +221,7 @@ public class AdminSubscriptionManagementController {
      */
     @GetMapping("/subscription-plans")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<List<SubscriptionPlanResponse>> getAllPlans() {
         List<SubscriptionPlanResponse> plans = subscriptionPlanRepository.findAll()
                 .stream()
@@ -207,7 +235,7 @@ public class AdminSubscriptionManagementController {
      */
     @GetMapping("/subscription-plans/{id}")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public ResponseEntity<SubscriptionPlanResponse> getPlanById(@PathVariable String id) {
         SubscriptionPlan plan = subscriptionPlanRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Plan non trouvé"));
@@ -215,11 +243,17 @@ public class AdminSubscriptionManagementController {
     }
 
     /**
-     * API: Créer un nouveau plan d'abonnement (JSON)
+     * API JSON: Créer un nouveau plan d'abonnement
      */
     @PostMapping(value = "/subscription-plans", consumes = "application/json")
     @ResponseBody
     @PreAuthorize("hasRole('SUPERADMIN')")
+    @Operation(summary = "Créer un plan", description = "Crée un nouveau plan d'abonnement")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Plan créé"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Données invalides")
+    })
     public ResponseEntity<SubscriptionPlanResponse> createPlanJson(
             @Valid @RequestBody SubscriptionPlanRequest request) {
         
@@ -232,8 +266,18 @@ public class AdminSubscriptionManagementController {
         String featuresData = request.getFeaturesJson() != null ? request.getFeaturesJson() : request.getFeatures();
         plan.setFeaturesJson(featuresData);
         plan.setActive(request.getActive() != null ? request.getActive() : true);
-        
+        // Limites et fonctionnalités premium
+        plan.setMaxGroups(request.getMaxGroups() != null ? request.getMaxGroups() : 2);
+        plan.setCanExportPdf(request.getCanExportPdf() != null ? request.getCanExportPdf() : false);
+        plan.setCanExportExcel(request.getCanExportExcel() != null ? request.getCanExportExcel() : false);
         plan = subscriptionPlanRepository.save(plan);
+        
+        // Audit log
+        String adminId = currentUser.getPersonId();
+        String details = String.format("{\"planId\":\"%s\",\"planName\":\"%s\",\"planType\":\"%s\",\"price\":\"%s\"}", 
+            plan.getId(), plan.getName(), plan.getType(), plan.getMonthlyPrice());
+        auditService.log(adminId, "SUBSCRIPTION_PLAN_CREATED", "SubscriptionPlan", plan.getId(), details);
+        systemLogService.log(adminId, "Admin", "SUBSCRIPTION_PLAN_CREATED", "SubscriptionPlan", plan.getId(), details, "INFO", true);
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SubscriptionPlanResponse(plan));
@@ -255,8 +299,19 @@ public class AdminSubscriptionManagementController {
             String featuresData = request.getFeaturesJson() != null ? request.getFeaturesJson() : request.getFeatures();
             plan.setFeaturesJson(featuresData);
             plan.setActive(request.getActive() != null ? request.getActive() : true);
+            // Limites et fonctionnalités premium
+            plan.setMaxGroups(request.getMaxGroups() != null ? request.getMaxGroups() : 2);
+            plan.setCanExportPdf(request.getCanExportPdf() != null ? request.getCanExportPdf() : false);
+            plan.setCanExportExcel(request.getCanExportExcel() != null ? request.getCanExportExcel() : false);
             
-            subscriptionPlanRepository.save(plan);
+            plan = subscriptionPlanRepository.save(plan);
+            
+            // Audit log
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"planId\":\"%s\",\"planName\":\"%s\",\"planType\":\"%s\",\"price\":\"%s\"}", 
+                plan.getId(), plan.getName(), plan.getType(), plan.getMonthlyPrice());
+            auditService.log(adminId, "SUBSCRIPTION_PLAN_CREATED", "SubscriptionPlan", plan.getId(), details);
+            systemLogService.log(adminId, "Admin", "SUBSCRIPTION_PLAN_CREATED", "SubscriptionPlan", plan.getId(), details, "INFO", true);
             
             return "redirect:/admin/subscription-plans-view?success=created";
         } catch (Exception e) {
@@ -272,6 +327,12 @@ public class AdminSubscriptionManagementController {
     @PutMapping("/subscription-plans/{id}")
     @ResponseBody
     @PreAuthorize("hasRole('SUPERADMIN')")
+    @Operation(summary = "Modifier un plan", description = "Met à jour un plan d'abonnement existant")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Plan mis à jour"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Plan non trouvé")
+    })
     public ResponseEntity<SubscriptionPlanResponse> updatePlan(
             @PathVariable String id,
             @Valid @RequestBody SubscriptionPlanRequest request) {
@@ -289,8 +350,25 @@ public class AdminSubscriptionManagementController {
         if (request.getActive() != null) {
             plan.setActive(request.getActive());
         }
+        // Limites et fonctionnalités premium
+        if (request.getMaxGroups() != null) {
+            plan.setMaxGroups(request.getMaxGroups());
+        }
+        if (request.getCanExportPdf() != null) {
+            plan.setCanExportPdf(request.getCanExportPdf());
+        }
+        if (request.getCanExportExcel() != null) {
+            plan.setCanExportExcel(request.getCanExportExcel());
+        }
         
         plan = subscriptionPlanRepository.save(plan);
+        
+        // Audit log
+        String adminId = currentUser.getPersonId();
+        String details = String.format("{\"planId\":\"%s\",\"planName\":\"%s\",\"planType\":\"%s\",\"price\":\"%s\"}", 
+            plan.getId(), plan.getName(), plan.getType(), plan.getMonthlyPrice());
+        auditService.log(adminId, "SUBSCRIPTION_PLAN_UPDATED", "SubscriptionPlan", plan.getId(), details);
+        systemLogService.log(adminId, "Admin", "SUBSCRIPTION_PLAN_UPDATED", "SubscriptionPlan", plan.getId(), details, "INFO", true);
         
         return ResponseEntity.ok(new SubscriptionPlanResponse(plan));
     }
@@ -308,6 +386,13 @@ public class AdminSubscriptionManagementController {
         plan.setActive(!plan.getActive());
         plan = subscriptionPlanRepository.save(plan);
         
+        // Audit log
+        String adminId = currentUser.getPersonId();
+        String details = String.format("{\"planId\":\"%s\",\"planName\":\"%s\",\"active\":\"%s\"}", 
+            plan.getId(), plan.getName(), plan.getActive());
+        auditService.log(adminId, "SUBSCRIPTION_PLAN_TOGGLED", "SubscriptionPlan", plan.getId(), details);
+        systemLogService.log(adminId, "Admin", "SUBSCRIPTION_PLAN_TOGGLED", "SubscriptionPlan", plan.getId(), details, "INFO", true);
+        
         return ResponseEntity.ok(new SubscriptionPlanResponse(plan));
     }
 
@@ -320,6 +405,13 @@ public class AdminSubscriptionManagementController {
     public ResponseEntity<Void> deletePlan(@PathVariable String id) {
         SubscriptionPlan plan = subscriptionPlanRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Plan non trouvé"));
+        
+        // Audit log avant suppression
+        String adminId = currentUser.getPersonId();
+        String details = String.format("{\"planId\":\"%s\",\"planName\":\"%s\",\"planType\":\"%s\"}", 
+            plan.getId(), plan.getName(), plan.getType());
+        auditService.log(adminId, "SUBSCRIPTION_PLAN_DELETED", "SubscriptionPlan", plan.getId(), details);
+        systemLogService.log(adminId, "Admin", "SUBSCRIPTION_PLAN_DELETED", "SubscriptionPlan", plan.getId(), details, "WARNING", true);
         
         subscriptionPlanRepository.delete(plan);
         

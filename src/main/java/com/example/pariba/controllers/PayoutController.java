@@ -7,6 +7,8 @@ import com.example.pariba.dtos.responses.PayoutResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.example.pariba.services.IPayoutService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,9 +21,13 @@ import java.util.List;
 public class PayoutController {
 
     private final IPayoutService payoutService;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public PayoutController(IPayoutService payoutService) {
+    public PayoutController(IPayoutService payoutService, IAuditService auditService, ISystemLogService systemLogService) {
         this.payoutService = payoutService;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @PostMapping
@@ -31,6 +37,11 @@ public class PayoutController {
             @Valid @RequestBody PayoutRequest request) {
         String personId = userDetails.getUsername();
         PayoutResponse payout = payoutService.processPayout(personId, request);
+        
+        String details = String.format("{\"payoutId\":\"%s\",\"tourId\":\"%s\"}", payout.getId(), request.getTourId());
+        auditService.log(personId, "PAYOUT_PROCESSED", "Payout", payout.getId(), details);
+        systemLogService.log(personId, "User", "PAYOUT_PROCESSED", "Payout", payout.getId(), details, "INFO", true);
+        
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.PAYMENT_SUCCESS_PAYOUT, payout));
     }
 

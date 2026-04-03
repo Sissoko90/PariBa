@@ -6,6 +6,8 @@ import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.DeviceResponse;
 import com.example.pariba.security.CurrentUser;
 import com.example.pariba.services.IDeviceTokenService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -28,10 +30,15 @@ public class DeviceController {
 
     private final IDeviceTokenService deviceTokenService;
     private final CurrentUser currentUser;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public DeviceController(IDeviceTokenService deviceTokenService, CurrentUser currentUser) {
+    public DeviceController(IDeviceTokenService deviceTokenService, CurrentUser currentUser,
+                           IAuditService auditService, ISystemLogService systemLogService) {
         this.deviceTokenService = deviceTokenService;
         this.currentUser = currentUser;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @PostMapping("/register")
@@ -47,6 +54,11 @@ public class DeviceController {
     public ResponseEntity<ApiResponse<DeviceResponse>> registerDevice(@Valid @RequestBody RegisterDeviceRequest request) {
         String personId = currentUser.getPersonId();
         DeviceResponse response = deviceTokenService.registerDevice(personId, request);
+        
+        String details = String.format("{\"deviceId\":\"%s\",\"deviceName\":\"%s\"}", response.getId(), request.getDeviceName());
+        auditService.log(personId, "DEVICE_REGISTERED", "Device", response.getId(), details);
+        systemLogService.log(personId, "User", "DEVICE_REGISTERED", "Device", response.getId(), details, "INFO", true);
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Appareil enregistré avec succès", response));
     }
@@ -106,6 +118,10 @@ public class DeviceController {
     })
     public ResponseEntity<ApiResponse<String>> deleteDevice(@PathVariable String deviceId) {
         String personId = currentUser.getPersonId();
+        String details = String.format("{\"deviceId\":\"%s\"}", deviceId);
+        auditService.log(personId, "DEVICE_DELETED", "Device", deviceId, details);
+        systemLogService.log(personId, "User", "DEVICE_DELETED", "Device", deviceId, details, "WARNING", true);
+        
         deviceTokenService.deleteDevice(personId, deviceId);
         return ResponseEntity.ok(ApiResponse.success("Appareil supprimé avec succès", null));
     }

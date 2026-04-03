@@ -17,6 +17,7 @@ import com.example.pariba.repositories.UserRepository;
 import com.example.pariba.services.IAuthService;
 import com.example.pariba.services.IJwtService;
 import com.example.pariba.services.INotificationService;
+import com.example.pariba.services.IOtpService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,17 +35,20 @@ public class AuthServiceImpl implements IAuthService {
     private final PasswordEncoder passwordEncoder;
     private final IJwtService jwtService;
     private final INotificationService notificationService;
+    private final IOtpService otpService;
 
     public AuthServiceImpl(PersonRepository personRepository, 
                           UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
                           IJwtService jwtService,
-                          INotificationService notificationService) {
+                          INotificationService notificationService,
+                          IOtpService otpService) {
         this.personRepository = personRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.notificationService = notificationService;
+        this.otpService = otpService;
     }
 
     @Transactional
@@ -81,21 +85,17 @@ public class AuthServiceImpl implements IAuthService {
         person.setRole(AppRole.USER);
         person = personRepository.save(person);
 
-        // Créer l'utilisateur
+        // Creer l'utilisateur
         User user = new User();
         user.setPerson(person);
-        // Utiliser l'email comme username, sinon le téléphone
-        user.setUsername(hasEmail ? request.getEmail() : request.getPhone());
+        // Utiliser le telephone comme username (prioritaire), sinon l'email
+        user.setUsername(hasPhone ? request.getPhone() : request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
-
-        // Générer le token JWT
-        String token = jwtService.generateToken(person.getId(), person.getEmail(), person.getRole());
 
         // Envoyer notification de bienvenue
         try {
             Map<String, String> variables = new HashMap<>();
-            // Les variables prenom et nom seront automatiquement ajoutées par le service
             
             notificationService.sendNotificationWithTemplate(
                 person.getId(),
@@ -104,44 +104,55 @@ public class AuthServiceImpl implements IAuthService {
                 variables
             );
             
-            // Envoyer aussi par Email
-            notificationService.sendNotificationWithTemplate(
-                person.getId(),
-                NotificationType.WELCOME_REGISTRATION,
-                NotificationChannel.EMAIL,
-                variables
-            );
+            // Envoyer aussi par Email si disponible
+            if (hasEmail) {
+                notificationService.sendNotificationWithTemplate(
+                    person.getId(),
+                    NotificationType.WELCOME_REGISTRATION,
+                    NotificationChannel.EMAIL,
+                    variables
+                );
+            }
             
-            log.info("✅ Notifications de bienvenue envoyées à {}", person.getEmail());
+            log.info("Notifications de bienvenue envoyees a {}", hasEmail ? person.getEmail() : person.getPhone());
         } catch (Exception e) {
-            log.error("❌ Erreur lors de l'envoi des notifications de bienvenue: {}", e.getMessage());
+            log.error("Erreur lors de l'envoi des notifications de bienvenue: {}", e.getMessage());
         }
 
-        return new AuthResponse(token, new PersonResponse(person));
+        // Ne pas retourner de token - l'utilisateur doit s'authentifier separement
+        // Retourner uniquement les informations de la personne creee
+        return new AuthResponse(null, new PersonResponse(person));
     }
 
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        System.out.println("🔍 LOGIN - Tentative avec username: " + request.getUsername());
+        log.info("🔍 LOGIN - Tentative avec username: {}", request.getUsername());
         
         // Chercher l'utilisateur par username, email ou phone
         User user = userRepository.findByUsernameOrEmailOrPhone(request.getUsername())
                 .orElseThrow(() -> {
-                    System.out.println("❌ LOGIN - Utilisateur non trouvé: " + request.getUsername());
+                    log.warn("❌ LOGIN - Utilisateur non trouvé: {}", request.getUsername());
                     return new UnauthorizedException(MessageConstants.AUTH_ERROR_INVALID_CREDENTIALS);
                 });
 
-        System.out.println("✅ LOGIN - Utilisateur trouvé: " + user.getUsername());
-        System.out.println("📧 LOGIN - Email: " + user.getPerson().getEmail());
-        System.out.println("📱 LOGIN - Phone: " + user.getPerson().getPhone());
+        log.info("✅ LOGIN - Utilisateur trouvé: {}", user.getUsername());
         
-        // Vérifier le mot de passe
+        // Étape 1: Vérifier l'OTP (obligatoire - validé par @NotBlank dans DTO)
+        log.info("🔐 LOGIN - Vérification OTP");
+        boolean otpValid = otpService.verifyOtp(request.getUsername(), request.getOtpCode());
+        if (!otpValid) {
+            log.warn("❌ LOGIN - Code OTP invalide ou expiré");
+            throw new UnauthorizedException("Code OTP invalide ou expiré");
+        }
+        log.info("✅ LOGIN - Code OTP valide");
+        
+        // Étape 2: Vérifier le mot de passe (obligatoire - validé par @NotBlank dans DTO)
+        log.info("🔐 LOGIN - Vérification mot de passe");
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            System.out.println("❌ LOGIN - Mot de passe incorrect");
+            log.warn("❌ LOGIN - Mot de passe incorrect");
             throw new UnauthorizedException(MessageConstants.AUTH_ERROR_INVALID_CREDENTIALS);
         }
-        
-        System.out.println("✅ LOGIN - Mot de passe correct");
+        log.info("✅ LOGIN - Mot de passe correct");
 
         Person person = user.getPerson();
         

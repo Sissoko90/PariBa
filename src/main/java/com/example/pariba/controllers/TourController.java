@@ -7,6 +7,8 @@ import com.example.pariba.dtos.responses.TourResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.example.pariba.services.ITourService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,9 +27,13 @@ import java.util.List;
 public class TourController {
 
     private final ITourService tourService;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public TourController(ITourService tourService) {
+    public TourController(ITourService tourService, IAuditService auditService, ISystemLogService systemLogService) {
         this.tourService = tourService;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @PostMapping("/generate")
@@ -42,6 +48,11 @@ public class TourController {
             @Valid @RequestBody GenerateToursRequest request) {
         String personId = userDetails.getUsername();
         List<TourResponse> tours = tourService.generateTours(personId, request);
+        
+        String details = String.format("{\"groupId\":\"%s\",\"toursCount\":%d}", request.getGroupId(), tours.size());
+        auditService.log(personId, "TOURS_GENERATED", "Tour", request.getGroupId(), details);
+        systemLogService.log(personId, "User", "TOURS_GENERATED", "Tour", request.getGroupId(), details, "INFO", true);
+        
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.TOUR_SUCCESS_GENERATED, tours));
     }
 
@@ -104,6 +115,11 @@ public class TourController {
             @PathVariable String id) {
         String personId = userDetails.getUsername();
         tourService.startTour(id, personId);
+        
+        String details = String.format("{\"tourId\":\"%s\"}", id);
+        auditService.log(personId, "TOUR_STARTED", "Tour", id, details);
+        systemLogService.log(personId, "User", "TOUR_STARTED", "Tour", id, details, "INFO", true);
+        
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.TOUR_SUCCESS_STARTED, null));
     }
 
@@ -119,6 +135,11 @@ public class TourController {
             @PathVariable String id) {
         String personId = userDetails.getUsername();
         tourService.completeTour(id, personId);
+        
+        String details = String.format("{\"tourId\":\"%s\"}", id);
+        auditService.log(personId, "TOUR_COMPLETED", "Tour", id, details);
+        systemLogService.log(personId, "User", "TOUR_COMPLETED", "Tour", id, details, "INFO", true);
+        
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.TOUR_SUCCESS_COMPLETED, null));
     }
 }

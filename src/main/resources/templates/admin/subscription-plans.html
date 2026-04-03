@@ -350,6 +350,23 @@
                     </li>
                 </ul>
                 
+                <!-- Limites et fonctionnalités premium -->
+                <div class="premium-features mt-3 p-3" style="background: #f8f9fa; border-radius: 10px;">
+                    <small class="text-muted d-block mb-2"><i class="fas fa-sliders-h"></i> Limites & Premium</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-users-cog"></i> 
+                            <span th:text="${plan.maxGroups == 0 ? 'Tontines illimitées' : plan.maxGroups + ' tontines max'}">2 tontines</span>
+                        </span>
+                        <span th:if="${plan.canExportPdf}" class="badge bg-danger">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </span>
+                        <span th:if="${plan.canExportExcel}" class="badge bg-success">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </span>
+                    </div>
+                </div>
+                
                 <div class="plan-actions">
                     <button class="btn btn-edit" 
                             th:data-plan-id="${plan.id}"
@@ -415,6 +432,39 @@
                                       placeholder="Ex: Pas de publicités, Support prioritaire, Groupes illimités"></textarea>
                         </div>
                         
+                        <hr class="my-4">
+                        <h6 class="text-muted mb-3"><i class="fas fa-sliders-h"></i> Limites et Fonctionnalités Premium</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre max de tontines</label>
+                                <input type="number" class="form-control" id="edit-maxGroups" name="maxGroups" min="0" value="2" 
+                                       placeholder="0 = illimité">
+                                <small class="text-muted">0 = illimité</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="edit-canExportPdf" name="canExportPdf">
+                                    <label class="form-check-label" for="edit-canExportPdf">
+                                        <i class="fas fa-file-pdf text-danger"></i> Export PDF
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="edit-canExportExcel" name="canExportExcel">
+                                    <label class="form-check-label" for="edit-canExportExcel">
+                                        <i class="fas fa-file-excel text-success"></i> Export Excel
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-3">
+                        
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="edit-active" name="active">
                             <label class="form-check-label">Plan actif</label>
@@ -471,6 +521,39 @@
                                       placeholder="Ex: Pas de publicités, Support prioritaire, Groupes illimités"></textarea>
                         </div>
                         
+                        <hr class="my-4">
+                        <h6 class="text-muted mb-3"><i class="fas fa-sliders-h"></i> Limites et Fonctionnalités Premium</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre max de tontines</label>
+                                <input type="number" class="form-control" name="maxGroups" min="0" value="2" 
+                                       placeholder="0 = illimité">
+                                <small class="text-muted">0 = illimité</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="canExportPdf" id="create-canExportPdf">
+                                    <label class="form-check-label" for="create-canExportPdf">
+                                        <i class="fas fa-file-pdf text-danger"></i> Export PDF
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="canExportExcel" id="create-canExportExcel">
+                                    <label class="form-check-label" for="create-canExportExcel">
+                                        <i class="fas fa-file-excel text-success"></i> Export Excel
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-3">
+                        
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="active" checked>
                             <label class="form-check-label">Plan actif</label>
@@ -488,30 +571,49 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function editPlan(planId) {
-            // Récupérer les données du plan via API
-            fetch('/admin/subscription-plans/' + planId)
-                .then(response => response.json())
-                .then(plan => {
-                    // Remplir le formulaire d'édition
-                    document.getElementById('edit-plan-id').value = plan.id;
-                    document.getElementById('edit-type').value = plan.type;
-                    document.getElementById('edit-name').value = plan.name;
-                    document.getElementById('edit-description').value = plan.description || '';
-                    document.getElementById('edit-monthlyPrice').value = plan.monthlyPrice;
-                    document.getElementById('edit-features').value = plan.featuresJson || '';
-                    document.getElementById('edit-active').checked = plan.active;
-                    
-                    // Définir l'action du formulaire
-                    document.getElementById('editPlanForm').action = '/admin/subscription-plans/' + planId;
-                    
-                    // Ouvrir le modal
-                    const modal = new bootstrap.Modal(document.getElementById('editPlanModal'));
-                    modal.show();
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                    alert('Erreur lors du chargement des données du plan');
-                });
+            console.log('Chargement du plan:', planId);
+            // Recuperer les donnees du plan via API
+            fetch('/admin/subscription-plans/' + planId, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Erreur HTTP: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(plan => {
+                console.log('Plan recu:', plan);
+                // Remplir le formulaire d'edition
+                document.getElementById('edit-plan-id').value = plan.id;
+                document.getElementById('edit-type').value = plan.type;
+                document.getElementById('edit-name').value = plan.name;
+                document.getElementById('edit-description').value = plan.description || '';
+                document.getElementById('edit-monthlyPrice').value = plan.monthlyPrice;
+                document.getElementById('edit-features').value = plan.featuresJson || plan.features || '';
+                document.getElementById('edit-active').checked = plan.active;
+                
+                // Nouveaux champs premium
+                document.getElementById('edit-maxGroups').value = plan.maxGroups != null ? plan.maxGroups : 2;
+                document.getElementById('edit-canExportPdf').checked = plan.canExportPdf === true;
+                document.getElementById('edit-canExportExcel').checked = plan.canExportExcel === true;
+                
+                // Definir l'action du formulaire
+                document.getElementById('editPlanForm').action = '/admin/subscription-plans/' + planId;
+                
+                // Ouvrir le modal
+                const modal = new bootstrap.Modal(document.getElementById('editPlanModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors du chargement des donnees du plan: ' + error.message);
+            });
         }
         
         // Gérer la soumission du formulaire d'édition
@@ -525,7 +627,11 @@
                 description: document.getElementById('edit-description').value,
                 monthlyPrice: parseFloat(document.getElementById('edit-monthlyPrice').value),
                 featuresJson: document.getElementById('edit-features').value,
-                active: document.getElementById('edit-active').checked
+                active: document.getElementById('edit-active').checked,
+                // Nouveaux champs premium
+                maxGroups: parseInt(document.getElementById('edit-maxGroups').value) || 2,
+                canExportPdf: document.getElementById('edit-canExportPdf').checked,
+                canExportExcel: document.getElementById('edit-canExportExcel').checked
             };
             
             fetch('/admin/subscription-plans/' + planId, {

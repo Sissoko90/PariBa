@@ -4,6 +4,7 @@ import com.example.pariba.constants.UiConstants;
 import com.example.pariba.dtos.responses.AdvertisementResponse;
 import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.services.IAdvertisementService;
+import com.example.pariba.services.ISystemLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import java.util.List;
 public class AdvertisementController {
     
     private final IAdvertisementService advertisementService;
+    private final ISystemLogService systemLogService;
     
     /**
      * Récupère les publicités actives pour un placement donné (optionnel)
@@ -76,6 +78,10 @@ public class AdvertisementController {
         
         String personId = userDetails.getUsername();
         advertisementService.recordClick(adId, personId);
+        
+        // Log clic publicité
+        String details = String.format("{\"adId\":\"%s\"}", adId);
+        systemLogService.log(personId, "User", "AD_CLICKED", "Advertisement", adId, details, "INFO", true);
         
         return ResponseEntity.ok(ApiResponse.success(UiConstants.SUCCESS_CLICK_RECORDED, null));
     }

@@ -6,6 +6,8 @@ import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.JoinRequestResponse;
 import com.example.pariba.security.CurrentUser;
 import com.example.pariba.services.IJoinRequestService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,10 +25,15 @@ public class JoinRequestController {
 
     private final IJoinRequestService joinRequestService;
     private final CurrentUser currentUser;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public JoinRequestController(IJoinRequestService joinRequestService, CurrentUser currentUser) {
+    public JoinRequestController(IJoinRequestService joinRequestService, CurrentUser currentUser,
+                                 IAuditService auditService, ISystemLogService systemLogService) {
         this.joinRequestService = joinRequestService;
         this.currentUser = currentUser;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @PostMapping
@@ -42,6 +49,11 @@ public class JoinRequestController {
             @Valid @RequestBody CreateJoinRequestRequest request) {
         String personId = currentUser.getPersonId();
         JoinRequestResponse response = joinRequestService.createJoinRequest(personId, request);
+        
+        String details = String.format("{\"groupId\":\"%s\"}", request.getGroupId());
+        auditService.log(personId, "JOIN_REQUEST_CREATED", "JoinRequest", response.getId(), details);
+        systemLogService.log(personId, "User", "JOIN_REQUEST_CREATED", "JoinRequest", response.getId(), details, "INFO", true);
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Demande d'adhésion envoyée avec succès", response));
     }
@@ -60,6 +72,13 @@ public class JoinRequestController {
             @Valid @RequestBody ReviewJoinRequestRequest request) {
         String adminId = currentUser.getPersonId();
         JoinRequestResponse response = joinRequestService.reviewJoinRequest(requestId, adminId, request);
+        
+        boolean approved = "APPROVE".equalsIgnoreCase(request.getAction());
+        String details = String.format("{\"requestId\":\"%s\",\"action\":\"%s\"}", requestId, request.getAction());
+        String logAction = approved ? "JOIN_REQUEST_APPROVED" : "JOIN_REQUEST_REJECTED";
+        auditService.log(adminId, logAction, "JoinRequest", requestId, details);
+        systemLogService.log(adminId, "User", logAction, "JoinRequest", requestId, details, approved ? "INFO" : "WARNING", true);
+        
         return ResponseEntity.ok(ApiResponse.success("Demande traitée avec succès", response));
     }
 
@@ -75,6 +94,11 @@ public class JoinRequestController {
     public ResponseEntity<ApiResponse<Void>> cancelJoinRequest(@PathVariable String requestId) {
         String personId = currentUser.getPersonId();
         joinRequestService.cancelJoinRequest(requestId, personId);
+        
+        String details = String.format("{\"requestId\":\"%s\"}", requestId);
+        auditService.log(personId, "JOIN_REQUEST_CANCELLED", "JoinRequest", requestId, details);
+        systemLogService.log(personId, "User", "JOIN_REQUEST_CANCELLED", "JoinRequest", requestId, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success("Demande annulée avec succès", null));
     }
 

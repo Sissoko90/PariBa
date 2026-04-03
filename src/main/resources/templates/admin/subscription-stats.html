@@ -312,10 +312,10 @@
                                 </td>
                                 <td th:text="${#numbers.formatDecimal(plan.price, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">Prix</td>
                                 <td>
-                                    <strong th:text="${stats.byPlan.get(plan.name) ?: 0}">0</strong>
+                                    <strong th:text="${stats.byPlanId.get(plan.id) ?: 0}">0</strong>
                                 </td>
                                 <td>
-                                    <strong th:text="${#numbers.formatDecimal((stats.byPlan.get(plan.name) ?: 0) * plan.price, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</strong>
+                                    <strong th:text="${#numbers.formatDecimal((stats.byPlanId.get(plan.id) ?: 0) * plan.price, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</strong>
                                 </td>
                             </tr>
                         </tbody>
@@ -372,18 +372,20 @@
             const planColors = [];
             
             /*[# th:each="plan : ${plans}"]*/
-            planLabels.push(/*[[${plan.name}]]*/ 'Plan');
-            planData.push(/*[[${stats.byPlan.get(plan.name) ?: 0}]]*/ 0);
-            
-            const type = /*[[${plan.type.name()}]]*/ 'FREE';
-            if (type === 'FREE') {
-                planColors.push('rgba(107, 114, 128, 0.8)');
-            } else if (type === 'BASIC') {
-                planColors.push('rgba(59, 130, 246, 0.8)');
-            } else if (type === 'PRO') {
-                planColors.push('rgba(102, 126, 234, 0.8)');
-            } else {
-                planColors.push('rgba(245, 158, 11, 0.8)');
+            {
+                planLabels.push(/*[[${plan.name}]]*/ 'Plan');
+                planData.push(/*[[${stats.byPlanId.get(plan.id) ?: 0}]]*/ 0);
+                
+                let type = /*[[${plan.type.name()}]]*/ 'FREE';
+                if (type === 'FREE') {
+                    planColors.push('rgba(107, 114, 128, 0.8)');
+                } else if (type === 'BASIC') {
+                    planColors.push('rgba(59, 130, 246, 0.8)');
+                } else if (type === 'PRO') {
+                    planColors.push('rgba(102, 126, 234, 0.8)');
+                } else {
+                    planColors.push('rgba(245, 158, 11, 0.8)');
+                }
             }
             /*[/]*/
 

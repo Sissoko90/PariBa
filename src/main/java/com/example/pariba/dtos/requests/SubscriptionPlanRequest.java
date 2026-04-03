@@ -28,4 +28,11 @@ public class SubscriptionPlanRequest {
     private String featuresJson;
     
     private Boolean active = true;
+    
+    // Limites et fonctionnalités du plan
+    private Integer maxGroups = 2; // Nombre max de tontines (0 = illimité)
+    
+    private Boolean canExportPdf = false; // Export PDF
+    
+    private Boolean canExportExcel = false; // Export Excel
 }

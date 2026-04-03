@@ -6,6 +6,8 @@ import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.MembershipResponse;
 import com.example.pariba.security.CurrentUser;
 import com.example.pariba.services.IMembershipService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -24,10 +26,15 @@ public class MembershipController {
 
     private final IMembershipService membershipService;
     private final CurrentUser currentUser;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public MembershipController(IMembershipService membershipService, CurrentUser currentUser) {
+    public MembershipController(IMembershipService membershipService, CurrentUser currentUser,
+                                IAuditService auditService, ISystemLogService systemLogService) {
         this.membershipService = membershipService;
         this.currentUser = currentUser;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @GetMapping("/group/{groupId}")
@@ -74,6 +81,12 @@ public class MembershipController {
     public ResponseEntity<ApiResponse<MembershipResponse>> updateMemberRole(@Valid @RequestBody UpdateMemberRoleRequest request) {
         String requesterId = currentUser.getPersonId();
         MembershipResponse response = membershipService.updateMemberRole(requesterId, request);
+        
+        String details = String.format("{\"groupId\":\"%s\",\"personId\":\"%s\",\"newRole\":\"%s\"}", 
+            request.getGroupId(), request.getPersonId(), request.getNewRole());
+        auditService.log(requesterId, "MEMBER_ROLE_UPDATED", "Membership", request.getGroupId(), details);
+        systemLogService.log(requesterId, "User", "MEMBER_ROLE_UPDATED", "Membership", request.getGroupId(), details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_MEMBER_ROLE_UPDATED, response));
     }
 
@@ -88,6 +101,11 @@ public class MembershipController {
             @PathVariable String personId) {
         String requesterId = currentUser.getPersonId();
         MembershipResponse response = membershipService.promoteMemberToAdmin(groupId, personId, requesterId);
+        
+        String details = String.format("{\"groupId\":\"%s\",\"personId\":\"%s\",\"action\":\"PROMOTE_TO_ADMIN\"}", groupId, personId);
+        auditService.log(requesterId, "MEMBER_PROMOTED", "Membership", groupId, details);
+        systemLogService.log(requesterId, "User", "MEMBER_PROMOTED", "Membership", groupId, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_MEMBER_ROLE_UPDATED, response));
     }
 
@@ -102,6 +120,11 @@ public class MembershipController {
             @PathVariable String personId) {
         String requesterId = currentUser.getPersonId();
         MembershipResponse response = membershipService.demoteAdminToMember(groupId, personId, requesterId);
+        
+        String details = String.format("{\"groupId\":\"%s\",\"personId\":\"%s\",\"action\":\"DEMOTE_TO_MEMBER\"}", groupId, personId);
+        auditService.log(requesterId, "MEMBER_DEMOTED", "Membership", groupId, details);
+        systemLogService.log(requesterId, "User", "MEMBER_DEMOTED", "Membership", groupId, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_MEMBER_ROLE_UPDATED, response));
     }
 
@@ -115,6 +138,11 @@ public class MembershipController {
             @PathVariable String groupId,
             @PathVariable String personId) {
         String requesterId = currentUser.getPersonId();
+        
+        String details = String.format("{\"groupId\":\"%s\",\"personId\":\"%s\"}", groupId, personId);
+        auditService.log(requesterId, "MEMBER_REMOVED", "Membership", groupId, details);
+        systemLogService.log(requesterId, "User", "MEMBER_REMOVED", "Membership", groupId, details, "WARNING", true);
+        
         membershipService.removeMember(groupId, personId, requesterId);
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_MEMBER_REMOVED, null));
     }

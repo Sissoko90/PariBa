@@ -26,6 +26,17 @@ public class SubscriptionPlan extends BaseEntity {
 
     @Column(nullable = false)
     private Boolean active = true;
+    
+    // Limites du plan
+    @Column(nullable = false)
+    private Integer maxGroups = 2; // Nombre max de tontines (0 = illimité)
+    
+    @Column(nullable = false)
+    private Boolean canExportPdf = false; // Export PDF
+    
+    @Column(nullable = false)
+    private Boolean canExportExcel = false; // Export Excel
+    
 
     public SubscriptionPlanType getType() { return type; }
     public void setType(SubscriptionPlanType type) { this.type = type; }
@@ -39,6 +50,16 @@ public class SubscriptionPlan extends BaseEntity {
     public void setFeaturesJson(String featuresJson) { this.featuresJson = featuresJson; }
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
+    
+    // Getters/Setters pour les limites
+    public Integer getMaxGroups() { return maxGroups; }
+    public void setMaxGroups(Integer maxGroups) { this.maxGroups = maxGroups; }
+    public Boolean getCanExportPdf() { return canExportPdf; }
+    public void setCanExportPdf(Boolean canExportPdf) { this.canExportPdf = canExportPdf; }
+    public Boolean getCanExportExcel() { return canExportExcel; }
+    public void setCanExportExcel(Boolean canExportExcel) { this.canExportExcel = canExportExcel; }
+    // Méthode utilitaire pour vérifier si les groupes sont illimités
+    public boolean hasUnlimitedGroups() { return maxGroups == null || maxGroups == 0; }
     
     // Alias pour compatibilité
     public BigDecimal getPrice() { return monthlyPrice; }

@@ -35,7 +35,7 @@ spring:
     default-encoding: UTF-8
 
 server:
-  port: ${PORT:8085}
+  port: ${PORT:8090}
   address: 0.0.0.0
   servlet:
     # Pas de context-path - géré par BaseRestController
@@ -109,12 +109,13 @@ firebase:
   config:
     file: ${FIREBASE_CONFIG_FILE:firebase-adminsdk.json}
 
-# Configuration Twilio (SMS)
-twilio:
-  enabled: ${TWILIO_ENABLED:false}
-  account-sid: ${TWILIO_ACCOUNT_SID:YOUR_TWILIO_ACCOUNT_SID}
-  auth-token: ${TWILIO_AUTH_TOKEN:YOUR_TWILIO_AUTH_TOKEN}
-  phone-number: ${TWILIO_PHONE_NUMBER:+1234567890}
+# Configuration SMS (Twilio)
+# Pour activer les SMS réels, définir SMS_ENABLED=true et fournir les identifiants Twilio
+sms:
+  enabled: ${SMS_ENABLED:false}
+  account-sid: ${SMS_ACCOUNT_SID:}
+  auth-token: ${SMS_AUTH_TOKEN:}
+  sender-id: ${SMS_SENDER_ID:}
 
 ---
 spring:
@@ -240,7 +241,7 @@ spring:
 
 # Tests: valeurs par défaut; les tests peuvent override via @SpringBootTest(properties)
 app:
-  base-url: ${APP_BASE_URL:http://192.168.100.99:8085}
+  base-url: ${APP_BASE_URL:http://localhost:8090}
   rate-limit:
     capacity: 100
     refill-tokens: 100

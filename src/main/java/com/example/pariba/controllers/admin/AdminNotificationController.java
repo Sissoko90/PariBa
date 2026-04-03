@@ -9,6 +9,8 @@ import com.example.pariba.repositories.GroupMembershipRepository;
 import com.example.pariba.repositories.PersonRepository;
 import com.example.pariba.repositories.TontineGroupRepository;
 import com.example.pariba.services.INotificationService;
+import com.example.pariba.services.ISystemLogService;
+import com.example.pariba.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,8 @@ public class AdminNotificationController {
     private final PersonRepository personRepository;
     private final TontineGroupRepository tontineGroupRepository;
     private final GroupMembershipRepository groupMembershipRepository;
+    private final ISystemLogService systemLogService;
+    private final CurrentUser currentUser;
 
     /**
      * DTO pour la requête d'envoi de notification
@@ -161,6 +165,12 @@ public class AdminNotificationController {
             }
             
             Map<String, Object> response = new HashMap<>();
+            // Log
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"recipientType\":\"%s\",\"channel\":\"%s\",\"recipientCount\":%d}", 
+                request.getRecipientType(), request.getChannel(), recipientCount);
+            systemLogService.log(adminId, "Admin", "ADMIN_NOTIFICATION_SENT", "Notification", null, details, "INFO", true);
+            
             response.put("success", true);
             response.put("message", "Notification envoyée avec succès");
             response.put("recipientCount", recipientCount);

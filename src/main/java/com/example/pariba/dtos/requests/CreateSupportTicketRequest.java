@@ -11,7 +11,7 @@ public class CreateSupportTicketRequest {
     private TicketType type;
     
     @NotBlank(message = "Le sujet est requis")
-    @Size(min = 5, max = 200, message = "Le sujet doit contenir entre 5 et 200 caractères")
+    @Size(min = 3, max = 200, message = "Le sujet doit contenir entre 3 et 200 caractères")
     private String subject;
     
     @NotBlank(message = "Le message est requis")

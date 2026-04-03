@@ -298,4 +298,59 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
                 .createdAt(subscription.getCreatedAt())
                 .build();
     }
+    
+    @Override
+    public int getMaxGroupsForPerson(String personId) {
+        log.info("Verification limite tontines pour personId: {}", personId);
+        
+        Person person = personRepository.findById(personId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personne non trouvee"));
+        
+        log.info("Person trouvee: {} {}", person.getPrenom(), person.getNom());
+        
+        Optional<Subscription> subscription = subscriptionRepository
+                .findByPersonAndStatus(person, SubscriptionStatus.ACTIVE);
+        
+        if (subscription.isEmpty()) {
+            log.warn("Aucun abonnement actif trouve pour {}, utilisation limite par defaut: 2", personId);
+            return 2;
+        }
+        
+        SubscriptionPlan plan = subscription.get().getPlan();
+        int maxGroups = plan.getMaxGroups() != null ? plan.getMaxGroups() : 2;
+        log.info("Abonnement actif: {} ({}), maxGroups: {}", plan.getName(), plan.getType(), maxGroups);
+        
+        return maxGroups;
+    }
+    
+    @Override
+    public boolean canExportPdf(String personId) {
+        Person person = personRepository.findById(personId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personne non trouvée"));
+        
+        Optional<Subscription> subscription = subscriptionRepository
+                .findByPersonAndStatus(person, SubscriptionStatus.ACTIVE);
+        
+        if (subscription.isEmpty()) {
+            return false; // Plan gratuit: pas d'export PDF
+        }
+        
+        return Boolean.TRUE.equals(subscription.get().getPlan().getCanExportPdf());
+    }
+    
+    @Override
+    public boolean canExportExcel(String personId) {
+        Person person = personRepository.findById(personId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personne non trouvée"));
+        
+        Optional<Subscription> subscription = subscriptionRepository
+                .findByPersonAndStatus(person, SubscriptionStatus.ACTIVE);
+        
+        if (subscription.isEmpty()) {
+            return false; // Plan gratuit: pas d'export Excel
+        }
+        
+        return Boolean.TRUE.equals(subscription.get().getPlan().getCanExportExcel());
+    }
+    
 }

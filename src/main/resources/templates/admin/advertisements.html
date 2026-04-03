@@ -121,7 +121,8 @@
                     <tbody>
                         <tr th:each="ad : ${advertisements}">
                             <td>
-                                <img th:if="${ad.imageUrl}" th:src="${ad.imageUrl}" 
+                                <img th:if="${ad.imageUrl}" 
+                                     th:src="${ad.imageUrl.contains('/uploads/') ? '/uploads/' + ad.imageUrl.substring(ad.imageUrl.indexOf('/uploads/') + 9) : ad.imageUrl}" 
                                      class="ad-image" alt="Publicité">
                                 <div th:unless="${ad.imageUrl}" class="ad-image bg-light d-flex align-items-center justify-content-center">
                                     <i class="fas fa-image text-muted fa-2x"></i>

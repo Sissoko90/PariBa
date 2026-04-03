@@ -73,6 +73,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
                 .requestMatchers("/api/v1/auth/otp/send").permitAll()
+                .requestMatchers("/api/v1/auth/otp/resend").permitAll()
                 .requestMatchers("/api/v1/auth/otp/verify").permitAll()
                 .requestMatchers("/api/v1/auth/password/forgot").permitAll()
                 .requestMatchers("/api/v1/auth/password/reset").permitAll()
@@ -131,7 +132,7 @@ public class SecurityConfig {
                     .maxAgeInSeconds(31536000)
                 )
                 .contentSecurityPolicy(csp -> csp
-                    .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' https://cdnjs.cloudflare.com;")
+                    .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https: http://localhost:* http://127.0.0.1:*; font-src 'self' https://cdnjs.cloudflare.com;")
                 )
                 .frameOptions(frame -> frame.deny())
                 .xssProtection(xss -> xss.disable())

@@ -40,4 +40,22 @@ public interface ISubscriptionService {
      * Renouvelle automatiquement les abonnements expirés
      */
     void renewExpiredSubscriptions();
+    
+    /**
+     * Récupère la limite de groupes pour un utilisateur
+     * @param personId L'identifiant de la personne
+     * @return Le nombre max de groupes (0 = illimité)
+     */
+    int getMaxGroupsForPerson(String personId);
+    
+    /**
+     * Vérifie si l'utilisateur peut exporter en PDF
+     */
+    boolean canExportPdf(String personId);
+    
+    /**
+     * Vérifie si l'utilisateur peut exporter en Excel
+     */
+    boolean canExportExcel(String personId);
+    
 }

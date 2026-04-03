@@ -44,4 +44,18 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Stri
     
     @Query("SELECT s FROM Subscription s WHERE s.person.id = :personId ORDER BY s.createdAt DESC")
     List<Subscription> findByPersonIdOrderByCreatedAtDesc(@Param("personId") String personId);
+    
+    @Query("SELECT s FROM Subscription s JOIN FETCH s.person JOIN FETCH s.plan ORDER BY s.createdAt DESC")
+    List<Subscription> findAllWithPersonAndPlan();
+    
+    @Query("SELECT s FROM Subscription s JOIN FETCH s.person JOIN FETCH s.plan WHERE s.status = :status ORDER BY s.createdAt DESC")
+    List<Subscription> findByStatusWithPersonAndPlan(@Param("status") SubscriptionStatus status);
+    
+    @Query(value = "SELECT s FROM Subscription s JOIN FETCH s.person JOIN FETCH s.plan ORDER BY s.createdAt DESC",
+           countQuery = "SELECT COUNT(s) FROM Subscription s")
+    Page<Subscription> findAllWithPersonAndPlan(Pageable pageable);
+    
+    @Query(value = "SELECT s FROM Subscription s JOIN FETCH s.person JOIN FETCH s.plan WHERE s.status = :status ORDER BY s.createdAt DESC",
+           countQuery = "SELECT COUNT(s) FROM Subscription s WHERE s.status = :status")
+    Page<Subscription> findByStatusWithPersonAndPlan(@Param("status") SubscriptionStatus status, Pageable pageable);
 }

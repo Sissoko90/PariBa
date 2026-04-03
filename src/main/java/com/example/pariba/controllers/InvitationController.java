@@ -7,6 +7,8 @@ import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.InvitationResponse;
 import com.example.pariba.security.CurrentUser;
 import com.example.pariba.services.IInvitationService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -26,10 +28,15 @@ public class InvitationController {
 
     private final IInvitationService invitationService;
     private final CurrentUser currentUser;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public InvitationController(IInvitationService invitationService, CurrentUser currentUser) {
+    public InvitationController(IInvitationService invitationService, CurrentUser currentUser,
+                                IAuditService auditService, ISystemLogService systemLogService) {
         this.invitationService = invitationService;
         this.currentUser = currentUser;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @PostMapping
@@ -41,6 +48,11 @@ public class InvitationController {
     public ResponseEntity<ApiResponse<InvitationResponse>> inviteMember(@Valid @RequestBody InviteMemberRequest request) {
         String inviterId = currentUser.getPersonId();
         InvitationResponse response = invitationService.inviteMember(inviterId, request);
+        
+        String details = String.format("{\"groupId\":\"%s\",\"targetPhone\":\"%s\"}", request.getGroupId(), request.getTargetPhone());
+        auditService.log(inviterId, "INVITATION_SENT", "Invitation", response.getId(), details);
+        systemLogService.log(inviterId, "User", "INVITATION_SENT", "Invitation", response.getId(), details, "INFO", true);
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(MessageConstants.SUCCESS_INVITATION_SENT, response));
     }
@@ -54,6 +66,11 @@ public class InvitationController {
     public ResponseEntity<ApiResponse<Void>> acceptInvitation(@Valid @RequestBody AcceptInvitationRequest request) {
         String personId = currentUser.getPersonId();
         invitationService.acceptInvitation(personId, request.getLinkCode());
+        
+        String details = String.format("{\"linkCode\":\"%s\"}", request.getLinkCode());
+        auditService.log(personId, "INVITATION_ACCEPTED", "Invitation", null, details);
+        systemLogService.log(personId, "User", "INVITATION_ACCEPTED", "Invitation", null, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_INVITATION_ACCEPTED, null));
     }
 

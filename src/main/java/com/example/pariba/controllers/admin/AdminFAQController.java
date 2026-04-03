@@ -3,6 +3,9 @@ package com.example.pariba.controllers.admin;
 import com.example.pariba.dtos.responses.FAQResponse;
 import com.example.pariba.enums.FAQCategory;
 import com.example.pariba.services.IFAQService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
+import com.example.pariba.security.CurrentUser;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,9 +20,15 @@ import java.util.List;
 public class AdminFAQController {
     
     private final IFAQService faqService;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
+    private final CurrentUser currentUser;
     
-    public AdminFAQController(IFAQService faqService) {
+    public AdminFAQController(IFAQService faqService, IAuditService auditService, ISystemLogService systemLogService, CurrentUser currentUser) {
         this.faqService = faqService;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
+        this.currentUser = currentUser;
     }
     
     @GetMapping
@@ -53,7 +62,14 @@ public class AdminFAQController {
     @PostMapping("/new")
     public String createFAQ(@ModelAttribute FAQResponse faq, RedirectAttributes redirectAttributes) {
         try {
-            faqService.createFAQ(faq);
+            FAQResponse created = faqService.createFAQ(faq);
+            
+            // Logs
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"faqId\":\"%s\",\"question\":\"%s\"}", created.getId(), faq.getQuestion());
+            auditService.log(adminId, "FAQ_CREATED", "FAQ", created.getId(), details);
+            systemLogService.log(adminId, "Admin", "FAQ_CREATED", "FAQ", created.getId(), details, "INFO", true);
+            
             redirectAttributes.addFlashAttribute("success", "FAQ créée avec succès");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
@@ -65,6 +81,13 @@ public class AdminFAQController {
     public String updateFAQ(@PathVariable String id, @ModelAttribute FAQResponse faq, RedirectAttributes redirectAttributes) {
         try {
             faqService.updateFAQ(id, faq);
+            
+            // Logs
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"faqId\":\"%s\",\"question\":\"%s\"}", id, faq.getQuestion());
+            auditService.log(adminId, "FAQ_UPDATED", "FAQ", id, details);
+            systemLogService.log(adminId, "Admin", "FAQ_UPDATED", "FAQ", id, details, "INFO", true);
+            
             redirectAttributes.addFlashAttribute("success", "FAQ mise à jour avec succès");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
@@ -75,6 +98,12 @@ public class AdminFAQController {
     @PostMapping("/{id}/delete")
     public String deleteFAQ(@PathVariable String id, RedirectAttributes redirectAttributes) {
         try {
+            // Logs avant suppression
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"faqId\":\"%s\"}", id);
+            auditService.log(adminId, "FAQ_DELETED", "FAQ", id, details);
+            systemLogService.log(adminId, "Admin", "FAQ_DELETED", "FAQ", id, details, "WARNING", true);
+            
             faqService.deleteFAQ(id);
             redirectAttributes.addFlashAttribute("success", "FAQ supprimée avec succès");
         } catch (Exception e) {

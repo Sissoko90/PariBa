@@ -6,6 +6,8 @@ import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.PersonResponse;
 import com.example.pariba.security.CurrentUser;
 import com.example.pariba.services.IPersonService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -26,10 +28,15 @@ public class PersonController {
 
     private final IPersonService personService;
     private final CurrentUser currentUser;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public PersonController(IPersonService personService, CurrentUser currentUser) {
+    public PersonController(IPersonService personService, CurrentUser currentUser,
+                           IAuditService auditService, ISystemLogService systemLogService) {
         this.personService = personService;
         this.currentUser = currentUser;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @GetMapping("/me")
@@ -73,6 +80,11 @@ public class PersonController {
     public ResponseEntity<ApiResponse<PersonResponse>> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
         String personId = currentUser.getPersonId();
         PersonResponse response = personService.updateProfile(personId, request);
+        
+        String details = String.format("{\"personId\":\"%s\"}", personId);
+        auditService.log(personId, "PROFILE_UPDATED", "Person", personId, details);
+        systemLogService.log(personId, "User", "PROFILE_UPDATED", "Person", personId, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_PROFILE_UPDATED, response));
     }
 
@@ -88,6 +100,11 @@ public class PersonController {
     public ResponseEntity<ApiResponse<PersonResponse>> uploadPhoto(@RequestParam("file") MultipartFile file) {
         String personId = currentUser.getPersonId();
         PersonResponse response = personService.uploadPhoto(personId, file);
+        
+        String details = String.format("{\"personId\":\"%s\",\"fileName\":\"%s\"}", personId, file.getOriginalFilename());
+        auditService.log(personId, "PHOTO_UPLOADED", "Person", personId, details);
+        systemLogService.log(personId, "User", "PHOTO_UPLOADED", "Person", personId, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success(MessageConstants.SUCCESS_PHOTO_UPLOADED, response));
     }
 
@@ -103,6 +120,11 @@ public class PersonController {
     public ResponseEntity<ApiResponse<String>> deletePhoto() {
         String personId = currentUser.getPersonId();
         personService.deletePhoto(personId);
+        
+        String details = String.format("{\"personId\":\"%s\"}", personId);
+        auditService.log(personId, "PHOTO_DELETED", "Person", personId, details);
+        systemLogService.log(personId, "User", "PHOTO_DELETED", "Person", personId, details, "INFO", true);
+        
         return ResponseEntity.ok(ApiResponse.success("Photo supprimée avec succès", null));
     }
 
@@ -117,6 +139,11 @@ public class PersonController {
     })
     public ResponseEntity<ApiResponse<String>> deleteAccount() {
         String personId = currentUser.getPersonId();
+        
+        String details = String.format("{\"personId\":\"%s\"}", personId);
+        auditService.log(personId, "ACCOUNT_DELETED", "Person", personId, details);
+        systemLogService.log(personId, "User", "ACCOUNT_DELETED", "Person", personId, details, "WARNING", true);
+        
         personService.deleteAccount(personId);
         return ResponseEntity.ok(ApiResponse.success("Compte supprimé avec succès", null));
     }

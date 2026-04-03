@@ -7,6 +7,8 @@ import com.example.pariba.dtos.responses.ExportJobResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.example.pariba.services.IExportService;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,9 +27,13 @@ import java.util.List;
 public class ExportController {
 
     private final IExportService exportService;
+    private final IAuditService auditService;
+    private final ISystemLogService systemLogService;
 
-    public ExportController(IExportService exportService) {
+    public ExportController(IExportService exportService, IAuditService auditService, ISystemLogService systemLogService) {
         this.exportService = exportService;
+        this.auditService = auditService;
+        this.systemLogService = systemLogService;
     }
 
     @PostMapping
@@ -42,6 +48,12 @@ public class ExportController {
             @Valid @RequestBody RequestExportRequest request) {
         String personId = userDetails.getUsername();
         ExportJobResponse job = exportService.requestExport(personId, request);
+        
+        String details = String.format("{\"exportId\":\"%s\",\"type\":\"%s\",\"format\":\"%s\"}", 
+            job.getId(), request.getExportType(), request.getFormat());
+        auditService.log(personId, "EXPORT_REQUESTED", "Export", job.getId(), details);
+        systemLogService.log(personId, "User", "EXPORT_REQUESTED", "Export", job.getId(), details, "INFO", true);
+        
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.EXPORT_SUCCESS_REQUESTED, job));
     }
 

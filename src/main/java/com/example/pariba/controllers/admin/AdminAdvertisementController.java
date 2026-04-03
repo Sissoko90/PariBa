@@ -2,6 +2,9 @@ package com.example.pariba.controllers.admin;
 
 import com.example.pariba.models.Advertisement;
 import com.example.pariba.repositories.AdvertisementRepository;
+import com.example.pariba.security.CurrentUser;
+import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.ISystemLogService;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +39,9 @@ import java.util.UUID;
 public class AdminAdvertisementController {
     
     private final AdvertisementRepository advertisementRepository;
+    private final IAuditService auditService;
+    private final CurrentUser currentUser;
+    private final ISystemLogService systemLogService;
     
     @Value("${app.upload.dir:uploads/advertisements}")
     private String uploadDir;
@@ -43,8 +49,11 @@ public class AdminAdvertisementController {
     @Value("${app.base-url:http://localhost:8085}")
     private String baseUrl;
     
-    public AdminAdvertisementController(AdvertisementRepository advertisementRepository) {
+    public AdminAdvertisementController(AdvertisementRepository advertisementRepository, IAuditService auditService, CurrentUser currentUser, ISystemLogService systemLogService) {
         this.advertisementRepository = advertisementRepository;
+        this.auditService = auditService;
+        this.currentUser = currentUser;
+        this.systemLogService = systemLogService;
     }
     
     @GetMapping
@@ -224,6 +233,13 @@ public class AdminAdvertisementController {
             advertisement.setImpressions(0);
             advertisementRepository.save(advertisement);
             
+            // Audit log
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"adId\":\"%s\",\"title\":\"%s\",\"placement\":\"%s\"}", 
+                advertisement.getId(), advertisement.getTitle(), advertisement.getPlacement());
+            auditService.log(adminId, "ADVERTISEMENT_CREATED", "Advertisement", advertisement.getId(), details);
+            systemLogService.log(adminId, "Admin", "ADVERTISEMENT_CREATED", "Advertisement", advertisement.getId(), details, "INFO", true);
+            
             log.info("💾 Publicité sauvegardée - ID: {}, ImageURL en DB: {}", advertisement.getId(), advertisement.getImageUrl());
             
             redirectAttributes.addFlashAttribute("success", "Publicité créée avec succès");
@@ -266,6 +282,14 @@ public class AdminAdvertisementController {
             existing.setActive(advertisement.isActive());
             
             advertisementRepository.save(existing);
+            
+            // Audit log
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"adId\":\"%s\",\"title\":\"%s\",\"placement\":\"%s\"}", 
+                id, existing.getTitle(), existing.getPlacement());
+            auditService.log(adminId, "ADVERTISEMENT_UPDATED", "Advertisement", id, details);
+            systemLogService.log(adminId, "Admin", "ADVERTISEMENT_UPDATED", "Advertisement", id, details, "INFO", true);
+            
             redirectAttributes.addFlashAttribute("success", "Publicité mise à jour");
             log.info("✅ Publicité mise à jour: {}", id);
         } catch (Exception e) {
@@ -289,6 +313,13 @@ public class AdminAdvertisementController {
             ad.setActive(!ad.isActive());
             advertisementRepository.save(ad);
             
+            // Audit log
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"adId\":\"%s\",\"title\":\"%s\",\"active\":\"%s\"}", 
+                id, ad.getTitle(), ad.isActive());
+            auditService.log(adminId, "ADVERTISEMENT_TOGGLED", "Advertisement", id, details);
+            systemLogService.log(adminId, "Admin", "ADVERTISEMENT_TOGGLED", "Advertisement", id, details, "INFO", true);
+            
             String status = ad.isActive() ? "activée" : "désactivée";
             redirectAttributes.addFlashAttribute("success", "Publicité " + status);
             log.info("✅ Publicité {} {}", id, status);
@@ -302,6 +333,12 @@ public class AdminAdvertisementController {
     @PostMapping("/delete/{id}")
     public String deleteAdvertisement(@PathVariable String id, RedirectAttributes redirectAttributes) {
         try {
+            // Audit log avant suppression
+            String adminId = currentUser.getPersonId();
+            String details = String.format("{\"adId\":\"%s\"}", id);
+            auditService.log(adminId, "ADVERTISEMENT_DELETED", "Advertisement", id, details);
+            systemLogService.log(adminId, "Admin", "ADVERTISEMENT_DELETED", "Advertisement", id, details, "WARNING", true);
+            
             advertisementRepository.deleteById(id);
             redirectAttributes.addFlashAttribute("success", "Publicité supprimée");
             log.info("✅ Publicité supprimée: {}", id);

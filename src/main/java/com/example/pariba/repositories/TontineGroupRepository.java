@@ -16,6 +16,9 @@ public interface TontineGroupRepository extends JpaRepository<TontineGroup, Stri
     
     List<TontineGroup> findByCreatorId(String creatorId);
     
+    // Compter le nombre de groupes créés par un utilisateur
+    long countByCreatorId(String creatorId);
+    
     @Query("SELECT DISTINCT g FROM TontineGroup g " +
            "JOIN g.memberships m " +
            "WHERE m.person.id = :personId")

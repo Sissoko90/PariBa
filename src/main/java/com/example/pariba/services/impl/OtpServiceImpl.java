@@ -9,9 +9,11 @@ import com.example.pariba.models.NotificationTemplate;
 import com.example.pariba.models.OtpToken;
 import com.example.pariba.repositories.NotificationTemplateRepository;
 import com.example.pariba.repositories.OtpTokenRepository;
+import com.example.pariba.repositories.UserRepository;
 import com.example.pariba.services.IEmailService;
 import com.example.pariba.services.IOtpService;
 import com.example.pariba.services.ISmsService;
+import com.example.pariba.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,16 +30,21 @@ public class OtpServiceImpl implements IOtpService {
     private final ISmsService smsService;
     private final IEmailService emailService;
     private final NotificationTemplateRepository templateRepository;
+    private final UserRepository userRepository;
     private final Random random = new Random();
+    
+    private static final String MALI_COUNTRY_CODE = "+223";
 
     public OtpServiceImpl(OtpTokenRepository otpTokenRepository,
                          ISmsService smsService,
                          IEmailService emailService,
-                         NotificationTemplateRepository templateRepository) {
+                         NotificationTemplateRepository templateRepository,
+                         UserRepository userRepository) {
         this.otpTokenRepository = otpTokenRepository;
         this.smsService = smsService;
         this.emailService = emailService;
         this.templateRepository = templateRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -47,25 +54,35 @@ public class OtpServiceImpl implements IOtpService {
     
     @Transactional
     public String generateAndSendOtp(String target, com.example.pariba.enums.NotificationChannel channel) {
-        // Générer un code OTP
+        // Valider et normaliser le numero de telephone
+        String normalizedTarget = normalizePhoneNumber(target);
+        
+        // Verifier que l'utilisateur existe dans la base de donnees
+        boolean userExists = userRepository.findByUsernameOrEmailOrPhone(normalizedTarget).isPresent();
+        if (!userExists) {
+            log.warn("Tentative d'envoi OTP pour un utilisateur inexistant: {}", normalizedTarget);
+            throw new ResourceNotFoundException("Aucun compte associe a ce numero. Veuillez vous inscrire.");
+        }
+        
+        // Generer un code OTP
         String code = generateOtpCode();
 
-        // Créer le token OTP
+        // Creer le token OTP
         OtpToken otpToken = new OtpToken();
-        otpToken.setTarget(target);
+        otpToken.setTarget(normalizedTarget);
         otpToken.setCode(code);
         otpToken.setExpiresAt(Instant.now().plusSeconds(AppConstants.OTP_EXPIRATION_MINUTES * 60));
         otpToken.setUsed(false);
         otpTokenRepository.save(otpToken);
 
-        // Envoyer selon le canal spécifié ou auto-détection
+        // Envoyer selon le canal specifie ou auto-detection
         if (channel != null) {
-            sendOtpByChannel(target, code, channel);
+            sendOtpByChannel(normalizedTarget, code, channel);
         } else {
-            sendOtpToTarget(target, code);
+            sendOtpToTarget(normalizedTarget, code);
         }
 
-        log.info("✅ OTP généré et envoyé pour: {} via {}", target, channel != null ? channel : "AUTO");
+        log.info("OTP genere et envoye pour: {} via {}", normalizedTarget, channel != null ? channel : "AUTO");
         return code;
     }
     
@@ -141,7 +158,7 @@ public class OtpServiceImpl implements IOtpService {
      * Envoyer l'OTP par SMS
      */
     private void sendOtpBySms(String phoneNumber, String code) {
-        // Récupérer le template depuis la base de données
+        // Recuperer le template depuis la base de donnees
         NotificationTemplate template = templateRepository
             .findByTypeAndChannelAndActiveTrue(NotificationType.OTP_VERIFICATION, NotificationChannel.SMS)
             .orElse(null);
@@ -149,27 +166,33 @@ public class OtpServiceImpl implements IOtpService {
         String message;
         if (template != null) {
             message = renderTemplate(template.getBodyTemplate(), Map.of("code", code));
-            log.info("📱 Utilisation du template OTP SMS depuis la base de données");
+            log.info("Utilisation du template OTP SMS depuis la base de donnees");
         } else {
-            message = "Votre code de vérification Pariba est: " + code + "\nCe code expire dans 10 minutes.";
-            log.warn("⚠️ Template OTP SMS non trouvé, utilisation du template par défaut");
+            message = "Votre code de verification Pariba est: " + code + "\nCe code expire dans 10 minutes.";
+            log.warn("Template OTP SMS non trouve, utilisation du template par defaut");
         }
+        
+        // Supprimer les accents pour compatibilite SMS (evite les caracteres speciaux)
+        message = removeAccents(message);
         
         try {
             smsService.sendSms(phoneNumber, message);
-            log.info("✅ OTP envoyé par SMS à: {}", phoneNumber);
+            log.info("OTP envoye par SMS a: {}", phoneNumber);
         } catch (Exception e) {
-            // En mode développement, afficher l'OTP dans les logs si l'envoi échoue
-            log.warn("⚠️ Impossible d'envoyer le SMS (Twilio non configuré). Mode DEV activé.");
-            log.info("📱 [MODE DEV] OTP pour {}: {}", phoneNumber, code);
-            log.info("💡 Pour activer l'envoi réel, configurez Twilio dans application.yml");
+            // En mode developpement, afficher l'OTP dans les logs si l'envoi echoue
+            log.warn("Impossible d'envoyer le SMS (Twilio non configure). Mode DEV active.");
+            log.info("[MODE DEV] OTP pour {}: {}", phoneNumber, code);
+            log.info("Pour activer l'envoi reel, configurez Twilio dans application.yml");
         }
     }
 
     @Transactional
     public boolean verifyOtp(String target, String code) {
+        // Normaliser le numero pour la verification
+        String normalizedTarget = normalizePhoneNumber(target);
+        
         OtpToken otpToken = otpTokenRepository
-                .findByTargetAndCodeAndUsedFalseAndExpiresAtAfter(target, code, Instant.now())
+                .findByTargetAndCodeAndUsedFalseAndExpiresAtAfter(normalizedTarget, code, Instant.now())
                 .orElseThrow(() -> new BadRequestException(MessageConstants.OTP_ERROR_INVALID));
 
         // Marquer comme utilisé
@@ -236,5 +259,63 @@ public class OtpServiceImpl implements IOtpService {
             </body>
             </html>
             """, code);
+    }
+    
+    /**
+     * Normaliser le numero de telephone au format international (+223)
+     * @param phoneNumber Le numero a normaliser
+     * @return Le numero normalise au format +223XXXXXXXX
+     * @throws BadRequestException si le format est invalide
+     */
+    private String normalizePhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.isBlank()) {
+            throw new BadRequestException("Le numero de telephone est requis");
+        }
+        
+        // Si c'est un email, le retourner tel quel
+        if (phoneNumber.contains("@")) {
+            return phoneNumber;
+        }
+        
+        // Nettoyer le numero (supprimer espaces, tirets, etc.)
+        String cleaned = phoneNumber.replaceAll("[\\s\\-\\.\\(\\)]", "");
+        
+        // Si le numero commence deja par +223, le retourner
+        if (cleaned.startsWith(MALI_COUNTRY_CODE)) {
+            // Verifier la longueur totale (+223 + 8 chiffres = 12 caracteres)
+            if (cleaned.length() != 12) {
+                throw new BadRequestException("Format de numero invalide. Le numero doit contenir 8 chiffres apres +223");
+            }
+            return cleaned;
+        }
+        
+        // Si le numero commence par 223 (sans +), ajouter le +
+        if (cleaned.startsWith("223") && cleaned.length() == 11) {
+            return "+" + cleaned;
+        }
+        
+        // Si le numero commence par 00223, remplacer par +223
+        if (cleaned.startsWith("00223") && cleaned.length() == 13) {
+            return "+" + cleaned.substring(2);
+        }
+        
+        // Si c'est un numero local (8 chiffres commencant par 7, 6, 5, 2)
+        if (cleaned.length() == 8 && cleaned.matches("^[76529]\\d{7}$")) {
+            return MALI_COUNTRY_CODE + cleaned;
+        }
+        
+        // Format invalide
+        throw new BadRequestException(
+            "Format de numero invalide. Utilisez le format +223XXXXXXXX ou un numero local a 8 chiffres"
+        );
+    }
+    
+    /**
+     * Supprimer les accents d'une chaine pour compatibilite SMS
+     */
+    private String removeAccents(String text) {
+        if (text == null) return null;
+        return java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+            .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
     }
 }
