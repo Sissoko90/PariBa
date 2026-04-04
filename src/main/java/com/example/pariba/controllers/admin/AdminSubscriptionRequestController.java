@@ -12,6 +12,7 @@ import com.example.pariba.repositories.PersonRepository;
 import com.example.pariba.repositories.SubscriptionRequestRepository;
 import com.example.pariba.security.CurrentUser;
 import com.example.pariba.services.IAuditService;
+import com.example.pariba.services.IPushNotificationService;
 import com.example.pariba.services.ISubscriptionService;
 import com.example.pariba.services.ISystemLogService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,11 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -53,6 +55,7 @@ public class AdminSubscriptionRequestController {
     private final PersonRepository personRepository;
     private final IAuditService auditService;
     private final ISystemLogService systemLogService;
+    private final IPushNotificationService pushNotificationService;
 
     // ========================================
     // VUE THYMELEAF
@@ -165,13 +168,42 @@ public class AdminSubscriptionRequestController {
             // Approuver et creer l'abonnement
             log.info("Approbation de la demande {} par admin {}", id, adminId);
             
-            // Creer l'abonnement via le service
-            subscriptionService.subscribe(request.getPerson().getId(), request.getPlan().getId());
-            
-            request.setStatus(SubscriptionRequestStatus.APPROVED);
-            request.setAdminNotes(dto.getAdminNotes());
-            request.setProcessedAt(Instant.now());
-            request.setProcessedBy(adminId);
+            try {
+                // Creer l'abonnement via le service avec période de facturation
+                subscriptionService.subscribe(
+                    request.getPerson().getId(), 
+                    request.getPlan().getId(),
+                    request.getBillingPeriod(),
+                    request.isAutoRenew()
+                );
+                
+                request.setStatus(SubscriptionRequestStatus.APPROVED);
+                request.setAdminNotes(dto.getAdminNotes());
+                request.setProcessedAt(Instant.now());
+                request.setProcessedBy(adminId);
+                
+                // Envoyer notification push d'approbation
+                sendApprovalNotification(request);
+                
+            } catch (IllegalStateException e) {
+                // Gestion du cas où l'utilisateur a déjà un abonnement actif
+                log.error("Erreur lors de l'approbation: {}", e.getMessage());
+                
+                // Log système ERROR
+                String errorDetails = String.format("{\"requestId\":\"%s\",\"personId\":\"%s\",\"planId\":\"%s\",\"error\":\"%s\"}", 
+                    id, request.getPerson().getId(), request.getPlan().getId(), e.getMessage());
+                systemLogService.log(adminId, "Admin", "SUBSCRIPTION_REQUEST_APPROVAL_FAILED", "SubscriptionRequest", id, errorDetails, "ERROR", false);
+                
+                throw new BadRequestException("Impossible d'approuver: " + e.getMessage());
+            } catch (Exception e) {
+                log.error("Erreur inattendue lors de l'approbation: {}", e.getMessage());
+                
+                // Log système ERROR
+                String errorDetails = String.format("{\"requestId\":\"%s\",\"error\":\"%s\"}", id, e.getMessage());
+                systemLogService.log(adminId, "Admin", "SUBSCRIPTION_REQUEST_APPROVAL_ERROR", "SubscriptionRequest", id, errorDetails, "ERROR", false);
+                
+                throw new RuntimeException("Une erreur inattendue s'est produite. Veuillez réessayer.");
+            }
             
             // Audit log
             String details = String.format("{\"requestId\":\"%s\",\"personId\":\"%s\",\"personName\":\"%s %s\",\"planId\":\"%s\",\"planName\":\"%s\",\"adminNotes\":\"%s\"}", 
@@ -193,6 +225,9 @@ public class AdminSubscriptionRequestController {
             request.setAdminNotes(dto.getAdminNotes());
             request.setProcessedAt(Instant.now());
             request.setProcessedBy(adminId);
+            
+            // Envoyer notification push de rejet
+            sendRejectionNotification(request);
             
             // Audit log
             String details = String.format("{\"requestId\":\"%s\",\"personId\":\"%s\",\"personName\":\"%s %s\",\"planId\":\"%s\",\"planName\":\"%s\",\"adminNotes\":\"%s\"}", 
@@ -318,5 +353,63 @@ public class AdminSubscriptionRequestController {
             .collect(java.util.stream.Collectors.toList());
         
         return ResponseEntity.ok(result);
+    }
+    
+    // ========================================
+    // MÉTHODES PRIVÉES - NOTIFICATIONS
+    // ========================================
+    
+    /**
+     * Envoyer une notification push d'approbation d'abonnement
+     */
+    private void sendApprovalNotification(SubscriptionRequest request) {
+        try {
+            Person person = request.getPerson();
+            if (person.getFcmToken() != null && !person.getFcmToken().trim().isEmpty()) {
+                String title = "🎉 Abonnement approuvé !";
+                String body = String.format("Votre demande d'abonnement au plan %s a été approuvée. Profitez de vos nouveaux avantages !", 
+                    request.getPlan().getName());
+                
+                Map<String, String> data = new HashMap<>();
+                data.put("type", "subscription_approved");
+                data.put("planId", request.getPlan().getId());
+                data.put("planName", request.getPlan().getName());
+                data.put("billingPeriod", request.getBillingPeriod());
+                
+                pushNotificationService.sendToDevice(person.getFcmToken(), title, body, data);
+                log.info("📱 Notification d'approbation envoyée à {}", person.getPhone());
+            } else {
+                log.warn("⚠️ Pas de token FCM pour l'utilisateur {}", person.getPhone());
+            }
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de l'envoi de la notification d'approbation: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Envoyer une notification push de rejet d'abonnement
+     */
+    private void sendRejectionNotification(SubscriptionRequest request) {
+        try {
+            Person person = request.getPerson();
+            if (person.getFcmToken() != null && !person.getFcmToken().trim().isEmpty()) {
+                String title = "❌ Demande d'abonnement rejetée";
+                String body = String.format("Votre demande d'abonnement au plan %s a été rejetée. Contactez le support pour plus d'informations.", 
+                    request.getPlan().getName());
+                
+                Map<String, String> data = new HashMap<>();
+                data.put("type", "subscription_rejected");
+                data.put("planId", request.getPlan().getId());
+                data.put("planName", request.getPlan().getName());
+                data.put("adminNotes", request.getAdminNotes() != null ? request.getAdminNotes() : "");
+                
+                pushNotificationService.sendToDevice(person.getFcmToken(), title, body, data);
+                log.info("📱 Notification de rejet envoyée à {}", person.getPhone());
+            } else {
+                log.warn("⚠️ Pas de token FCM pour l'utilisateur {}", person.getPhone());
+            }
+        } catch (Exception e) {
+            log.error("❌ Erreur lors de l'envoi de la notification de rejet: {}", e.getMessage());
+        }
     }
 }

@@ -28,6 +28,7 @@ import org.springframework.ui.Model;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -159,18 +160,42 @@ public class AdminSubscriptionManagementController {
             stats.put("totalCancelled", subscriptionRepository.countByStatus(SubscriptionStatus.CANCELLED));
             stats.put("totalCanceled", subscriptionRepository.countByStatus(SubscriptionStatus.CANCELED));
             
-            // Total par plan - utiliser l'ID comme clé pour éviter les conflits de noms
+            // Total par plan avec distinction mensuel/annuel
             Map<String, Long> byPlanId = new HashMap<>();
+            Map<String, Long> monthlyByPlanId = new HashMap<>();
+            Map<String, Long> annualByPlanId = new HashMap<>();
             List<SubscriptionPlan> allPlans = subscriptionPlanRepository.findAll();
             log.info("📊 Nombre de plans: {}", allPlans.size());
             
             for (SubscriptionPlan plan : allPlans) {
-                long count = subscriptionRepository.countByPlanAndStatus(plan, SubscriptionStatus.ACTIVE);
-                log.info("📊 Plan '{}' (ID: {}): {} abonnés actifs", plan.getName(), plan.getId(), count);
-                byPlanId.put(plan.getId(), count);
+                // Total abonnés actifs
+                long totalCount = subscriptionRepository.countByPlanAndStatus(plan, SubscriptionStatus.ACTIVE);
+                
+                // Abonnés par période de facturation
+                List<Subscription> planActiveSubscriptions = subscriptionRepository.findByStatus(SubscriptionStatus.ACTIVE)
+                    .stream()
+                    .filter(s -> s.getPlan().getId().equals(plan.getId()))
+                    .collect(Collectors.toList());
+                
+                long monthlyCount = planActiveSubscriptions.stream()
+                    .filter(s -> !"annual".equalsIgnoreCase(s.getBillingPeriod()))
+                    .count();
+                
+                long annualCount = planActiveSubscriptions.stream()
+                    .filter(s -> "annual".equalsIgnoreCase(s.getBillingPeriod()))
+                    .count();
+                
+                log.info("📊 Plan '{}' (ID: {}): {} total ({} mensuels, {} annuels)", 
+                    plan.getName(), plan.getId(), totalCount, monthlyCount, annualCount);
+                
+                byPlanId.put(plan.getId(), totalCount);
+                monthlyByPlanId.put(plan.getId(), monthlyCount);
+                annualByPlanId.put(plan.getId(), annualCount);
             }
             
             stats.put("byPlanId", byPlanId);
+            stats.put("monthlyByPlanId", monthlyByPlanId);
+            stats.put("annualByPlanId", annualByPlanId);
             
             // Abonnements récents (30 derniers jours)
             Instant thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS);
@@ -192,13 +217,50 @@ public class AdminSubscriptionManagementController {
             }
             stats.put("renewalRate", String.format("%.1f", renewalRate));
             
-            // Revenus estimés (basé sur les abonnements actifs)
-            double estimatedRevenue = 0.0;
+            // Revenus estimés séparés par période de facturation
+            double monthlyRevenue = 0.0;
+            double annualRevenue = 0.0;
+            long monthlySubscriptionsCount = 0;
+            long annualSubscriptionsCount = 0;
+            
             List<Subscription> activeSubscriptions = subscriptionRepository.findByStatus(SubscriptionStatus.ACTIVE);
+            log.info("📊 Nombre d'abonnements actifs trouvés: {}", activeSubscriptions.size());
+            
             for (Subscription sub : activeSubscriptions) {
-                estimatedRevenue += sub.getPlan().getPrice().doubleValue();
+                String billingPeriod = sub.getBillingPeriod();
+                BigDecimal pricePaid = sub.getPricePaid();
+                
+                log.info("📊 Abonnement ID: {}, billingPeriod: '{}', pricePaid: {}", 
+                    sub.getId(), billingPeriod, pricePaid);
+                
+                // Si pas de pricePaid, utiliser le prix du plan selon la période
+                BigDecimal revenue = pricePaid;
+                if (revenue == null && sub.getPlan() != null) {
+                    // Déterminer la période: si null ou vide, considérer comme mensuel
+                    String period = (billingPeriod != null && !billingPeriod.trim().isEmpty()) ? billingPeriod : "monthly";
+                    revenue = sub.getPlan().getPriceForPeriod(period);
+                    log.info("📊 Prix calculé depuis le plan: {} pour période: {}", revenue, period);
+                }
+                
+                if (revenue != null) {
+                    if ("annual".equalsIgnoreCase(billingPeriod)) {
+                        annualRevenue += revenue.doubleValue();
+                        annualSubscriptionsCount++;
+                        log.info("📊 Ajouté aux revenus annuels: {}", revenue);
+                    } else {
+                        // Par défaut, considérer comme mensuel si billingPeriod est null/vide
+                        monthlyRevenue += revenue.doubleValue();
+                        monthlySubscriptionsCount++;
+                        log.info("📊 Ajouté aux revenus mensuels: {}", revenue);
+                    }
+                }
             }
-            stats.put("estimatedMonthlyRevenue", estimatedRevenue);
+            
+            stats.put("monthlyRevenue", monthlyRevenue);
+            stats.put("annualRevenue", annualRevenue);
+            stats.put("monthlySubscriptionsCount", monthlySubscriptionsCount);
+            stats.put("annualSubscriptionsCount", annualSubscriptionsCount);
+            stats.put("totalRevenue", monthlyRevenue + annualRevenue);
 
             model.addAttribute("pageTitle", "Statistiques d'Abonnement");
             model.addAttribute("stats", stats);

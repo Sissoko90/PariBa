@@ -22,6 +22,8 @@ public class SubscriptionResponse {
     private SubscriptionPlanType planType;
     private String planName;
     private BigDecimal monthlyPrice;
+    private String billingPeriod;
+    private BigDecimal pricePaid;
     private SubscriptionStatus status;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -43,6 +45,8 @@ public class SubscriptionResponse {
         this.status = subscription.getStatus();
         this.startDate = subscription.getStartDate();
         this.endDate = subscription.getEndDate();
+        this.billingPeriod = subscription.getBillingPeriod();
+        this.pricePaid = subscription.getPricePaid();
         this.autoRenew = subscription.getAutoRenew();
         this.createdAt = subscription.getCreatedAt();
     }

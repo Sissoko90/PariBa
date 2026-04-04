@@ -26,6 +26,12 @@ public class SubscriptionRequest extends BaseEntity {
 
     @Column(length = 500)
     private String notes; // Notes de l'utilisateur (ex: reference de paiement)
+    
+    @Column(nullable = false, length = 10)
+    private String billingPeriod = "monthly"; // monthly, annual
+    
+    @Column(nullable = false)
+    private boolean autoRenew = false;
 
     @Column(length = 500)
     private String adminNotes; // Notes de l'admin (ex: raison du rejet)
@@ -57,4 +63,10 @@ public class SubscriptionRequest extends BaseEntity {
 
     public String getProcessedBy() { return processedBy; }
     public void setProcessedBy(String processedBy) { this.processedBy = processedBy; }
+    
+    public String getBillingPeriod() { return billingPeriod; }
+    public void setBillingPeriod(String billingPeriod) { this.billingPeriod = billingPeriod; }
+    
+    public boolean isAutoRenew() { return autoRenew; }
+    public void setAutoRenew(boolean autoRenew) { this.autoRenew = autoRenew; }
 }

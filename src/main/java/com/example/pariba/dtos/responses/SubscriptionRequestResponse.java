@@ -26,6 +26,8 @@ public class SubscriptionRequestResponse {
     private String planName;
     private String planType;
     private Double planPrice;
+    private String billingPeriod;
+    private boolean autoRenew;
     private SubscriptionRequestStatus status;
     private String notes;
     private String adminNotes;
@@ -41,8 +43,11 @@ public class SubscriptionRequestResponse {
         this.planId = request.getPlan().getId();
         this.planName = request.getPlan().getName();
         this.planType = request.getPlan().getType().name();
-        this.planPrice = request.getPlan().getMonthlyPrice() != null ? 
-                         request.getPlan().getMonthlyPrice().doubleValue() : 0.0;
+        // Calculer le prix selon la période de facturation
+        this.planPrice = request.getPlan().getPriceForPeriod(request.getBillingPeriod()) != null ? 
+                         request.getPlan().getPriceForPeriod(request.getBillingPeriod()).doubleValue() : 0.0;
+        this.billingPeriod = request.getBillingPeriod();
+        this.autoRenew = request.isAutoRenew();
         this.status = request.getStatus();
         this.notes = request.getNotes();
         this.adminNotes = request.getAdminNotes();
@@ -65,8 +70,11 @@ public class SubscriptionRequestResponse {
         this.planId = plan.getId();
         this.planName = plan.getName();
         this.planType = plan.getType() != null ? plan.getType().name() : "";
-        this.planPrice = plan.getMonthlyPrice() != null ? 
-                         plan.getMonthlyPrice().doubleValue() : 0.0;
+        // Calculer le prix selon la période de facturation
+        this.planPrice = plan.getPriceForPeriod(request.getBillingPeriod()) != null ? 
+                         plan.getPriceForPeriod(request.getBillingPeriod()).doubleValue() : 0.0;
+        this.billingPeriod = request.getBillingPeriod();
+        this.autoRenew = request.isAutoRenew();
         this.status = request.getStatus();
         this.notes = request.getNotes();
         this.adminNotes = request.getAdminNotes();

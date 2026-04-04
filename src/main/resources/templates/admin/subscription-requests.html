@@ -204,6 +204,7 @@
                             <th>Telephone</th>
                             <th>Plan</th>
                             <th>Prix</th>
+                            <th>Période</th>
                             <th>Statut</th>
                             <th>Notes</th>
                             <th>Date</th>
@@ -222,6 +223,16 @@
                             </td>
                             <td>
                                 <span th:text="${#numbers.formatDecimal(request.planPrice, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">5000 FCFA</span>
+                                <small class="text-muted d-block" th:if="${request.billingPeriod == 'annual'}">(Prix annuel)</small>
+                                <small class="text-muted d-block" th:if="${request.billingPeriod == 'monthly'}">(Prix mensuel)</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info" th:if="${request.billingPeriod == 'annual'}">
+                                    <i class="fas fa-calendar-alt me-1"></i> Annuel
+                                </span>
+                                <span class="badge bg-secondary" th:if="${request.billingPeriod == 'monthly'}">
+                                    <i class="fas fa-calendar me-1"></i> Mensuel
+                                </span>
                             </td>
                             <td>
                                 <span class="badge badge-pending" th:if="${request.status.name() == 'PENDING'}">
@@ -443,12 +454,18 @@
                 if (response.ok) {
                     location.reload();
                 } else {
-                    alert('Erreur lors du traitement de la demande');
+                    // Essayer de récupérer le message d'erreur spécifique
+                    return response.json().then(errorData => {
+                        const errorMessage = errorData.error || errorData.message || 'Erreur lors du traitement de la demande';
+                        alert(errorMessage);
+                    }).catch(() => {
+                        alert('Erreur lors du traitement de la demande');
+                    });
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('Erreur lors du traitement de la demande');
+                alert('Erreur de connexion. Veuillez réessayer.');
             });
         });
 

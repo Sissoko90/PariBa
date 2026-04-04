@@ -8,11 +8,14 @@ import com.example.pariba.dtos.responses.SubscriptionPlanResponse;
 import com.example.pariba.enums.SubscriptionRequestStatus;
 import com.example.pariba.exceptions.BadRequestException;
 import com.example.pariba.exceptions.ResourceNotFoundException;
+import com.example.pariba.enums.SubscriptionStatus;
 import com.example.pariba.models.Person;
+import com.example.pariba.models.Subscription;
 import com.example.pariba.models.SubscriptionPlan;
 import com.example.pariba.models.SubscriptionRequest;
 import com.example.pariba.repositories.PersonRepository;
 import com.example.pariba.repositories.SubscriptionPlanRepository;
+import com.example.pariba.repositories.SubscriptionRepository;
 import com.example.pariba.repositories.SubscriptionRequestRepository;
 import com.example.pariba.services.ISubscriptionService;
 import com.example.pariba.services.IAuditService;
@@ -47,6 +50,7 @@ public class SubscriptionController {
     
     private final ISubscriptionService subscriptionService;
     private final SubscriptionRequestRepository subscriptionRequestRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final PersonRepository personRepository;
     private final IAuditService auditService;
@@ -132,12 +136,27 @@ public class SubscriptionController {
             throw new BadRequestException("Vous avez deja une demande d'abonnement en attente");
         }
         
+        // Vérifier si l'utilisateur a déjà un abonnement actif
+        List<Subscription> activeSubscriptions = subscriptionRepository.findByPersonIdOrderByCreatedAtDesc(person.getId())
+            .stream()
+            .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE)
+            .collect(Collectors.toList());
+            
+        if (!activeSubscriptions.isEmpty()) {
+            Subscription activeSub = activeSubscriptions.get(0);
+            throw new BadRequestException("Vous avez déjà un abonnement actif au plan '" + activeSub.getPlan().getName() + 
+                "'. Vous ne pouvez pas demander un nouvel abonnement tant que votre abonnement actuel n'est pas expiré.");
+        }
+        
         // Creer la demande
         SubscriptionRequest subscriptionRequest = new SubscriptionRequest();
         subscriptionRequest.setPerson(person);
         subscriptionRequest.setPlan(plan);
         subscriptionRequest.setStatus(SubscriptionRequestStatus.PENDING);
         subscriptionRequest.setNotes(request.getNotes());
+        subscriptionRequest.setBillingPeriod(request.getBillingPeriod());
+        // Auto-renewal automatique pour les abonnements annuels
+        subscriptionRequest.setAutoRenew("annual".equalsIgnoreCase(request.getBillingPeriod()));
         
         subscriptionRequest = subscriptionRequestRepository.save(subscriptionRequest);
         log.info("Demande d'abonnement {} creee avec succes", subscriptionRequest.getId());

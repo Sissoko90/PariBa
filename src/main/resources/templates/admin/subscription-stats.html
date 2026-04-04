@@ -228,20 +228,50 @@
             </div>
         </div>
 
-        <!-- Revenus et Taux de Renouvellement -->
+        <!-- Revenus par Période de Facturation -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="card">
                     <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Revenus Mensuels Estimés</h5>
+                        <h5 class="mb-0"><i class="fas fa-calendar"></i> Revenus Mensuels</h5>
                     </div>
                     <div class="card-body text-center">
-                        <h2 class="text-success" th:text="${#numbers.formatDecimal(stats.estimatedMonthlyRevenue, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</h2>
-                        <p class="text-muted">Basé sur les abonnements actifs</p>
+                        <h2 class="text-success" th:text="${#numbers.formatDecimal(stats.monthlyRevenue, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</h2>
+                        <p class="text-muted">
+                            <span th:text="${stats.monthlySubscriptionsCount}">0</span> abonnement(s) mensuel(s)
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Revenus Annuels</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <h2 class="text-info" th:text="${#numbers.formatDecimal(stats.annualRevenue, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</h2>
+                        <p class="text-muted">
+                            <span th:text="${stats.annualSubscriptionsCount}">0</span> abonnement(s) annuel(s)
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0"><i class="fas fa-coins"></i> Total Revenus</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <h2 class="text-warning" th:text="${#numbers.formatDecimal(stats.totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</h2>
+                        <p class="text-muted">Revenus totaux (mensuels + annuels)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taux de Rétention -->
+        <div class="row mb-4">
+            <div class="col-md-12">
                 <div class="card">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0"><i class="fas fa-sync-alt"></i> Taux de Rétention</h5>
@@ -293,9 +323,12 @@
                             <tr>
                                 <th>Plan</th>
                                 <th>Type</th>
-                                <th>Prix</th>
-                                <th>Abonnés Actifs</th>
-                                <th>Revenus Mensuels</th>
+                                <th>Prix Mensuel</th>
+                                <th>Prix Annuel</th>
+                                <th>Abonnés Mensuels</th>
+                                <th>Abonnés Annuels</th>
+                                <th>Total Abonnés</th>
+                                <th>Revenus Estimés</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -310,12 +343,21 @@
                                                          (${plan.type.name() == 'PRO'} ? 'bg-primary' : 'bg-warning'))"
                                           th:text="${plan.type}">Type</span>
                                 </td>
-                                <td th:text="${#numbers.formatDecimal(plan.price, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">Prix</td>
+                                <td th:text="${#numbers.formatDecimal(plan.monthlyPrice, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">Prix Mensuel</td>
+                                <td th:text="${plan.annualPrice != null ? (#numbers.formatDecimal(plan.annualPrice, 0, 'COMMA', 0, 'POINT') + ' FCFA') : (#numbers.formatDecimal(plan.monthlyPrice * 12, 0, 'COMMA', 0, 'POINT') + ' FCFA')}">Prix Annuel</td>
+                                <td>
+                                    <span class="badge bg-secondary" th:text="${stats.monthlyByPlanId.get(plan.id) ?: 0}">0</span>
+                                    <small class="text-muted d-block">mensuels</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info" th:text="${stats.annualByPlanId.get(plan.id) ?: 0}">0</span>
+                                    <small class="text-muted d-block">annuels</small>
+                                </td>
                                 <td>
                                     <strong th:text="${stats.byPlanId.get(plan.id) ?: 0}">0</strong>
                                 </td>
                                 <td>
-                                    <strong th:text="${#numbers.formatDecimal((stats.byPlanId.get(plan.id) ?: 0) * plan.price, 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</strong>
+                                    <strong th:text="${#numbers.formatDecimal((stats.monthlyByPlanId.get(plan.id) ?: 0) * plan.monthlyPrice + (stats.annualByPlanId.get(plan.id) ?: 0) * (plan.annualPrice ?: plan.monthlyPrice * 12), 0, 'COMMA', 0, 'POINT')} + ' FCFA'">0 FCFA</strong>
                                 </td>
                             </tr>
                         </tbody>

@@ -1,6 +1,10 @@
 package com.example.pariba.controllers.admin;
 
 import com.example.pariba.models.SystemLog;
+import com.example.pariba.models.Subscription;
+import com.example.pariba.models.SubscriptionRequest;
+import com.example.pariba.enums.SubscriptionStatus;
+import com.example.pariba.enums.SubscriptionRequestStatus;
 import com.example.pariba.repositories.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,19 +34,25 @@ public class AdminStatisticsController {
     private final ContributionRepository contributionRepository;
     private final NotificationRepository notificationRepository;
     private final SystemLogRepository systemLogRepository;
+    private final SubscriptionRepository subscriptionRepository;
+    private final SubscriptionRequestRepository subscriptionRequestRepository;
     
     public AdminStatisticsController(PersonRepository personRepository,
                                     TontineGroupRepository groupRepository,
                                     PaymentRepository paymentRepository,
                                     ContributionRepository contributionRepository,
                                     NotificationRepository notificationRepository,
-                                    SystemLogRepository systemLogRepository) {
+                                    SystemLogRepository systemLogRepository,
+                                    SubscriptionRepository subscriptionRepository,
+                                    SubscriptionRequestRepository subscriptionRequestRepository) {
         this.personRepository = personRepository;
         this.groupRepository = groupRepository;
         this.paymentRepository = paymentRepository;
         this.contributionRepository = contributionRepository;
         this.notificationRepository = notificationRepository;
         this.systemLogRepository = systemLogRepository;
+        this.subscriptionRepository = subscriptionRepository;
+        this.subscriptionRequestRepository = subscriptionRequestRepository;
     }
     
     @GetMapping("/superadmin-dashboard")
@@ -83,6 +93,30 @@ public class AdminStatisticsController {
             long totalNotifications = notificationRepository.count();
             long unreadNotifications = notificationRepository.countByReadFlagFalse();
             
+            // Statistiques d'abonnements
+            long totalSubscriptions = subscriptionRepository.count();
+            long activeSubscriptions = subscriptionRepository.countByStatus(SubscriptionStatus.ACTIVE);
+            long pendingRequests = subscriptionRequestRepository.countByStatus(SubscriptionRequestStatus.PENDING);
+            
+            // Calcul des revenus mensuels et annuels
+            List<Subscription> allActiveSubscriptions = subscriptionRepository.findByStatus(SubscriptionStatus.ACTIVE);
+            double monthlyRevenue = 0.0;
+            double annualRevenue = 0.0;
+            long monthlySubscriptionsCount = 0;
+            long annualSubscriptionsCount = 0;
+            
+            for (Subscription sub : allActiveSubscriptions) {
+                if (sub.getPricePaid() != null) {
+                    if ("annual".equalsIgnoreCase(sub.getBillingPeriod())) {
+                        annualRevenue += sub.getPricePaid().doubleValue();
+                        annualSubscriptionsCount++;
+                    } else {
+                        monthlyRevenue += sub.getPricePaid().doubleValue();
+                        monthlySubscriptionsCount++;
+                    }
+                }
+            }
+            
             // Ajouter au modèle
             model.addAttribute("totalUsers", totalUsers);
             model.addAttribute("totalGroups", totalGroups);
@@ -101,6 +135,15 @@ public class AdminStatisticsController {
             
             model.addAttribute("totalNotifications", totalNotifications);
             model.addAttribute("unreadNotifications", unreadNotifications);
+            
+            // Statistiques d'abonnements
+            model.addAttribute("totalSubscriptions", totalSubscriptions);
+            model.addAttribute("activeSubscriptions", activeSubscriptions);
+            model.addAttribute("pendingRequests", pendingRequests);
+            model.addAttribute("monthlyRevenue", monthlyRevenue);
+            model.addAttribute("annualRevenue", annualRevenue);
+            model.addAttribute("monthlySubscriptionsCount", monthlySubscriptionsCount);
+            model.addAttribute("annualSubscriptionsCount", annualSubscriptionsCount);
             
             model.addAttribute("recentLogs", recentLogs);
             model.addAttribute("totalLogs", totalLogs);

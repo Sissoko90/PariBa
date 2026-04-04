@@ -146,31 +146,14 @@
             </div>
             
             <!-- Pagination -->
-            <nav th:if="${totalPages > 1}" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
-                        <a class="page-link" 
-                           th:href="@{/admin/system-logs(page=${currentPage - 1}, level=${selectedLevel}, search=${search})}">
-                            Précédent
-                        </a>
-                    </li>
-                    
-                    <li class="page-item" 
-                        th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
-                        th:classappend="${i == currentPage} ? 'active' : ''">
-                        <a class="page-link" 
-                           th:href="@{/admin/system-logs(page=${i}, level=${selectedLevel}, search=${search})}" 
-                           th:text="${i + 1}">1</a>
-                    </li>
-                    
-                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
-                        <a class="page-link" 
-                           th:href="@{/admin/system-logs(page=${currentPage + 1}, level=${selectedLevel}, search=${search})}">
-                            Suivant
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+            <div th:if="${totalPages > 1}" class="mt-4">
+                <div th:replace="admin/fragments/pagination :: pagination(
+                    currentPage=${currentPage}, 
+                    totalPages=${totalPages}, 
+                    baseUrl='/admin/system-logs',
+                    params=${{level: selectedLevel, search: search}}
+                )"></div>
+            </div>
         </div>
     </div>
 

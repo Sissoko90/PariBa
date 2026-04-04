@@ -21,6 +21,7 @@ public class SubscriptionPlanResponse {
     private String name;
     private String description;
     private BigDecimal monthlyPrice;
+    private BigDecimal annualPrice;
     private String features;
     private String featuresJson;
     private Boolean active;
@@ -38,6 +39,7 @@ public class SubscriptionPlanResponse {
         this.name = plan.getName();
         this.description = plan.getDescription();
         this.monthlyPrice = plan.getMonthlyPrice();
+        this.annualPrice = plan.getAnnualPrice();
         this.features = plan.getFeatures();
         this.featuresJson = plan.getFeaturesJson();
         this.active = plan.getActive();

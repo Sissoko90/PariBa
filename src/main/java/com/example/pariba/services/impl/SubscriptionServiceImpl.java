@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Implémentation du service de gestion des abonnements
@@ -117,6 +118,89 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
                 );
                 log.info("✅ Notification nouvel abonnement envoyée à {}", personId);
             }
+        } catch (Exception e) {
+            log.error("❌ Erreur notification abonnement: {}", e.getMessage());
+        }
+        
+        return mapToResponse(subscription);
+    }
+    
+    @Override
+    @Transactional
+    public SubscriptionResponse subscribe(String personId, String planId, String billingPeriod, boolean autoRenew) {
+        Person person = personRepository.findById(personId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personne non trouvée"));
+        
+        SubscriptionPlan plan = subscriptionPlanRepository.findById(planId)
+                .orElseThrow(() -> new ResourceNotFoundException("Plan non trouvé"));
+        
+        // Note: Tous les plans supportent maintenant les abonnements annuels
+        // Le prix annuel est calculé automatiquement (mensuel × 12) si pas défini explicitement
+        
+        // Vérifier s'il existe déjà des abonnements actifs
+        List<Subscription> activeSubscriptions = subscriptionRepository
+                .findByPersonIdOrderByCreatedAtDesc(person.getId())
+                .stream()
+                .filter(s -> s.getStatus() == SubscriptionStatus.ACTIVE)
+                .collect(Collectors.toList());
+        
+        // Un utilisateur ne peut avoir qu'un seul abonnement actif à la fois
+        if (activeSubscriptions.size() > 1) {
+            throw new IllegalStateException("Cet utilisateur a plusieurs abonnements actifs. Veuillez contacter l'administrateur.");
+        }
+        
+        Optional<Subscription> existingSubscription = activeSubscriptions.isEmpty() ? 
+            Optional.empty() : Optional.of(activeSubscriptions.get(0));
+        
+        Subscription subscription;
+        if (existingSubscription.isPresent()) {
+            // Vérifier si l'abonnement existant est du même plan
+            Subscription existing = existingSubscription.get();
+            if (!existing.getPlan().getId().equals(plan.getId())) {
+                throw new IllegalStateException("Vous avez déjà un abonnement actif au plan '" + existing.getPlan().getName() + "'. Vous ne pouvez pas vous abonner à un autre plan tant que votre abonnement actuel n'est pas expiré.");
+            }
+            
+            // Mettre à niveau l'abonnement existant (même plan, changement de période)
+            subscription = existing;
+            subscription.setBillingPeriod(billingPeriod);
+            subscription.setAutoRenew(autoRenew);
+            subscription.setStartDate(LocalDate.now());
+            subscription.setEndDate(calculateEndDate(plan, billingPeriod));
+            subscription.setPricePaid(plan.getPriceForPeriod(billingPeriod));
+        } else {
+            // Créer un nouvel abonnement
+            subscription = new Subscription();
+            subscription.setPerson(person);
+            subscription.setPlan(plan);
+            subscription.setStatus(SubscriptionStatus.ACTIVE);
+            subscription.setBillingPeriod(billingPeriod);
+            subscription.setAutoRenew(autoRenew);
+            subscription.setStartDate(LocalDate.now());
+            subscription.setEndDate(calculateEndDate(plan, billingPeriod));
+            subscription.setPricePaid(plan.getPriceForPeriod(billingPeriod));
+        }
+        
+        subscription = subscriptionRepository.save(subscription);
+        
+        // Notification d'activation
+        try {
+            String periodLabel = billingPeriod.equals("annual") ? "annuel" : "mensuel";
+            String message = String.format("Votre abonnement %s (%s) a été activé avec succès!", 
+                plan.getName(), periodLabel);
+            
+            Map<String, String> variables = new HashMap<>();
+            variables.put("plan", plan.getName());
+            variables.put("montant", String.format("%,.0f", plan.getPriceForPeriod(billingPeriod)));
+            variables.put("date_fin", subscription.getEndDate().toString());
+            variables.put("periode", periodLabel);
+            
+            notificationService.sendNotificationWithTemplate(
+                personId,
+                NotificationType.SYSTEM_UPDATE,
+                NotificationChannel.PUSH,
+                variables
+            );
+            log.info("✅ Notification abonnement {} envoyée à {}", periodLabel, personId);
         } catch (Exception e) {
             log.error("❌ Erreur notification abonnement: {}", e.getMessage());
         }
@@ -264,11 +348,20 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
      * Calcule la date de fin d'un abonnement basé sur le plan
      */
     private LocalDate calculateEndDate(SubscriptionPlan plan) {
+        return calculateEndDate(plan, "monthly");
+    }
+    
+    /**
+     * Calcule la date de fin d'un abonnement basé sur le plan et la période
+     */
+    private LocalDate calculateEndDate(SubscriptionPlan plan, String billingPeriod) {
         LocalDate now = LocalDate.now();
         
-        // Par défaut, un abonnement dure 30 jours
-        // Vous pouvez ajouter une logique plus complexe basée sur le plan
-        return now.plusMonths(1);
+        if ("annual".equalsIgnoreCase(billingPeriod)) {
+            return now.plusYears(1);
+        } else {
+            return now.plusMonths(1);
+        }
     }
     
     /**

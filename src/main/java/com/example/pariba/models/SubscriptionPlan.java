@@ -21,6 +21,9 @@ public class SubscriptionPlan extends BaseEntity {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal monthlyPrice = BigDecimal.ZERO;
 
+    @Column(precision = 19, scale = 2)
+    private BigDecimal annualPrice;
+
     @Column(length = 2000)
     private String featuresJson;
 
@@ -65,4 +68,24 @@ public class SubscriptionPlan extends BaseEntity {
     public BigDecimal getPrice() { return monthlyPrice; }
     public String getFeatures() { return featuresJson; }
     public void setFeatures(String features) { this.featuresJson = features; }
+    
+    // Getters/Setters pour annualPrice
+    public BigDecimal getAnnualPrice() { return annualPrice; }
+    public void setAnnualPrice(BigDecimal annualPrice) { this.annualPrice = annualPrice; }
+    
+    // Méthode pour vérifier si le plan a un prix annuel
+    public boolean hasAnnualPrice() { return annualPrice != null && annualPrice.compareTo(BigDecimal.ZERO) > 0; }
+    
+    // Méthode pour obtenir le prix selon la période
+    public BigDecimal getPriceForPeriod(String period) {
+        if ("annual".equalsIgnoreCase(period)) {
+            // Si un prix annuel est défini, l'utiliser, sinon calculer (prix mensuel x 12)
+            if (hasAnnualPrice()) {
+                return annualPrice;
+            } else {
+                return monthlyPrice.multiply(BigDecimal.valueOf(12));
+            }
+        }
+        return monthlyPrice;
+    }
 }

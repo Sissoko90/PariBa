@@ -25,6 +25,12 @@ public class Subscription extends BaseEntity {
     
     @Column(nullable = false)
     private boolean autoRenew = false;
+    
+    @Column(nullable = false, length = 10)
+    private String billingPeriod = "monthly"; // monthly, annual
+    
+    @Column(precision = 19, scale = 2)
+    private java.math.BigDecimal pricePaid;
 
     public Person getPerson() { return person; }
     public void setPerson(Person person) { this.person = person; }
@@ -38,4 +44,22 @@ public class Subscription extends BaseEntity {
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
     public boolean getAutoRenew() { return autoRenew; }
     public void setAutoRenew(boolean autoRenew) { this.autoRenew = autoRenew; }
+    
+    public String getBillingPeriod() { return billingPeriod; }
+    public void setBillingPeriod(String billingPeriod) { this.billingPeriod = billingPeriod; }
+    
+    public java.math.BigDecimal getPricePaid() { return pricePaid; }
+    public void setPricePaid(java.math.BigDecimal pricePaid) { this.pricePaid = pricePaid; }
+    
+    // Méthode pour vérifier si c'est un abonnement annuel
+    public boolean isAnnual() { return "annual".equalsIgnoreCase(billingPeriod); }
+    
+    // Méthode pour calculer la date de fin selon la période
+    public LocalDate calculateEndDate(LocalDate startDate) {
+        if (isAnnual()) {
+            return startDate.plusYears(1);
+        } else {
+            return startDate.plusMonths(1);
+        }
+    }
 }

@@ -23,6 +23,16 @@ public interface ISubscriptionService {
     SubscriptionResponse subscribe(String personId, String planId);
     
     /**
+     * Crée ou met à niveau un abonnement avec période de facturation
+     * @param personId L'identifiant de la personne
+     * @param planId L'identifiant du plan
+     * @param billingPeriod La période de facturation (monthly/annual)
+     * @param autoRenew Renouvellement automatique
+     * @return L'abonnement créé/mis à jour
+     */
+    SubscriptionResponse subscribe(String personId, String planId, String billingPeriod, boolean autoRenew);
+    
+    /**
      * Annule un abonnement
      * @param personId L'identifiant de la personne
      */
