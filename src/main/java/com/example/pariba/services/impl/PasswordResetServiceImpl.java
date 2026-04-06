@@ -237,7 +237,8 @@ public class PasswordResetServiceImpl implements IPasswordResetService {
         resetTokenStorage.put(token, tokenData);
         
         // Envoyer l'email avec le lien de réinitialisation
-        String resetLink = "http://localhost:8085/admin/reset-password?token=" + token;
+        String resetLink = "http://localhost:8090/admin/reset-password?token=" + token;
+        //String resetLink = "http://localhost:8085/admin/reset-password?token=" + token;
         String subject = "Réinitialisation de votre mot de passe - Pariba Admin";
         String body = String.format(
             "Bonjour %s,\n\n" +

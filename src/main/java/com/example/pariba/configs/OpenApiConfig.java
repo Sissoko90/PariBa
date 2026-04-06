@@ -59,7 +59,8 @@ import org.springframework.context.annotation.Configuration;
     servers = {
         @Server(
             description = "Serveur de développement",
-            url = "http://localhost:8085"
+            url = "http://localhost:8090"
+            //url = "http://localhost:8085"
         ),
         @Server(
             description = "Serveur de production",

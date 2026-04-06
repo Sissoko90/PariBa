@@ -456,7 +456,8 @@ POST /tours/{id}/complete (admin)
 ### application.yml
 ```yaml
 server:
-  port: 8085
+  port: 8090
+  #port: 8085
   address: 0.0.0.0
 
 spring:

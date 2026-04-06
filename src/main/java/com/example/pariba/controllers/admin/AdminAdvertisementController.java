@@ -46,7 +46,8 @@ public class AdminAdvertisementController {
     @Value("${app.upload.dir:uploads/advertisements}")
     private String uploadDir;
     
-    @Value("${app.base-url:http://localhost:8085}")
+    //@Value("${app.base-url:http://localhost:8085}")
+    @Value("${app.base-url:http://localhost:8090}")
     private String baseUrl;
     
     public AdminAdvertisementController(AdvertisementRepository advertisementRepository, IAuditService auditService, CurrentUser currentUser, ISystemLogService systemLogService) {

@@ -190,7 +190,7 @@ spring:
             enable: true
     default-encoding: UTF-8
 server:
-  port: ${PORT:8085}
+  port: ${PORT:8090}
   servlet:
     session:
       cookie:
