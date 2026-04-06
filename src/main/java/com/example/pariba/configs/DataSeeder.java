@@ -84,8 +84,8 @@ public class DataSeeder implements CommandLineRunner {
             log.info("Mot de passe: Admin123!");
             log.info("Rôle: SUPERADMIN");
             log.info("========================================");
-            log.info("Dashboard Admin: http://localhost:8080/admin/dashboard");
-            log.info("Swagger UI: http://localhost:8080/swagger-ui.html");
+            log.info("Dashboard Admin: http://localhost:8085/admin/dashboard");
+            log.info("Swagger UI: http://localhost:8085/swagger-ui.html");
             log.info("========================================");
             
         } catch (Exception e) {
