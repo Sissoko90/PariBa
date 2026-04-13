@@ -18,6 +18,7 @@ public interface ContributionRepository extends JpaRepository<Contribution, Stri
     List<Contribution> findByTourId(String tourId);
     
     List<Contribution> findByMemberId(String memberId);
+    List<Contribution> findByMemberIdAndStatusIn(String memberId, List<ContributionStatus> statuses);
     
     List<Contribution> findByGroupIdAndMemberId(String groupId, String memberId);
     

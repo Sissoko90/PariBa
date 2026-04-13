@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/join-requests")
+@RequestMapping("/join-requests")
 @Tag(name = "Join Requests", description = "Gestion des demandes d'adhésion aux groupes")
 public class JoinRequestController {
 

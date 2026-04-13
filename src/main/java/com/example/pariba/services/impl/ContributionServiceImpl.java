@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import com.example.pariba.enums.ContributionStatus;
 @Service
 public class ContributionServiceImpl implements IContributionService {
 
@@ -97,6 +97,19 @@ public class ContributionServiceImpl implements IContributionService {
                 }
             }
         }
+    }
+        @Override
+    @Transactional(readOnly = true)
+    public List<ContributionResponse> getPendingContributionsByMember(String personId) {
+        List<Contribution> contributions = contributionRepository
+            .findByMemberIdAndStatusIn(
+                personId, 
+                List.of(ContributionStatus.PENDING, ContributionStatus.PARTIAL)
+            );
+        
+        return contributions.stream()
+            .map(ContributionResponse::new)
+            .collect(Collectors.toList());
     }
 
     @Override

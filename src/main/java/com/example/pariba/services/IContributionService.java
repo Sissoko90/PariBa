@@ -10,6 +10,7 @@ public interface IContributionService {
     List<ContributionResponse> getContributionsByTour(String tourId);
     List<ContributionResponse> getContributionsByMember(String personId);
     List<ContributionResponse> getPendingContributions(String groupId);
+    List<ContributionResponse> getPendingContributionsByMember(String personId);
     void applyLatePenalties();
     void markAsPaid(String contributionId);
 }

@@ -3,6 +3,7 @@ package com.example.pariba.controllers;
 import com.example.pariba.constants.MessageConstants;
 import com.example.pariba.dtos.responses.ApiResponse;
 import com.example.pariba.dtos.responses.ContributionResponse;
+import com.example.pariba.exceptions.BadRequestException;
 import com.example.pariba.services.IContributionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -79,6 +82,26 @@ public class ContributionController {
     })
     public ResponseEntity<ApiResponse<List<ContributionResponse>>> getPendingContributions(@PathVariable String groupId) {
         List<ContributionResponse> contributions = contributionService.getPendingContributions(groupId);
+        return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, contributions));
+    }
+        @GetMapping("/member/{personId}/pending")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Contributions en attente d'un membre", 
+               description = "Récupère toutes les contributions en attente de paiement pour un membre spécifique")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Liste des contributions en attente"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Accès non autorisé")
+    })
+    public ResponseEntity<ApiResponse<List<ContributionResponse>>> getPendingContributionsByMember(
+            @PathVariable String personId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        // Vérifier que l'utilisateur demande ses propres contributions
+        if (!personId.equals(userDetails.getUsername())) {
+            throw new BadRequestException("Vous ne pouvez voir que vos propres contributions");
+        }
+        
+        List<ContributionResponse> contributions = contributionService.getPendingContributionsByMember(personId);
         return ResponseEntity.ok(new ApiResponse<>(true, MessageConstants.SUCCESS_OPERATION, contributions));
     }
 }
