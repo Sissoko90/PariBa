@@ -8,7 +8,7 @@ spring:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
   mvc:
-    throw-exception-if-no-handler-found: true
+    
     hiddenmethod:
       filter:
         enabled: true
@@ -125,8 +125,8 @@ spring:
   datasource:
      #url: jdbc:mysql://localhost:8889/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true
     url: jdbc:mysql://localhost:3306/pariba?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa%2FBamako&createDatabaseIfNotExist=true
-    username: kalash  
-    password: Kalash@2024!
+    username: root  
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
